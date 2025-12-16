@@ -3,7 +3,8 @@
 # LibreChat Setup Script
 # This script automates the setup and build process for LibreChat after cloning
 
-set -e  # Exit on error
+# Don't exit on error immediately - we want to show helpful messages
+set +e
 
 # Colors for output
 RED='\033[0;31m'
@@ -58,11 +59,21 @@ if ! command_exists node; then
     exit 1
 fi
 
-NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
-if [ "$NODE_VERSION" -lt 18 ]; then
-    print_warning "Node.js version is less than 18. Recommended: Node.js v18 or higher"
+# Get Node.js version more robustly
+NODE_VERSION_STRING=$(node -v)
+NODE_VERSION_MAJOR=$(echo "$NODE_VERSION_STRING" | sed 's/v//' | cut -d'.' -f1)
+
+# Check if NODE_VERSION_MAJOR is a valid number
+if ! [[ "$NODE_VERSION_MAJOR" =~ ^[0-9]+$ ]]; then
+    print_warning "Could not parse Node.js version: $NODE_VERSION_STRING"
+    print_warning "Continuing anyway, but Node.js v18+ is recommended"
 else
-    print_success "Node.js $(node -v) found"
+    if [ "$NODE_VERSION_MAJOR" -lt 18 ]; then
+        print_warning "Node.js version $NODE_VERSION_STRING is less than 18. Recommended: Node.js v18 or higher"
+        print_warning "The build may fail with older versions"
+    else
+        print_success "Node.js $NODE_VERSION_STRING found"
+    fi
 fi
 
 # Check for npm
@@ -82,10 +93,13 @@ echo ""
 # Step 1: Install dependencies
 print_info "Step 1: Installing dependencies..."
 print_info "This may take several minutes..."
-if npm install; then
+set -e  # Enable exit on error for actual commands
+npm install
+if [ $? -eq 0 ]; then
     print_success "Dependencies installed successfully"
 else
     print_error "Failed to install dependencies"
+    print_info "Try running: cd InstiLibreChat && npm install"
     exit 1
 fi
 echo ""
@@ -99,10 +113,12 @@ print_info "  - @librechat/api"
 print_info "  - @librechat/client"
 echo ""
 
-if npm run build:packages; then
+npm run build:packages
+if [ $? -eq 0 ]; then
     print_success "All packages built successfully"
 else
     print_error "Failed to build packages"
+    print_info "Try running: cd InstiLibreChat && npm run build:packages"
     exit 1
 fi
 echo ""
@@ -110,12 +126,16 @@ echo ""
 # Step 3: Build client (optional, but recommended)
 print_info "Step 3: Building client application..."
 print_info "This may take a few minutes..."
-if npm run build:client; then
+set +e  # Don't exit on error for client build (it's optional)
+npm run build:client
+if [ $? -eq 0 ]; then
     print_success "Client built successfully"
 else
     print_warning "Client build failed, but packages are built"
     print_info "You can still run the backend, but frontend may not work"
+    print_info "Try running: cd InstiLibreChat && npm run build:client"
 fi
+set -e  # Re-enable exit on error
 echo ""
 
 # Summary
