@@ -29,11 +29,51 @@ echo
 
 [ -d "$LIBRECHAT_DIR" ] || error "InstiLibreChat directory not found"
 
-command -v node >/dev/null || error "Node.js not installed"
-command -v npm  >/dev/null || error "npm not installed"
+# Check for Node.js
+if ! command -v node >/dev/null; then
+  error "Node.js is not installed"
+  echo ""
+  info "Please install Node.js (v18 or higher recommended)"
+  info ""
+  info "Installation options:"
+  info "  • macOS (using Homebrew): brew install node"
+  info "  • Linux (using nvm): curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash"
+  info "  • Windows: Download from https://nodejs.org/"
+  info "  • Or use nvm: https://github.com/nvm-sh/nvm"
+  info ""
+  info "After installing Node.js, run this script again."
+  exit 1
+fi
 
+# Check for npm
+if ! command -v npm >/dev/null; then
+  error "npm is not installed"
+  echo ""
+  info "npm should come with Node.js. If you see this error,"
+  info "your Node.js installation may be incomplete."
+  info "Please reinstall Node.js from https://nodejs.org/"
+  exit 1
+fi
+
+# Check Node.js version
 NODE_VERSION=$(node -v)
 NPM_VERSION=$(npm -v)
+
+# Extract major version number
+NODE_MAJOR_VERSION=$(echo "$NODE_VERSION" | sed 's/v\([0-9]*\).*/\1/')
+
+if [ "$NODE_MAJOR_VERSION" -lt 18 ]; then
+  warn "Node.js version $NODE_VERSION detected"
+  warn "Node.js v18 or higher is recommended"
+  warn "You may encounter issues with older versions"
+  echo ""
+  read -p "Continue anyway? (y/N) " -n 1 -r
+  echo ""
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    info "Please upgrade Node.js to v18 or higher and run this script again"
+    exit 1
+  fi
+fi
 
 success "Node.js $NODE_VERSION"
 success "npm $NPM_VERSION"
