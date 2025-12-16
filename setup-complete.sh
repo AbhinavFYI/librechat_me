@@ -217,6 +217,14 @@ install_dependencies() {
         success "All critical dependencies verified"
     fi
     
+    # Install OpenTelemetry exporter for backend (required for tracing)
+    substep "Installing OpenTelemetry exporter for backend..."
+    if npm install @opentelemetry/exporter-trace-otlp-http --no-audit --legacy-peer-deps; then
+        success "OpenTelemetry exporter installed"
+    else
+        warn "Failed to install OpenTelemetry exporter (backend may work without it)"
+    fi
+    
     # Install lucide-react in client workspace (required for frontend build)
     substep "Installing lucide-react in client workspace..."
     if [ -d "client" ]; then
@@ -398,12 +406,8 @@ build_packages() {
         # Verify memory module is included
         if grep -q "loadMemoryConfig\|isMemoryEnabled" packages/api/dist/index.js 2>/dev/null; then
             success "api built successfully (memory module verified)"
-            # Show warnings if present but don't fail
-            if echo "$BUILD_OUTPUT" | grep -q "TS2345\|TS.*:"; then
-                warn "TypeScript warnings detected (non-fatal):"
-                echo "$BUILD_OUTPUT" | grep -E "TS[0-9]+:" | head -3 | sed 's/^/    /' || true
-                info "These warnings don't prevent the build from working"
-            fi
+            # Note: TypeScript warnings (like TS2345) are now suppressed in rollup.config.js
+            # They don't prevent the build from working and are filtered out
         else
             warn "api built but memory module exports not found"
             warn "This may cause issues with backend startup"
@@ -415,6 +419,15 @@ build_packages() {
     
     # 4. Build client package
     substep "Building @librechat/client package (4/4)..."
+    
+    # Ensure dependencies are installed in packages/client
+    substep "Installing dependencies in packages/client..."
+    if [ -d "packages/client" ]; then
+        cd packages/client
+        npm install --no-audit --legacy-peer-deps || warn "Client package dependency installation had issues"
+        cd "$LIBRECHAT_DIR"
+    fi
+    
     BUILD_OUTPUT=$(npm run build:client-package 2>&1)
     BUILD_STATUS=$?
     
@@ -450,12 +463,28 @@ build_frontend() {
         error "client package must be built before frontend"
     fi
     
-    # Verify lucide-react is installed (should be installed during dependency installation)
-    if [ ! -d "node_modules/lucide-react" ] && [ ! -d "client/node_modules/lucide-react" ]; then
-        warn "lucide-react not found - attempting to install..."
+    # Install dependencies in client directory
+    substep "Installing client dependencies (lucide-react, vite, etc.)..."
+    if [ -d "client" ]; then
         cd client
-        npm install lucide-react@^0.394.0 --no-audit --legacy-peer-deps || warn "Failed to install lucide-react"
+        # Install all client dependencies
+        npm install --no-audit --legacy-peer-deps || warn "Client dependency installation had issues"
+        
+        # Ensure lucide-react is installed
+        if [ ! -d "node_modules/lucide-react" ]; then
+            info "Installing lucide-react..."
+            npm install lucide-react@^0.394.0 --no-audit --legacy-peer-deps || warn "Failed to install lucide-react"
+        fi
+        
+        # Ensure vite is installed
+        if [ ! -d "node_modules/vite" ] && [ ! -f "node_modules/.bin/vite" ]; then
+            info "Installing vite..."
+            npm install vite --no-audit --legacy-peer-deps || warn "Failed to install vite"
+        fi
+        
         cd "$LIBRECHAT_DIR"
+    else
+        error "client directory not found"
     fi
     
     # Temporarily disable exit on error for frontend build

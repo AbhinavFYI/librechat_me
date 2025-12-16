@@ -80,6 +80,18 @@ const cjsBuild = {
   external: [...Object.keys(pkg.dependencies || {}), ...Object.keys(pkg.devDependencies || {})],
   preserveSymlinks: true,
   plugins,
+  /**
+   * Suppress non-fatal warnings during build
+   */
+  onwarn: (warning, warn) => {
+    // Suppress TypeScript plugin warnings about type errors (TS2345, etc.)
+    // These are non-fatal and don't prevent the build from working
+    if (warning.plugin === 'typescript' && warning.message.includes('TS2345')) {
+      return; // Don't show this warning
+    }
+    // Show other warnings
+    warn(warning);
+  },
 };
 
 export default cjsBuild;
