@@ -14,20 +14,44 @@ This repository contains a customized version of LibreChat with additional SaaS 
 - MongoDB (for LibreChat)
 - Go (for saas-api, if building from source)
 
+## After Cloning
+
+**Quick Start:** After cloning the repository, run the setup script:
+
+```bash
+git clone https://github.com/AbhinavFYI/librechat_me.git
+cd librechat_me
+./setup-complete.sh
+```
+
+This will automatically:
+1. Check all prerequisites
+2. Install dependencies
+3. Build all required packages
+4. Build the client application
+5. Verify everything was built correctly
+
+Then configure your `.env` file and start the backend!
+
 ## Quick Setup (Automated)
 
 **Easiest way:** Use the automated setup script after cloning:
 
 ```bash
 # From the repository root directory
-./setup.sh
+./setup-complete.sh
 ```
 
 This script will:
-- Check prerequisites (Node.js, npm)
+- Check prerequisites (Node.js, npm, MongoDB, Go)
 - Install all dependencies
-- Build all required packages
+- Build all required packages in correct order:
+  - @librechat/data-schemas
+  - librechat-data-provider
+  - @librechat/api
+  - @librechat/client package
 - Build the client application
+- Verify all build artifacts
 
 Alternatively, use the frontend-only build script:
 
@@ -179,7 +203,7 @@ From the repository root:
 
 ```bash
 # Run the automated setup script
-./setup.sh
+./setup-complete.sh
 
 # Then start the backend
 cd InstiLibreChat
