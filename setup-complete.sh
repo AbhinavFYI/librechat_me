@@ -46,7 +46,9 @@ info "Cleaning previous installs/builds..."
 rm -rf node_modules
 rm -rf packages/*/node_modules
 rm -rf packages/*/dist
+rm -rf client/node_modules
 rm -rf client/dist
+rm -rf api/node_modules
 rm -rf api/dist
 success "Clean slate ready"
 echo
@@ -58,13 +60,45 @@ npm install --no-audit --legacy-peer-deps
 success "Dependencies installed"
 echo
 
-# ---------- Verify API Dependencies ----------
-info "Verifying @librechat/api dependencies..."
-# In npm workspaces, dependencies are hoisted to root, but we verify they exist
+# ---------- Verify Dependencies ----------
+info "Verifying dependencies for all workspaces..."
+
+# Verify API package build dependencies
 if [ -d "node_modules/@rollup" ] && [ -d "node_modules/rollup" ]; then
   success "API build dependencies verified (hoisted to root)"
 else
-  warn "Some API dependencies may be missing, but npm workspaces should handle this"
+  warn "Some API build dependencies may be missing"
+fi
+
+# Verify backend (api workspace) dependencies
+info "Verifying backend (api) dependencies..."
+BACKEND_DEPS=(
+  "express"
+  "mongoose"
+  "passport"
+  "cors"
+  "dotenv"
+  "@librechat/api"
+  "@librechat/data-schemas"
+  "librechat-data-provider"
+)
+
+MISSING_DEPS=()
+for dep in "${BACKEND_DEPS[@]}"; do
+  # Check if dependency exists in node_modules (workspace dependencies are hoisted)
+  if [ ! -d "node_modules/$dep" ] && [ ! -f "api/node_modules/$dep/package.json" ] 2>/dev/null; then
+    MISSING_DEPS+=("$dep")
+  fi
+done
+
+if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
+  warn "Some backend dependencies may be missing: ${MISSING_DEPS[*]}"
+  info "Installing backend dependencies explicitly..."
+  cd api
+  npm install --no-audit --legacy-peer-deps || warn "Backend dependency installation had issues"
+  cd "$LIBRECHAT_DIR"
+else
+  success "Backend dependencies verified"
 fi
 echo
 
@@ -150,6 +184,24 @@ info "Verifying runtime prerequisites"
 [ -f api/server/index.js ] \
   && success "api/server/index.js found" \
   || error "api/server/index.js missing"
+
+# Verify critical backend dependencies are available
+info "Verifying critical backend dependencies..."
+CRITICAL_BACKEND_DEPS=(
+  "express"
+  "mongoose"
+  "@librechat/api"
+  "@librechat/data-schemas"
+  "librechat-data-provider"
+)
+
+for dep in "${CRITICAL_BACKEND_DEPS[@]}"; do
+  if [ -d "node_modules/$dep" ] || [ -f "api/node_modules/$dep/package.json" ] 2>/dev/null; then
+    success "  ✓ $dep"
+  else
+    error "  ✗ $dep missing - backend may not start"
+  fi
+done
 
 [ -f .env ] \
   && success ".env file found" \
