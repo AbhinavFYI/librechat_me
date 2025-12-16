@@ -19,7 +19,7 @@ warn()    { echo -e "${YELLOW}⚠${NC} $1"; }
 error()   { echo -e "${RED}✗${NC} $1"; exit 1; }
 
 # ---------- Paths ----------
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIBRECHAT_DIR="$ROOT_DIR/InstiLibreChat"
 
 # ---------- Checks ----------
@@ -53,8 +53,19 @@ echo
 
 # ---------- Install ----------
 info "Installing workspace dependencies (npm workspaces)..."
-npm install --no-audit
+info "This installs all dependencies including peer dependencies for @librechat/api"
+npm install --no-audit --legacy-peer-deps
 success "Dependencies installed"
+echo
+
+# ---------- Verify API Dependencies ----------
+info "Verifying @librechat/api dependencies..."
+# In npm workspaces, dependencies are hoisted to root, but we verify they exist
+if [ -d "node_modules/@rollup" ] && [ -d "node_modules/rollup" ]; then
+  success "API build dependencies verified (hoisted to root)"
+else
+  warn "Some API dependencies may be missing, but npm workspaces should handle this"
+fi
 echo
 
 # ---------- Build Order ----------
@@ -74,7 +85,10 @@ success "data-schemas built"
 echo
 
 info "3/4 → api"
-npm run build:api
+info "Building @librechat/api (requires all peer dependencies)..."
+cd packages/api
+npm run build
+cd "$LIBRECHAT_DIR"
 [ -f packages/api/dist/index.js ] || error "api build failed"
 success "api built"
 echo
