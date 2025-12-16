@@ -157,13 +157,36 @@ clean_builds() {
 install_dependencies() {
     cd "$LIBRECHAT_DIR"
     
-    substep "Installing workspace dependencies (this may take several minutes)..."
+    # Check and install rimraf globally if needed (fixes clean errors in data-schemas)
+    substep "Checking for rimraf (required for package builds)..."
+    if ! command -v rimraf >/dev/null 2>&1; then
+        info "rimraf not found. Installing globally..."
+        npm install -g rimraf --no-audit || warn "Failed to install rimraf globally (may cause build issues)"
+    else
+        success "rimraf found"
+    fi
+    
+    substep "Installing root workspace dependencies (this may take several minutes)..."
     info "Using npm workspaces to install all dependencies"
     
     if npm install --no-audit --legacy-peer-deps; then
-        success "Dependencies installed successfully"
+        success "Root dependencies installed successfully"
     else
-        error "Failed to install dependencies"
+        error "Failed to install root dependencies"
+    fi
+    
+    # Install dependencies in client directory explicitly
+    substep "Installing client workspace dependencies..."
+    if [ -d "client" ]; then
+        cd client
+        if npm install --no-audit --legacy-peer-deps; then
+            success "Client dependencies installed"
+        else
+            warn "Client dependency installation had issues (continuing anyway)"
+        fi
+        cd "$LIBRECHAT_DIR"
+    else
+        warn "client directory not found"
     fi
     
     # Verify critical dependencies
@@ -449,14 +472,6 @@ verify_installation() {
         fi
     done
     
-    # Check .env file
-    if [ -f ".env" ]; then
-        success ".env file found"
-    else
-        warn ".env file not found (required for backend)"
-        info "Create .env file before running the backend"
-    fi
-    
     echo ""
 }
 
@@ -476,9 +491,10 @@ show_summary() {
     echo -e "${BOLD}Next Steps:${NC}"
     echo ""
     echo -e "${CYAN}1. Configure Environment:${NC}"
-    echo "   • Create a .env file in InstiLibreChat directory"
+    echo "   • Create a .env file in InstiLibreChat directory, OR"
+    echo "   • Configure librechat.yaml file"
+    echo "   • Set required variables: MONGO_URI, API keys, etc."
     echo "   • Copy from .env.example if available"
-    echo "   • Set required variables (MongoDB URI, API keys, etc.)"
     echo ""
     echo -e "${CYAN}2. Start MongoDB:${NC}"
     echo "   • Ensure MongoDB is running on your system"
@@ -487,7 +503,7 @@ show_summary() {
     echo -e "${CYAN}3. Run the Backend:${NC}"
     echo "   ${BOLD}cd InstiLibreChat${NC}"
     echo "   ${BOLD}npm run backend${NC}        # Production mode"
-    echo "   ${BOLD}npm run backend:dev${NC}    # Development mode (with auto-reload)"
+    echo "   ${BOLD}npm run backend:dev${NC}    # Development mode (with auto-reload - recommended)"
     echo ""
     echo -e "${CYAN}4. Run the Frontend:${NC}"
     if [ "$FRONTEND_BUILT" = "true" ]; then
