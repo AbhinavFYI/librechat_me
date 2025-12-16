@@ -297,15 +297,55 @@ if [ ! -d "packages/data-schemas/dist" ]; then
 fi
 echo ""
 
-# Build API package
-if ! run_command "npm run build:api" "Building @librechat/api"; then
-    print_error "Failed to build @librechat/api"
+# Build API package (depends on data-provider and data-schemas)
+print_info "Building @librechat/api (depends on data-provider and data-schemas)..."
+print_info "Verifying dependencies are available..."
+
+# Verify dependencies exist before building
+if [ ! -d "packages/data-provider/dist" ]; then
+    print_error "data-provider/dist not found! API build requires data-provider to be built first."
     exit 1
 fi
 
+if [ ! -d "packages/data-schemas/dist" ]; then
+    print_error "data-schemas/dist not found! API build requires data-schemas to be built first."
+    exit 1
+fi
+
+print_success "Dependencies verified"
+echo ""
+
+if ! run_command "npm run build:api" "Building @librechat/api"; then
+    print_error "Failed to build @librechat/api"
+    print_info "Common issues:"
+    print_info "1. Missing dependencies - make sure data-provider and data-schemas built successfully"
+    print_info "2. TypeScript errors - check the error output above"
+    print_info "3. Missing node_modules - try: cd packages/api && npm install"
+    print_info "4. Rollup configuration issues - check packages/api/rollup.config.js"
+    echo ""
+    print_info "Try building manually:"
+    print_info "  cd packages/api"
+    print_info "  npm run build"
+    exit 1
+fi
+
+# Verify API was built correctly
 if [ ! -f "api/server/index.js" ]; then
     print_error "api/server/index.js not found after build"
-    exit 1
+    print_info "The API package may have built, but api/server/index.js was not created."
+    print_info "This file is created by the root build process, not the packages/api build."
+    print_info "Checking if packages/api/dist exists..."
+    
+    if [ -d "packages/api/dist" ]; then
+        print_success "packages/api/dist exists - API package built successfully"
+        print_warning "api/server/index.js may be created by a different build step"
+        print_info "The API package itself is built, but the server index may need additional setup"
+    else
+        print_error "packages/api/dist not found - API package build failed"
+        exit 1
+    fi
+else
+    print_success "api/server/index.js found - API build successful"
 fi
 echo ""
 
