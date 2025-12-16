@@ -38,6 +38,12 @@ This will install dependencies for the root workspace and all sub-packages.
 
 **IMPORTANT:** After cloning, you must build the required packages before running the application. The build artifacts are not included in the repository (as they should be built locally).
 
+The following packages need to be built:
+- `@librechat/data-schemas` - Mongoose schemas and models
+- `librechat-data-provider` - Data services for LibreChat apps
+- `@librechat/api` - API package (creates `api/server/index.js`)
+- `@librechat/client` - React components package
+
 Build all required packages in order:
 
 ```bash
@@ -48,7 +54,7 @@ npm run build:api
 npm run build:client-package
 ```
 
-Or build all packages at once:
+Or build all packages at once (recommended):
 
 ```bash
 npm run build:packages
@@ -108,6 +114,17 @@ If you see errors about missing data-schemas:
 cd InstiLibreChat
 npm run build:data-schemas
 ```
+
+### Missing @librechat/client package
+
+If you see errors about missing `@librechat/client`:
+
+```bash
+cd InstiLibreChat
+npm run build:client-package
+```
+
+This builds the `packages/client` package which creates the `dist/` directory needed by the client application.
 
 ### Missing api/server/index.js
 
