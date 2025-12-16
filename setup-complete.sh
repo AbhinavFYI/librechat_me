@@ -321,7 +321,7 @@ if ! run_command "npm run build:api" "Building @librechat/api"; then
     print_info "1. Missing dependencies - make sure data-provider and data-schemas built successfully"
     print_info "2. TypeScript errors - check the error output above"
     print_info "3. Missing node_modules - try: cd packages/api && npm install"
-    print_info "4. Rollup configuration issues - check packages/api/rollup.config.js"
+    print_info "4. Memory module issues - check if packages/api/src/memory directory has files"
     echo ""
     print_info "Try building manually:"
     print_info "  cd packages/api"
@@ -338,6 +338,29 @@ if [ ! -f "api/server/index.js" ]; then
     
     if [ -d "packages/api/dist" ]; then
         print_success "packages/api/dist exists - API package built successfully"
+        
+        # Check if memory module was built
+        if [ -d "packages/api/dist/memory" ] && [ -f "packages/api/dist/memory/index.js" ]; then
+            print_success "packages/api/dist/memory exists - memory module built"
+        else
+            print_warning "packages/api/dist/memory not found - memory module may not have been built"
+            print_info "Checking source files..."
+            
+            if [ -d "packages/api/src/memory" ] && [ -f "packages/api/src/memory/index.ts" ]; then
+                print_info "Source memory module exists at packages/api/src/memory/"
+                print_warning "Memory module exists in source but not in dist - build may have issues"
+                print_info "This could be due to:"
+                print_info "1. TypeScript path alias resolution issue (~/memory/config)"
+                print_info "2. Rollup not including the memory module in the bundle"
+                print_info "3. The memory module not being properly exported"
+                print_info ""
+                print_info "The build may still work, but memory-related features might fail at runtime"
+            else
+                print_error "Source memory module not found at packages/api/src/memory/"
+                print_info "The memory module should exist in the source code"
+            fi
+        fi
+        
         print_warning "api/server/index.js may be created by a different build step"
         print_info "The API package itself is built, but the server index may need additional setup"
     else
@@ -346,6 +369,12 @@ if [ ! -f "api/server/index.js" ]; then
     fi
 else
     print_success "api/server/index.js found - API build successful"
+    
+    # Still check memory module even if api/server/index.js exists
+    if [ ! -d "packages/api/dist/memory" ] || [ ! -f "packages/api/dist/memory/index.js" ]; then
+        print_warning "Memory module not found in dist, but api/server/index.js exists"
+        print_info "This might cause runtime errors when using memory features"
+    fi
 fi
 echo ""
 
