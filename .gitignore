@@ -1,8 +1,14 @@
 # Large files
 *.pdf
+# Binary executables
+main
+api
+proxy
+*.exe
 # Upload directories
 saas-api/cmd/api/uploads/
 saas-api/cmd/proxy/uploads/
+InstiLibreChat/uploads/
 # Environment files
 .env
 .env.local
@@ -17,4 +23,7 @@ build/
 *.swp
 *.swo
 *~
+# Lock files (optional - you may want to keep these)
+# package-lock.json
+# bun.lockb
 
