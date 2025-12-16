@@ -73,8 +73,12 @@ main() {
     step "Step 7: Verifying installation"
     verify_installation
     
-    # Step 8: Final summary
-    step "Step 8: Setup complete!"
+    # Step 8: Final setup for running frontend and backend
+    step "Step 8: Final setup for running frontend and backend"
+    final_setup
+    
+    # Step 9: Final summary
+    step "Step 9: Setup complete!"
     show_summary
 }
 
@@ -634,6 +638,45 @@ verify_installation() {
             warn "Dependency may be missing: $dep"
         fi
     done
+    
+    echo ""
+}
+
+final_setup() {
+    cd "$LIBRECHAT_DIR"
+    
+    substep "Final setup: Ensuring frontend is ready to run..."
+    
+    # Ensure client has lucide-react and vite installed, then build
+    if [ -d "client" ]; then
+        cd client
+        
+        # Install lucide-react
+        info "Installing lucide-react..."
+        npm install lucide-react@^0.394.0 --no-audit --legacy-peer-deps || warn "Failed to install lucide-react"
+        
+        # Install vite (last step as requested)
+        info "Installing vite (last step)..."
+        npm install vite --no-audit --legacy-peer-deps || warn "Failed to install vite"
+        
+        # Build the frontend
+        substep "Building frontend (final build step)..."
+        set +e
+        BUILD_OUTPUT=$(npm run build 2>&1)
+        BUILD_STATUS=$?
+        set -e
+        
+        if [ $BUILD_STATUS -eq 0 ] && [ -d "dist" ]; then
+            success "Frontend built successfully"
+        else
+            warn "Frontend build had issues, but development server will still work"
+        fi
+        
+        cd "$LIBRECHAT_DIR"
+        success "Frontend is ready - you can now run 'npm run frontend:dev'"
+    else
+        warn "client directory not found"
+    fi
     
     echo ""
 }
