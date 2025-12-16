@@ -295,6 +295,46 @@ build_packages() {
         error "data-schemas must be built before api"
     fi
     
+    # Check for critical source files (memory module)
+    substep "Verifying API source files..."
+    if [ ! -f "packages/api/src/memory/config.ts" ] || [ ! -f "packages/api/src/memory/index.ts" ]; then
+        error "Critical API source files are missing!"
+        echo ""
+        warn "The memory module files are required for the API build:"
+        echo "  • packages/api/src/memory/config.ts"
+        echo "  • packages/api/src/memory/index.ts"
+        echo ""
+        info "These files may be missing because they're ignored by .gitignore"
+        info "To fix this issue:"
+        substep "1. Check if files exist but are ignored:"
+        echo "     ls -la InstiLibreChat/packages/api/src/memory/"
+        substep "2. If files exist, force add them to git:"
+        echo "     git add -f InstiLibreChat/packages/api/src/memory/"
+        echo "     git commit -m 'Add memory module files'"
+        substep "3. If files don't exist, check the original repository or create them:"
+        echo "     The memory module should export loadMemoryConfig and isMemoryEnabled"
+        echo ""
+        error "Cannot proceed without memory module files"
+    else
+        success "Memory module source files found"
+    fi
+    
+    # Check if API package dependencies are installed
+    substep "Verifying API package dependencies..."
+    if [ ! -d "packages/api/node_modules" ] && [ ! -f "packages/api/node_modules/rollup/package.json" ]; then
+        warn "API package dependencies may be missing"
+        info "Installing dependencies in packages/api..."
+        cd packages/api
+        npm install --no-audit --legacy-peer-deps || warn "API dependency installation had issues"
+        cd "$LIBRECHAT_DIR"
+    fi
+    
+    # Check for critical build tools (rollup should be in root node_modules via workspaces)
+    if [ ! -f "node_modules/.bin/rollup" ] && [ ! -f "packages/api/node_modules/.bin/rollup" ] && ! command -v rollup >/dev/null 2>&1; then
+        warn "rollup not found - this should be installed via root npm install"
+        info "If build fails, rollup may need to be installed in root or API package"
+    fi
+    
     BUILD_OUTPUT=$(npm run build:api 2>&1)
     BUILD_STATUS=$?
     
@@ -304,12 +344,56 @@ build_packages() {
             warn "API build completed with warnings (TypeScript type errors)"
             warn "These are usually non-fatal - checking if dist/index.js exists..."
         else
-            set -e
-            error "api build failed"
-            echo "$BUILD_OUTPUT" | tail -30
+            # Show the error output
+            echo ""
+            error "API build failed. Error output:"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "$BUILD_OUTPUT" | tail -40
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            
+            # Provide troubleshooting steps
+            info "Troubleshooting steps:"
+            substep "1. Try installing dependencies in the API package:"
+            echo "     cd InstiLibreChat/packages/api"
+            echo "     npm install --legacy-peer-deps"
+            echo "     cd ../.."
+            echo "     npm run build:api"
+            echo ""
+            substep "2. Check if rollup and plugins are installed:"
+            echo "     cd InstiLibreChat/packages/api"
+            echo "     npm install rollup @rollup/plugin-typescript @rollup/plugin-node-resolve --legacy-peer-deps"
+            echo "     cd ../.."
+            echo ""
+            substep "3. Verify data-provider and data-schemas are built:"
+            echo "     ls -la InstiLibreChat/packages/data-provider/dist"
+            echo "     ls -la InstiLibreChat/packages/data-schemas/dist"
+            echo ""
+            
+            # Try to auto-fix by installing dependencies
+            warn "Attempting to auto-fix by installing API package dependencies..."
+            cd packages/api
+            npm install --no-audit --legacy-peer-deps
+            cd "$LIBRECHAT_DIR"
+            
+            info "Retrying API build..."
+            BUILD_OUTPUT=$(npm run build:api 2>&1)
+            BUILD_STATUS=$?
+            
+            if [ $BUILD_STATUS -ne 0 ]; then
+                if echo "$BUILD_OUTPUT" | grep -q "created dist"; then
+                    warn "Build completed with errors but dist was created"
+                else
+                    set -e
+                    error "API build failed after retry. Please check the error messages above."
+                fi
+            else
+                success "API build succeeded after installing dependencies"
+            fi
         fi
     fi
     
+    # Verify the build output exists
     if [ -f "packages/api/dist/index.js" ]; then
         # Verify memory module is included
         if grep -q "loadMemoryConfig\|isMemoryEnabled" packages/api/dist/index.js 2>/dev/null; then
