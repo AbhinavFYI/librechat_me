@@ -1,14 +1,9 @@
 # Large files
 *.pdf
-# Binary executables
-main
-api
-proxy
+
 *.exe
 # Upload directories
-saas-api/cmd/api/uploads/
-saas-api/cmd/proxy/uploads/
-InstiLibreChat/uploads/
+
 # Environment files
 .env
 .env.local
