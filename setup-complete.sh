@@ -1,260 +1,401 @@
 #!/usr/bin/env bash
 
 # ==========================================
-# LibreChat First-Time Bootstrap Script
+# LibreChat Complete Setup & Build Script
+# ==========================================
+# This script handles the complete setup from a fresh clone:
+# 1. Prerequisites checking
+# 2. Dependency installation
+# 3. Package builds in correct order
+# 4. Verification
+# 5. Ready to run frontend and backend
 # ==========================================
 
 set -euo pipefail
 
-# ---------- Colors ----------
+# ---------- Colors & Output ----------
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
 NC='\033[0m'
 
 info()    { echo -e "${BLUE}ℹ${NC} $1"; }
 success() { echo -e "${GREEN}✓${NC} $1"; }
 warn()    { echo -e "${YELLOW}⚠${NC} $1"; }
 error()   { echo -e "${RED}✗${NC} $1"; exit 1; }
+step()    { echo -e "\n${CYAN}${BOLD}▶${NC} ${BOLD}$1${NC}"; }
+substep() { echo -e "  ${BLUE}→${NC} $1"; }
 
 # ---------- Paths ----------
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIBRECHAT_DIR="$ROOT_DIR/InstiLibreChat"
 
-# ---------- Checks ----------
-info "LibreChat Bootstrap Script"
-info "Root: $LIBRECHAT_DIR"
-echo
+# ---------- Main Execution ----------
+main() {
+    echo -e "${BOLD}${CYAN}"
+    echo "╔════════════════════════════════════════════════════════════╗"
+    echo "║     LibreChat Complete Setup & Build Script              ║"
+    echo "╚════════════════════════════════════════════════════════════╝"
+    echo -e "${NC}"
+    
+    # Step 1: Verify project structure
+    step "Step 1: Verifying project structure"
+    verify_project_structure
+    
+    # Step 2: Check prerequisites
+    step "Step 2: Checking prerequisites"
+    check_prerequisites
+    
+    # Step 3: Clean previous builds
+    step "Step 3: Cleaning previous builds"
+    clean_builds
+    
+    # Step 4: Install dependencies
+    step "Step 4: Installing dependencies"
+    install_dependencies
+    
+    # Step 5: Build packages in order
+    step "Step 5: Building workspace packages"
+    build_packages
+    
+    # Step 6: Build frontend
+    step "Step 6: Building frontend application"
+    build_frontend
+    
+    # Step 7: Verify installation
+    step "Step 7: Verifying installation"
+    verify_installation
+    
+    # Step 8: Final summary
+    step "Step 8: Setup complete!"
+    show_summary
+}
 
-[ -d "$LIBRECHAT_DIR" ] || error "InstiLibreChat directory not found"
+# ---------- Functions ----------
 
-# Check for Node.js
-if ! command -v node >/dev/null; then
-  error "Node.js is not installed"
-  echo ""
-  info "Please install Node.js (v18 or higher recommended)"
-  info ""
-  info "Installation options:"
-  info "  • macOS (using Homebrew): brew install node"
-  info "  • Linux (using nvm): curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash"
-  info "  • Windows: Download from https://nodejs.org/"
-  info "  • Or use nvm: https://github.com/nvm-sh/nvm"
-  info ""
-  info "After installing Node.js, run this script again."
-  exit 1
-fi
+verify_project_structure() {
+    if [ ! -d "$LIBRECHAT_DIR" ]; then
+        error "InstiLibreChat directory not found at: $LIBRECHAT_DIR"
+    fi
+    
+    if [ ! -f "$LIBRECHAT_DIR/package.json" ]; then
+        error "package.json not found in InstiLibreChat directory"
+    fi
+    
+    success "Project structure verified"
+    substep "Root directory: $ROOT_DIR"
+    substep "LibreChat directory: $LIBRECHAT_DIR"
+}
 
-# Check for npm
-if ! command -v npm >/dev/null; then
-  error "npm is not installed"
-  echo ""
-  info "npm should come with Node.js. If you see this error,"
-  info "your Node.js installation may be incomplete."
-  info "Please reinstall Node.js from https://nodejs.org/"
-  exit 1
-fi
+check_prerequisites() {
+    # Check Node.js
+    if ! command -v node >/dev/null 2>&1; then
+        error "Node.js is not installed"
+        echo ""
+        info "Please install Node.js v18 or higher:"
+        info "  • macOS (Homebrew): brew install node"
+        info "  • macOS (nvm): curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash"
+        info "  • Ubuntu/Debian: sudo apt update && sudo apt install nodejs npm"
+        info "  • Windows: Download from https://nodejs.org/"
+        info "  • Or visit: https://nodejs.org/"
+        exit 1
+    fi
+    
+    NODE_VERSION=$(node -v)
+    NPM_VERSION=$(npm -v)
+    NODE_MAJOR=$(echo "$NODE_VERSION" | sed 's/v\([0-9]*\).*/\1/')
+    
+    if [ "$NODE_MAJOR" -lt 18 ]; then
+        warn "Node.js version $NODE_VERSION detected (v18+ recommended)"
+        echo ""
+        read -p "Continue anyway? (y/N) " -n 1 -r
+        echo ""
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            info "Please upgrade Node.js to v18 or higher"
+            exit 1
+        fi
+    else
+        success "Node.js $NODE_VERSION found"
+    fi
+    
+    # Check npm
+    if ! command -v npm >/dev/null 2>&1; then
+        error "npm is not installed (should come with Node.js)"
+    fi
+    success "npm $NPM_VERSION found"
+    
+    # Check MongoDB (optional but recommended)
+    if command -v mongod >/dev/null 2>&1; then
+        success "MongoDB found (mongod command available)"
+    else
+        warn "MongoDB not found in PATH (backend requires MongoDB)"
+        info "Install MongoDB: https://www.mongodb.com/try/download/community"
+    fi
+    
+    echo ""
+}
 
-# Check Node.js version
-NODE_VERSION=$(node -v)
-NPM_VERSION=$(npm -v)
+clean_builds() {
+    cd "$LIBRECHAT_DIR"
+    
+    substep "Removing node_modules directories..."
+    rm -rf node_modules 2>/dev/null || true
+    rm -rf packages/*/node_modules 2>/dev/null || true
+    rm -rf packages/*/dist 2>/dev/null || true
+    rm -rf client/node_modules 2>/dev/null || true
+    rm -rf client/dist 2>/dev/null || true
+    rm -rf api/node_modules 2>/dev/null || true
+    rm -rf api/dist 2>/dev/null || true
+    
+    success "Previous builds cleaned"
+    echo ""
+}
 
-# Extract major version number
-NODE_MAJOR_VERSION=$(echo "$NODE_VERSION" | sed 's/v\([0-9]*\).*/\1/')
+install_dependencies() {
+    cd "$LIBRECHAT_DIR"
+    
+    substep "Installing workspace dependencies (this may take several minutes)..."
+    info "Using npm workspaces to install all dependencies"
+    
+    if npm install --no-audit --legacy-peer-deps; then
+        success "Dependencies installed successfully"
+    else
+        error "Failed to install dependencies"
+    fi
+    
+    # Verify critical dependencies
+    substep "Verifying critical dependencies..."
+    CRITICAL_DEPS=(
+        "express"
+        "mongoose"
+        "@librechat/api"
+        "@librechat/data-schemas"
+        "librechat-data-provider"
+        "@librechat/client"
+    )
+    
+    MISSING=()
+    for dep in "${CRITICAL_DEPS[@]}"; do
+        if [ ! -d "node_modules/$dep" ] && [ ! -f "api/node_modules/$dep/package.json" ] 2>/dev/null; then
+            MISSING+=("$dep")
+        fi
+    done
+    
+    if [ ${#MISSING[@]} -gt 0 ]; then
+        warn "Some dependencies may be missing: ${MISSING[*]}"
+        substep "Attempting to install backend dependencies explicitly..."
+        cd api
+        npm install --no-audit --legacy-peer-deps || warn "Backend dependency installation had issues"
+        cd "$LIBRECHAT_DIR"
+    else
+        success "All critical dependencies verified"
+    fi
+    
+    echo ""
+}
 
-if [ "$NODE_MAJOR_VERSION" -lt 18 ]; then
-  warn "Node.js version $NODE_VERSION detected"
-  warn "Node.js v18 or higher is recommended"
-  warn "You may encounter issues with older versions"
-  echo ""
-  read -p "Continue anyway? (y/N) " -n 1 -r
-  echo ""
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    info "Please upgrade Node.js to v18 or higher and run this script again"
-    exit 1
-  fi
-fi
+build_packages() {
+    cd "$LIBRECHAT_DIR"
+    
+    # Build order is critical due to dependencies:
+    # 1. data-provider (no dependencies)
+    # 2. data-schemas (depends on data-provider)
+    # 3. api (depends on data-provider and data-schemas)
+    # 4. client package (depends on data-provider)
+    
+    # 1. Build data-provider
+    substep "Building librechat-data-provider (1/4)..."
+    if npm run build:data-provider; then
+        if [ -d "packages/data-provider/dist" ]; then
+            success "data-provider built successfully"
+        else
+            error "data-provider build failed - dist directory not found"
+        fi
+    else
+        error "data-provider build failed"
+    fi
+    
+    # 2. Build data-schemas
+    substep "Building @librechat/data-schemas (2/4)..."
+    if npm run build:data-schemas; then
+        if [ -d "packages/data-schemas/dist" ]; then
+            success "data-schemas built successfully"
+        else
+            error "data-schemas build failed - dist directory not found"
+        fi
+    else
+        error "data-schemas build failed"
+    fi
+    
+    # 3. Build api package
+    substep "Building @librechat/api (3/4)..."
+    info "This package requires data-provider and data-schemas to be built first"
+    
+    # Verify dependencies are built
+    if [ ! -d "packages/data-provider/dist" ]; then
+        error "data-provider must be built before api"
+    fi
+    if [ ! -d "packages/data-schemas/dist" ]; then
+        error "data-schemas must be built before api"
+    fi
+    
+    if npm run build:api; then
+        if [ -f "packages/api/dist/index.js" ]; then
+            # Verify memory module is included
+            if grep -q "loadMemoryConfig\|isMemoryEnabled" packages/api/dist/index.js 2>/dev/null; then
+                success "api built successfully (memory module verified)"
+            else
+                warn "api built but memory module exports not found"
+                warn "This may cause issues with backend startup"
+            fi
+        else
+            error "api build failed - dist/index.js not found"
+        fi
+    else
+        error "api build failed"
+    fi
+    
+    # 4. Build client package
+    substep "Building @librechat/client package (4/4)..."
+    if npm run build:client-package; then
+        if [ -d "packages/client/dist" ]; then
+            success "client package built successfully"
+        else
+            error "client package build failed - dist directory not found"
+        fi
+    else
+        error "client package build failed"
+    fi
+    
+    echo ""
+}
 
-success "Node.js $NODE_VERSION"
-success "npm $NPM_VERSION"
-echo
+build_frontend() {
+    cd "$LIBRECHAT_DIR"
+    
+    substep "Building frontend application (Vite + React)..."
+    info "This requires all packages to be built first"
+    
+    # Verify packages are built
+    if [ ! -d "packages/data-provider/dist" ]; then
+        error "data-provider must be built before frontend"
+    fi
+    if [ ! -d "packages/client/dist" ]; then
+        error "client package must be built before frontend"
+    fi
+    
+    if npm run build:client; then
+        if [ -d "client/dist" ]; then
+            success "Frontend built successfully"
+        else
+            warn "Frontend build completed but dist directory not found"
+            warn "You can still run the development server"
+        fi
+    else
+        warn "Frontend build failed (you can still run development server)"
+        info "To run in development mode: npm run frontend:dev"
+    fi
+    
+    echo ""
+}
 
-cd "$LIBRECHAT_DIR"
+verify_installation() {
+    cd "$LIBRECHAT_DIR"
+    
+    substep "Verifying critical files and directories..."
+    
+    # Check backend
+    if [ -f "api/server/index.js" ]; then
+        success "Backend entry point found: api/server/index.js"
+    else
+        error "Backend entry point missing: api/server/index.js"
+    fi
+    
+    # Check built packages
+    PACKAGES=(
+        "packages/data-provider/dist"
+        "packages/data-schemas/dist"
+        "packages/api/dist/index.js"
+        "packages/client/dist"
+    )
+    
+    for pkg in "${PACKAGES[@]}"; do
+        if [ -e "$pkg" ]; then
+            success "Package verified: $pkg"
+        else
+            error "Package missing: $pkg"
+        fi
+    done
+    
+    # Check critical dependencies
+    substep "Verifying runtime dependencies..."
+    RUNTIME_DEPS=(
+        "express"
+        "mongoose"
+        "@librechat/api"
+        "@librechat/data-schemas"
+        "librechat-data-provider"
+    )
+    
+    for dep in "${RUNTIME_DEPS[@]}"; do
+        if [ -d "node_modules/$dep" ] || [ -f "api/node_modules/$dep/package.json" ] 2>/dev/null; then
+            success "Dependency available: $dep"
+        else
+            warn "Dependency may be missing: $dep"
+        fi
+    done
+    
+    # Check .env file
+    if [ -f ".env" ]; then
+        success ".env file found"
+    else
+        warn ".env file not found (required for backend)"
+        info "Create .env file before running the backend"
+    fi
+    
+    echo ""
+}
 
-# ---------- Clean State ----------
-info "Cleaning previous installs/builds..."
-rm -rf node_modules
-rm -rf packages/*/node_modules
-rm -rf packages/*/dist
-rm -rf client/node_modules
-rm -rf client/dist
-rm -rf api/node_modules
-rm -rf api/dist
-success "Clean slate ready"
-echo
+show_summary() {
+    echo -e "${GREEN}${BOLD}"
+    echo "╔════════════════════════════════════════════════════════════╗"
+    echo "║              Setup Complete! 🎉                            ║"
+    echo "╚════════════════════════════════════════════════════════════╝"
+    echo -e "${NC}"
+    
+    echo -e "${BOLD}Next Steps:${NC}"
+    echo ""
+    echo -e "${CYAN}1. Configure Environment:${NC}"
+    echo "   • Create a .env file in InstiLibreChat directory"
+    echo "   • Copy from .env.example if available"
+    echo "   • Set required variables (MongoDB URI, API keys, etc.)"
+    echo ""
+    echo -e "${CYAN}2. Start MongoDB:${NC}"
+    echo "   • Ensure MongoDB is running on your system"
+    echo "   • Default connection: mongodb://localhost:27017"
+    echo ""
+    echo -e "${CYAN}3. Run the Backend:${NC}"
+    echo "   ${BOLD}cd InstiLibreChat${NC}"
+    echo "   ${BOLD}npm run backend${NC}        # Production mode"
+    echo "   ${BOLD}npm run backend:dev${NC}    # Development mode (with auto-reload)"
+    echo ""
+    echo -e "${CYAN}4. Run the Frontend:${NC}"
+    echo "   ${BOLD}npm run frontend:dev${NC}   # Development server (recommended)"
+    echo "   ${BOLD}npm run build:client${NC}   # Build for production"
+    echo ""
+    echo -e "${CYAN}5. Access the Application:${NC}"
+    echo "   • Frontend: http://localhost:3080"
+    echo "   • Backend API: http://localhost:3080/api"
+    echo ""
+    echo -e "${YELLOW}Note:${NC} Run backend and frontend in separate terminal windows"
+    echo ""
+}
 
-# ---------- Install ----------
-info "Installing workspace dependencies (npm workspaces)..."
-info "This installs all dependencies including peer dependencies for @librechat/api"
-npm install --no-audit --legacy-peer-deps
-success "Dependencies installed"
-echo
+# ---------- Error Handling ----------
+trap 'error "Script failed at line $LINENO"' ERR
 
-# ---------- Verify Dependencies ----------
-info "Verifying dependencies for all workspaces..."
-
-# Verify API package build dependencies
-if [ -d "node_modules/@rollup" ] && [ -d "node_modules/rollup" ]; then
-  success "API build dependencies verified (hoisted to root)"
-else
-  warn "Some API build dependencies may be missing"
-fi
-
-# Verify backend (api workspace) dependencies
-info "Verifying backend (api) dependencies..."
-BACKEND_DEPS=(
-  "express"
-  "mongoose"
-  "passport"
-  "cors"
-  "dotenv"
-  "@librechat/api"
-  "@librechat/data-schemas"
-  "librechat-data-provider"
-)
-
-MISSING_DEPS=()
-for dep in "${BACKEND_DEPS[@]}"; do
-  # Check if dependency exists in node_modules (workspace dependencies are hoisted)
-  if [ ! -d "node_modules/$dep" ] && [ ! -f "api/node_modules/$dep/package.json" ] 2>/dev/null; then
-    MISSING_DEPS+=("$dep")
-  fi
-done
-
-if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
-  warn "Some backend dependencies may be missing: ${MISSING_DEPS[*]}"
-  info "Installing backend dependencies explicitly..."
-  cd api
-  npm install --no-audit --legacy-peer-deps || warn "Backend dependency installation had issues"
-  cd "$LIBRECHAT_DIR"
-else
-  success "Backend dependencies verified"
-fi
-echo
-
-# ---------- Build Order ----------
-info "Building workspace packages (correct order)"
-echo
-
-info "1/4 → data-provider"
-npm run build:data-provider
-[ -d packages/data-provider/dist ] || error "data-provider build failed"
-success "data-provider built"
-echo
-
-info "2/4 → data-schemas"
-npm run build:data-schemas
-[ -d packages/data-schemas/dist ] || error "data-schemas build failed"
-success "data-schemas built"
-echo
-
-info "3/4 → api"
-info "Building @librechat/api (requires all peer dependencies)..."
-
-# Ensure data-provider is available (peer dependency)
-if [ ! -d "packages/data-provider/dist" ]; then
-  error "data-provider must be built before api. Run: npm run build:data-provider"
-fi
-
-# Ensure data-schemas is available (peer dependency)
-if [ ! -d "packages/data-schemas/dist" ]; then
-  error "data-schemas must be built before api. Run: npm run build:data-schemas"
-fi
-
-# Verify TypeScript config has path aliases configured
-if ! grep -q '"~/\*"' packages/api/tsconfig.build.json 2>/dev/null; then
-  warn "tsconfig.build.json may be missing path alias configuration"
-  warn "This could cause memory module build issues"
-fi
-
-# Build API package
-cd packages/api
-npm run build
-cd "$LIBRECHAT_DIR"
-
-# Verify API build succeeded
-[ -f packages/api/dist/index.js ] || error "api build failed - dist/index.js not found"
-
-# Verify memory module is included in the build (critical for backend)
-if grep -q "loadMemoryConfig\|isMemoryEnabled" packages/api/dist/index.js 2>/dev/null; then
-  success "api built (memory module verified)"
-else
-  error "api build failed - memory module exports not found in bundle"
-  info "The memory module is required for the backend to start"
-  info "This usually means the path alias ~/memory/config is not resolving correctly"
-  info "Check rollup.config.js alias plugin configuration"
-  info "Try rebuilding: cd packages/api && npm run build"
-  exit 1
-fi
-echo
-
-info "4/4 → client package"
-npm run build:client-package
-[ -d packages/client/dist ] || error "client package build failed"
-success "client package built"
-echo
-
-# ---------- Optional Frontend ----------
-info "Building frontend (optional, safe to fail)..."
-set +e
-npm run build:client
-FRONTEND_STATUS=$?
-set -e
-
-if [ $FRONTEND_STATUS -eq 0 ]; then
-  success "Frontend built"
-else
-  warn "Frontend build failed (can still run backend)"
-fi
-echo
-
-# ---------- Runtime Checks ----------
-info "Verifying runtime prerequisites"
-
-[ -f api/server/index.js ] \
-  && success "api/server/index.js found" \
-  || error "api/server/index.js missing"
-
-# Verify critical backend dependencies are available
-info "Verifying critical backend dependencies..."
-CRITICAL_BACKEND_DEPS=(
-  "express"
-  "mongoose"
-  "@librechat/api"
-  "@librechat/data-schemas"
-  "librechat-data-provider"
-)
-
-for dep in "${CRITICAL_BACKEND_DEPS[@]}"; do
-  if [ -d "node_modules/$dep" ] || [ -f "api/node_modules/$dep/package.json" ] 2>/dev/null; then
-    success "  ✓ $dep"
-  else
-    error "  ✗ $dep missing - backend may not start"
-  fi
-done
-
-[ -f .env ] \
-  && success ".env file found" \
-  || warn ".env missing (create before running backend)"
-
-echo
-
-# ---------- Summary ----------
-success "LibreChat bootstrap completed 🎉"
-echo
-info "Next steps:"
-info "1. Create .env (DO NOT COMMIT IT)"
-info "2. Ensure MongoDB is running"
-info "3. Run: npm run backend"
-info "4. Run: npm run frontend:dev"
-echo
+# ---------- Run Main Function ----------
+main "$@"
