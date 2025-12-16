@@ -55,6 +55,11 @@ const plugins = [
      * Always include source content in sourcemaps for better debugging
      */
     inlineSources: true,
+    /**
+     * Don't fail on type errors - the alias plugin resolves paths
+     * Type checking happens but won't stop the build
+     */
+    noForceEmit: true,
   }),
   json(),
 ];

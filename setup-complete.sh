@@ -97,6 +97,12 @@ if [ ! -d "packages/data-schemas/dist" ]; then
   error "data-schemas must be built before api. Run: npm run build:data-schemas"
 fi
 
+# Verify TypeScript config has path aliases configured
+if ! grep -q '"~/\*"' packages/api/tsconfig.build.json 2>/dev/null; then
+  warn "tsconfig.build.json may be missing path alias configuration"
+  warn "This could cause memory module build issues"
+fi
+
 # Build API package
 cd packages/api
 npm run build

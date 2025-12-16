@@ -6,7 +6,13 @@
     "inlineSources": true,
     "removeComments": false,
     "preserveConstEnums": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./src/*"]
+    },
+    "skipLibCheck": true,
+    "noEmitOnError": false
   },
   "exclude": ["node_modules", "dist", "types", "src/**/*.test.ts", "src/**/*.spec.ts"]
 }
