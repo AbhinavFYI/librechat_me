@@ -76,10 +76,22 @@ npm run frontend:dev
 
 ### 5. Configure Environment
 
-Copy the example environment file and configure it:
+Create a `.env` file in the `InstiLibreChat` directory with your configuration. 
+
+**Note:** There is no `.env.example` file in this repository. You'll need to create your own `.env` file based on your requirements. 
+
+For detailed environment variable configuration, refer to the [LibreChat Documentation](https://docs.librechat.ai) or check the original [LibreChat repository](https://github.com/danny-avila/LibreChat) for example configurations.
+
+Common environment variables include:
+- `MONGO_URI` - MongoDB connection string
+- `MEILI_HOST` - Meilisearch host URL
+- `OPENAI_API_KEY` - OpenAI API key (if using OpenAI)
+- `PORT` - Server port (default: 3080)
 
 ```bash
-cp .env.example .env
+# Create .env file in InstiLibreChat directory
+cd InstiLibreChat
+touch .env
 # Edit .env with your configuration
 ```
 
