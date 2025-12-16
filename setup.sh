@@ -106,21 +106,54 @@ echo ""
 
 # Step 2: Build required packages
 print_info "Step 2: Building required packages..."
-print_info "This includes:"
-print_info "  - @librechat/data-schemas"
-print_info "  - librechat-data-provider"
-print_info "  - @librechat/api"
-print_info "  - @librechat/client"
+print_info "Building all packages individually for first-time setup..."
 echo ""
 
-npm run build:packages
+# Build data-schemas
+print_info "Building @librechat/data-schemas..."
+npm run build:data-schemas
 if [ $? -eq 0 ]; then
-    print_success "All packages built successfully"
+    print_success "@librechat/data-schemas built successfully"
 else
-    print_error "Failed to build packages"
-    print_info "Try running: cd InstiLibreChat && npm run build:packages"
+    print_error "Failed to build @librechat/data-schemas"
     exit 1
 fi
+echo ""
+
+# Build data-provider
+print_info "Building librechat-data-provider..."
+npm run build:data-provider
+if [ $? -eq 0 ]; then
+    print_success "librechat-data-provider built successfully"
+else
+    print_error "Failed to build librechat-data-provider"
+    exit 1
+fi
+echo ""
+
+# Build API package
+print_info "Building @librechat/api..."
+npm run build:api
+if [ $? -eq 0 ]; then
+    print_success "@librechat/api built successfully"
+else
+    print_error "Failed to build @librechat/api"
+    exit 1
+fi
+echo ""
+
+# Build client package
+print_info "Building @librechat/client package..."
+npm run build:client-package
+if [ $? -eq 0 ]; then
+    print_success "@librechat/client package built successfully"
+else
+    print_error "Failed to build @librechat/client package"
+    exit 1
+fi
+echo ""
+
+print_success "All required packages built successfully!"
 echo ""
 
 # Step 3: Build client (optional, but recommended)
