@@ -185,25 +185,13 @@ echo ""
 # Step 4: Build Required Packages
 print_header "Step 4: Building Required Packages"
 print_info "Building packages in dependency order:"
-print_info "  1. @librechat/data-schemas - Mongoose schemas and models"
-print_info "  2. librechat-data-provider - Data services for LibreChat apps"
-print_info "  3. @librechat/api - API package (creates api/server/index.js)"
-print_info "  4. @librechat/client - React components package"
+print_info "  1. librechat-data-provider - Data services (no dependencies)"
+print_info "  2. @librechat/data-schemas - Mongoose schemas (depends on data-provider)"
+print_info "  3. @librechat/api - API package (depends on data-provider, data-schemas)"
+print_info "  4. @librechat/client - React components package (independent)"
 echo ""
 
-# Build data-schemas
-if ! run_command "npm run build:data-schemas" "Building @librechat/data-schemas"; then
-    print_error "Failed to build @librechat/data-schemas"
-    exit 1
-fi
-
-if [ ! -d "packages/data-schemas/dist" ]; then
-    print_error "data-schemas dist directory not found after build"
-    exit 1
-fi
-echo ""
-
-# Build data-provider
+# Build data-provider first (no dependencies)
 if ! run_command "npm run build:data-provider" "Building librechat-data-provider"; then
     print_error "Failed to build librechat-data-provider"
     exit 1
@@ -211,6 +199,19 @@ fi
 
 if [ ! -d "packages/data-provider/dist" ]; then
     print_error "data-provider dist directory not found after build"
+    exit 1
+fi
+echo ""
+
+# Build data-schemas (depends on data-provider)
+if ! run_command "npm run build:data-schemas" "Building @librechat/data-schemas"; then
+    print_error "Failed to build @librechat/data-schemas"
+    print_info "This package depends on data-provider. Make sure data-provider built successfully."
+    exit 1
+fi
+
+if [ ! -d "packages/data-schemas/dist" ]; then
+    print_error "data-schemas dist directory not found after build"
     exit 1
 fi
 echo ""
