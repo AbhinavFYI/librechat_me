@@ -3,9 +3,6 @@
 # LibreChat Setup Script
 # This script automates the setup and build process for LibreChat after cloning
 
-# Don't exit on error immediately - we want to show helpful messages
-set +e
-
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -33,6 +30,27 @@ print_error() {
 # Function to check if command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
+}
+
+# Function to run command with error handling
+run_command() {
+    local cmd="$1"
+    local description="$2"
+    local optional="${3:-false}"
+    
+    print_info "$description"
+    if eval "$cmd"; then
+        print_success "$description completed"
+        return 0
+    else
+        if [ "$optional" = "true" ]; then
+            print_warning "$description failed (optional step)"
+            return 1
+        else
+            print_error "$description failed"
+            return 1
+        fi
+    fi
 }
 
 # Get the directory where the script is located
@@ -86,69 +104,96 @@ echo ""
 
 # Navigate to InstiLibreChat directory
 print_info "Navigating to InstiLibreChat directory..."
-cd "$INSTILIBRECHAT_DIR"
+cd "$INSTILIBRECHAT_DIR" || {
+    print_error "Failed to navigate to InstiLibreChat directory"
+    exit 1
+}
 print_success "Current directory: $(pwd)"
 echo ""
 
 # Step 1: Install dependencies
 print_info "Step 1: Installing dependencies..."
 print_info "This may take several minutes..."
-set -e  # Enable exit on error for actual commands
-npm install
-if [ $? -eq 0 ]; then
-    print_success "Dependencies installed successfully"
-else
+print_info "Installing root dependencies and all workspace packages..."
+
+# Clean install to ensure everything is fresh
+if ! run_command "npm install" "Installing dependencies"; then
     print_error "Failed to install dependencies"
-    print_info "Try running: cd InstiLibreChat && npm install"
+    print_info "Try running manually: cd InstiLibreChat && npm install"
+    print_info "If you continue to have issues, try: npm cache clean --force && npm install"
     exit 1
 fi
 echo ""
 
-# Step 2: Build required packages
+# Verify node_modules exist
+if [ ! -d "node_modules" ]; then
+    print_error "node_modules directory not found after installation"
+    exit 1
+fi
+print_success "Dependencies installed successfully"
+echo ""
+
+# Step 2: Build required packages in correct order
 print_info "Step 2: Building required packages..."
-print_info "Building all packages individually for first-time setup..."
+print_info "Building packages in dependency order:"
+print_info "  1. data-provider (no dependencies)"
+print_info "  2. data-schemas (depends on data-provider)"
+print_info "  3. api (depends on data-provider, data-schemas)"
+print_info "  4. client-package (independent)"
 echo ""
 
-# Build data-schemas
-print_info "Building @librechat/data-schemas..."
-npm run build:data-schemas
-if [ $? -eq 0 ]; then
-    print_success "@librechat/data-schemas built successfully"
-else
-    print_error "Failed to build @librechat/data-schemas"
-    exit 1
-fi
-echo ""
-
-# Build data-provider
-print_info "Building librechat-data-provider..."
-npm run build:data-provider
-if [ $? -eq 0 ]; then
-    print_success "librechat-data-provider built successfully"
-else
+# Build data-provider first (no dependencies)
+if ! run_command "npm run build:data-provider" "Building librechat-data-provider"; then
     print_error "Failed to build librechat-data-provider"
+    print_info "This is a critical package. Please check the error above."
+    exit 1
+fi
+
+# Verify data-provider was built
+if [ ! -d "packages/data-provider/dist" ]; then
+    print_error "data-provider dist directory not found after build"
     exit 1
 fi
 echo ""
 
-# Build API package
-print_info "Building @librechat/api..."
-npm run build:api
-if [ $? -eq 0 ]; then
-    print_success "@librechat/api built successfully"
-else
+# Build data-schemas (depends on data-provider)
+if ! run_command "npm run build:data-schemas" "Building @librechat/data-schemas"; then
+    print_error "Failed to build @librechat/data-schemas"
+    print_info "This package depends on data-provider. Make sure data-provider built successfully."
+    exit 1
+fi
+
+# Verify data-schemas was built
+if [ ! -d "packages/data-schemas/dist" ]; then
+    print_error "data-schemas dist directory not found after build"
+    exit 1
+fi
+echo ""
+
+# Build API package (depends on data-provider and data-schemas)
+if ! run_command "npm run build:api" "Building @librechat/api"; then
     print_error "Failed to build @librechat/api"
+    print_info "This package depends on data-provider and data-schemas."
+    exit 1
+fi
+
+# Verify API was built and api/server/index.js exists
+if [ ! -f "api/server/index.js" ]; then
+    print_error "api/server/index.js not found after build"
+    print_info "The API build may have failed. Check the error messages above."
     exit 1
 fi
 echo ""
 
-# Build client package
-print_info "Building @librechat/client package..."
-npm run build:client-package
-if [ $? -eq 0 ]; then
-    print_success "@librechat/client package built successfully"
-else
+# Build client package (independent)
+if ! run_command "npm run build:client-package" "Building @librechat/client package"; then
     print_error "Failed to build @librechat/client package"
+    exit 1
+fi
+
+# Verify client package was built
+if [ ! -d "packages/client/dist" ]; then
+    print_error "client package dist directory not found after build"
     exit 1
 fi
 echo ""
@@ -156,24 +201,58 @@ echo ""
 print_success "All required packages built successfully!"
 echo ""
 
-# Step 3: Build client (optional, but recommended)
+# Step 3: Build client application (optional, but recommended)
 print_info "Step 3: Building client application..."
 print_info "This may take a few minutes..."
-set +e  # Don't exit on error for client build (it's optional)
-npm run build:client
-if [ $? -eq 0 ]; then
-    print_success "Client built successfully"
+
+if run_command "npm run build:client" "Building client application" "true"; then
+    # Verify client was built
+    if [ -d "client/dist" ]; then
+        print_success "Client application built successfully"
+    else
+        print_warning "Client dist directory not found, but build reported success"
+    fi
 else
     print_warning "Client build failed, but packages are built"
     print_info "You can still run the backend, but frontend may not work"
-    print_info "Try running: cd InstiLibreChat && npm run build:client"
+    print_info "Try running manually: cd InstiLibreChat && npm run build:client"
 fi
-set -e  # Re-enable exit on error
+echo ""
+
+# Final verification
+print_info "Verifying build artifacts..."
+MISSING_FILES=0
+
+if [ ! -d "packages/data-provider/dist" ]; then
+    print_error "Missing: packages/data-provider/dist"
+    MISSING_FILES=$((MISSING_FILES + 1))
+fi
+
+if [ ! -d "packages/data-schemas/dist" ]; then
+    print_error "Missing: packages/data-schemas/dist"
+    MISSING_FILES=$((MISSING_FILES + 1))
+fi
+
+if [ ! -f "api/server/index.js" ]; then
+    print_error "Missing: api/server/index.js"
+    MISSING_FILES=$((MISSING_FILES + 1))
+fi
+
+if [ ! -d "packages/client/dist" ]; then
+    print_error "Missing: packages/client/dist"
+    MISSING_FILES=$((MISSING_FILES + 1))
+fi
+
+if [ $MISSING_FILES -eq 0 ]; then
+    print_success "All critical build artifacts verified"
+else
+    print_warning "$MISSING_FILES critical build artifact(s) missing"
+fi
 echo ""
 
 # Summary
 print_success "=========================================="
-print_success "Setup completed successfully!"
+print_success "Setup completed!"
 print_success "=========================================="
 echo ""
 print_info "Next steps:"
@@ -184,4 +263,3 @@ echo "  4. Or start in development mode: npm run backend:dev"
 echo ""
 print_info "For frontend development, run: npm run frontend:dev"
 echo ""
-
