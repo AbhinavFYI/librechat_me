@@ -14,7 +14,29 @@ This repository contains a customized version of LibreChat with additional SaaS 
 - MongoDB (for LibreChat)
 - Go (for saas-api, if building from source)
 
-## Setup Instructions
+## Quick Setup (Automated)
+
+**Easiest way:** Use the automated setup script after cloning:
+
+```bash
+# From the repository root directory
+./setup.sh
+```
+
+This script will:
+- Check prerequisites (Node.js, npm)
+- Install all dependencies
+- Build all required packages
+- Build the client application
+
+Alternatively, use the frontend-only build script:
+
+```bash
+# Build only the frontend (assumes dependencies are already installed)
+./build-frontend.sh
+```
+
+## Setup Instructions (Manual)
 
 **Important:** Most commands in this guide should be run from the `InstiLibreChat` directory unless otherwise specified. After step 2, you'll be in the `InstiLibreChat` directory for the remaining steps.
 
@@ -91,15 +113,10 @@ Common environment variables include:
 - `PORT` - Server port (default: 3080)
 
 ```bash
-# If you're in the root directory, navigate to InstiLibreChat first
-# (You should already be here from step 2)
-# cd InstiLibreChat
-
-# Create .env file
+# Create .env file in InstiLibreChat directory
+cd InstiLibreChat
 touch .env
-
-# Edit .env with your configuration using your preferred editor
-# For example: nano .env  or  vim .env  or  code .env
+# Edit .env with your configuration
 ```
 
 ### 6. Start the Backend
@@ -155,6 +172,21 @@ npm run build:api
 ```
 
 ## Quick Start (All-in-One)
+
+### Option 1: Using Setup Script (Recommended)
+
+From the repository root:
+
+```bash
+# Run the automated setup script
+./setup.sh
+
+# Then start the backend
+cd InstiLibreChat
+npm run backend
+```
+
+### Option 2: Manual Setup
 
 From the `InstiLibreChat` directory:
 

@@ -1,0 +1,134 @@
+#!/bin/bash
+
+# LibreChat Setup Script
+# This script automates the setup and build process for LibreChat after cloning
+
+set -e  # Exit on error
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored messages
+print_info() {
+    echo -e "${BLUE}ℹ${NC} $1"
+}
+
+print_success() {
+    echo -e "${GREEN}✓${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}✗${NC} $1"
+}
+
+# Function to check if command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Get the directory where the script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+REPO_ROOT="$SCRIPT_DIR"
+INSTILIBRECHAT_DIR="$REPO_ROOT/InstiLibreChat"
+
+print_info "LibreChat Setup Script"
+print_info "======================"
+echo ""
+
+# Check if InstiLibreChat directory exists
+if [ ! -d "$INSTILIBRECHAT_DIR" ]; then
+    print_error "InstiLibreChat directory not found at: $INSTILIBRECHAT_DIR"
+    print_info "Please make sure you're running this script from the repository root"
+    exit 1
+fi
+
+# Check for Node.js
+print_info "Checking prerequisites..."
+if ! command_exists node; then
+    print_error "Node.js is not installed. Please install Node.js v18 or higher."
+    print_info "Visit: https://nodejs.org/"
+    exit 1
+fi
+
+NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
+if [ "$NODE_VERSION" -lt 18 ]; then
+    print_warning "Node.js version is less than 18. Recommended: Node.js v18 or higher"
+else
+    print_success "Node.js $(node -v) found"
+fi
+
+# Check for npm
+if ! command_exists npm; then
+    print_error "npm is not installed. Please install npm."
+    exit 1
+fi
+print_success "npm $(npm -v) found"
+echo ""
+
+# Navigate to InstiLibreChat directory
+print_info "Navigating to InstiLibreChat directory..."
+cd "$INSTILIBRECHAT_DIR"
+print_success "Current directory: $(pwd)"
+echo ""
+
+# Step 1: Install dependencies
+print_info "Step 1: Installing dependencies..."
+print_info "This may take several minutes..."
+if npm install; then
+    print_success "Dependencies installed successfully"
+else
+    print_error "Failed to install dependencies"
+    exit 1
+fi
+echo ""
+
+# Step 2: Build required packages
+print_info "Step 2: Building required packages..."
+print_info "This includes:"
+print_info "  - @librechat/data-schemas"
+print_info "  - librechat-data-provider"
+print_info "  - @librechat/api"
+print_info "  - @librechat/client"
+echo ""
+
+if npm run build:packages; then
+    print_success "All packages built successfully"
+else
+    print_error "Failed to build packages"
+    exit 1
+fi
+echo ""
+
+# Step 3: Build client (optional, but recommended)
+print_info "Step 3: Building client application..."
+print_info "This may take a few minutes..."
+if npm run build:client; then
+    print_success "Client built successfully"
+else
+    print_warning "Client build failed, but packages are built"
+    print_info "You can still run the backend, but frontend may not work"
+fi
+echo ""
+
+# Summary
+print_success "=========================================="
+print_success "Setup completed successfully!"
+print_success "=========================================="
+echo ""
+print_info "Next steps:"
+echo "  1. Create a .env file in the InstiLibreChat directory"
+echo "  2. Configure your environment variables (MONGO_URI, etc.)"
+echo "  3. Start the backend with: npm run backend"
+echo "  4. Or start in development mode: npm run backend:dev"
+echo ""
+print_info "For frontend development, run: npm run frontend:dev"
+echo ""
+
