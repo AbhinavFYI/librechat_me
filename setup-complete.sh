@@ -464,38 +464,44 @@ build_frontend() {
     fi
     
     # Install dependencies in client directory
-    substep "Installing client dependencies (lucide-react, vite, etc.)..."
+    substep "Installing client dependencies..."
     if [ -d "client" ]; then
         cd client
-        # Install all client dependencies
+        # Install all client dependencies first
         npm install --no-audit --legacy-peer-deps || warn "Client dependency installation had issues"
-        
-        # Ensure lucide-react is installed
-        if [ ! -d "node_modules/lucide-react" ]; then
-            info "Installing lucide-react..."
-            npm install lucide-react@^0.394.0 --no-audit --legacy-peer-deps || warn "Failed to install lucide-react"
-        fi
-        
-        # Ensure vite is installed
-        if [ ! -d "node_modules/vite" ] && [ ! -f "node_modules/.bin/vite" ]; then
-            info "Installing vite..."
-            npm install vite --no-audit --legacy-peer-deps || warn "Failed to install vite"
-        fi
-        
         cd "$LIBRECHAT_DIR"
     else
         error "client directory not found"
     fi
     
-    # Temporarily disable exit on error for frontend build
-    set +e
-    
-    # Attempt build with error capture
-    BUILD_OUTPUT=$(npm run build:client 2>&1)
-    BUILD_STATUS=$?
-    
-    # Re-enable exit on error
-    set -e
+    # Install lucide-react, vite (last), then build frontend
+    substep "Installing lucide-react and vite, then building frontend..."
+    if [ -d "client" ]; then
+        cd client
+        
+        # Install lucide-react
+        info "Installing lucide-react..."
+        npm install lucide-react@^0.394.0 --no-audit --legacy-peer-deps || warn "Failed to install lucide-react"
+        
+        # Install vite (at the end as requested)
+        info "Installing vite (last step before build)..."
+        npm install vite --no-audit --legacy-peer-deps || warn "Failed to install vite"
+        
+        # Temporarily disable exit on error for frontend build
+        set +e
+        
+        # Build the frontend (we're already in client directory, so use npm run build)
+        info "Building frontend application..."
+        BUILD_OUTPUT=$(npm run build 2>&1)
+        BUILD_STATUS=$?
+        
+        # Re-enable exit on error
+        set -e
+        
+        cd "$LIBRECHAT_DIR"
+    else
+        error "client directory not found"
+    fi
     
     if [ $BUILD_STATUS -ne 0 ]; then
         # Check for specific error patterns
