@@ -44,15 +44,28 @@ run_command() {
     local optional="${3:-false}"
     
     print_info "$description"
-    if eval "$cmd" 2>&1; then
+    set +e  # Don't exit on error
+    eval "$cmd" > /tmp/last-command.log 2>&1
+    local exit_code=$?
+    set -e  # Re-enable exit on error
+    
+    if [ $exit_code -eq 0 ]; then
         print_success "$description completed"
         return 0
     else
         if [ "$optional" = "true" ]; then
             print_warning "$description failed (optional step)"
+            if [ -f /tmp/last-command.log ]; then
+                print_info "Error output (last 10 lines):"
+                tail -10 /tmp/last-command.log 2>/dev/null || true
+            fi
             return 1
         else
-            print_error "$description failed"
+            print_error "$description failed (exit code: $exit_code)"
+            if [ -f /tmp/last-command.log ]; then
+                print_info "Error output:"
+                cat /tmp/last-command.log
+            fi
             return 1
         fi
     fi
@@ -166,10 +179,45 @@ print_info "Installing dependencies for root workspace and all sub-packages..."
 print_info "This may take several minutes..."
 echo ""
 
-if ! run_command "npm install" "Installing dependencies"; then
+# Configure npm for better reliability (like in Dockerfile)
+print_info "Configuring npm for better reliability..."
+npm config set fetch-retry-maxtimeout 600000 || true
+npm config set fetch-retries 5 || true
+npm config set fetch-retry-mintimeout 15000 || true
+print_success "npm configuration updated"
+echo ""
+
+# Clean npm cache if there are issues (optional, but helpful)
+print_info "Checking npm cache..."
+if npm cache verify 2>/dev/null; then
+    print_success "npm cache is valid"
+else
+    print_warning "npm cache may have issues, cleaning..."
+    npm cache clean --force 2>/dev/null || true
+fi
+echo ""
+
+# Install dependencies with better error handling
+print_info "Installing dependencies (this may take several minutes)..."
+set +e  # Don't exit on error immediately
+npm install 2>&1 | tee /tmp/npm-install.log
+NPM_INSTALL_EXIT_CODE=$?
+set -e  # Re-enable exit on error
+
+if [ $NPM_INSTALL_EXIT_CODE -ne 0 ]; then
     print_error "Failed to install dependencies"
-    print_info "Try running manually: cd InstiLibreChat && npm install"
-    print_info "If issues persist, try: npm cache clean --force && npm install"
+    print_info "Exit code: $NPM_INSTALL_EXIT_CODE"
+    echo ""
+    print_info "Last 20 lines of npm install output:"
+    tail -20 /tmp/npm-install.log 2>/dev/null || true
+    echo ""
+    print_info "Troubleshooting steps:"
+    print_info "1. Try cleaning npm cache: npm cache clean --force"
+    print_info "2. Try removing node_modules and package-lock.json:"
+    print_info "   rm -rf node_modules package-lock.json"
+    print_info "   npm install"
+    print_info "3. Check your internet connection"
+    print_info "4. Try with verbose output: npm install --verbose"
     exit 1
 fi
 
@@ -177,6 +225,11 @@ fi
 if [ ! -d "node_modules" ]; then
     print_error "node_modules directory not found after installation"
     exit 1
+fi
+
+# Check if key packages are installed
+if [ ! -d "node_modules/.bin" ]; then
+    print_warning "node_modules/.bin not found, but continuing..."
 fi
 
 print_success "Dependencies installed successfully"
@@ -192,8 +245,11 @@ print_info "  4. @librechat/client - React components package (independent)"
 echo ""
 
 # Build data-provider first (no dependencies)
+print_info "Building librechat-data-provider (no dependencies)..."
 if ! run_command "npm run build:data-provider" "Building librechat-data-provider"; then
     print_error "Failed to build librechat-data-provider"
+    print_info "This is a critical package. Check the error output above."
+    print_info "Make sure all dependencies were installed correctly."
     exit 1
 fi
 
