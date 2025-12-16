@@ -140,63 +140,64 @@ done
 
 echo ""
 
-# Step 5: Build packages (optional, but recommended)
+# Step 5: Build packages in correct dependency order
 print_info "Step 5: Building workspace packages..."
-print_info "This step is optional but recommended for development"
+print_info "Building packages in dependency order:"
+print_info "  1. librechat-data-provider (no dependencies)"
+print_info "  2. @librechat/data-schemas (depends on data-provider)"
+print_info "  3. @librechat/api (depends on data-provider, data-schemas)"
+print_info "  4. @librechat/client package (independent)"
+print_info "  5. Client application (depends on packages above)"
 echo ""
 
-# Build data-provider
-print_info "Building librechat-data-provider..."
-set +e  # Don't exit on error for builds
+# Build data-provider first (no dependencies)
+print_info "Building librechat-data-provider (step 1/5)..."
 if npm run build:data-provider 2>&1 | tee /tmp/build-data-provider.log; then
     print_success "librechat-data-provider built successfully"
+    if [ ! -d "packages/data-provider/dist" ]; then
+        print_error "packages/data-provider/dist not found after build"
+        exit 1
+    fi
 else
-    print_warning "Failed to build librechat-data-provider"
+    print_error "Failed to build librechat-data-provider"
     print_info "Check /tmp/build-data-provider.log for details"
+    exit 1
 fi
-set -e
 echo ""
 
-# Build data-schemas
-print_info "Building @librechat/data-schemas..."
-set +e
+# Build data-schemas (depends on data-provider)
+print_info "Building @librechat/data-schemas (step 2/5)..."
 if npm run build:data-schemas 2>&1 | tee /tmp/build-data-schemas.log; then
     print_success "@librechat/data-schemas built successfully"
+    if [ ! -d "packages/data-schemas/dist" ]; then
+        print_error "packages/data-schemas/dist not found after build"
+        exit 1
+    fi
 else
-    print_warning "Failed to build @librechat/data-schemas"
+    print_error "Failed to build @librechat/data-schemas"
+    print_info "This package depends on data-provider. Make sure data-provider built successfully."
     print_info "Check /tmp/build-data-schemas.log for details"
+    exit 1
 fi
-set -e
 echo ""
 
-# Build client package
-print_info "Building @librechat/client..."
-set +e
-if npm run build:client-package 2>&1 | tee /tmp/build-client-package.log; then
-    print_success "@librechat/client built successfully"
-else
-    print_warning "Failed to build @librechat/client"
-    print_info "Check /tmp/build-client-package.log for details"
-fi
-set -e
-echo ""
-
-# Build API package
-print_info "Building @librechat/api..."
-set +e
+# Build API package (depends on data-provider and data-schemas)
+print_info "Building @librechat/api (step 3/5)..."
 if npm run build:api 2>&1 | tee /tmp/build-api.log; then
     print_success "@librechat/api built successfully"
     
-    # Check if memory module exports are in the bundle (rollup bundles everything into index.js)
-    if [ -f "packages/api/dist/index.js" ]; then
-        if grep -q "loadMemoryConfig\|isMemoryEnabled" packages/api/dist/index.js 2>/dev/null; then
-            print_success "Memory module exports verified in bundle"
-        else
-            print_warning "Memory module exports not found in bundle"
-            print_info "This might cause runtime issues with memory features"
-        fi
+    # Verify API package was built
+    if [ ! -f "packages/api/dist/index.js" ]; then
+        print_error "packages/api/dist/index.js not found after build"
+        exit 1
+    fi
+    
+    # Check if memory module exports are in the bundle
+    if grep -q "loadMemoryConfig\|isMemoryEnabled" packages/api/dist/index.js 2>/dev/null; then
+        print_success "Memory module exports verified in bundle"
     else
-        print_warning "packages/api/dist/index.js not found after build"
+        print_warning "Memory module exports not found in bundle"
+        print_info "This might cause runtime issues with memory features"
     fi
 else
     print_error "Failed to build @librechat/api"
@@ -206,6 +207,40 @@ else
     print_info "2. TypeScript/rollup errors - check the log file above"
     print_info "3. Memory module path alias issues - check rollup.config.js"
     exit 1
+fi
+echo ""
+
+# Build client package (independent)
+print_info "Building @librechat/client package (step 4/5)..."
+if npm run build:client-package 2>&1 | tee /tmp/build-client-package.log; then
+    print_success "@librechat/client package built successfully"
+    if [ ! -d "packages/client/dist" ]; then
+        print_error "packages/client/dist not found after build"
+        exit 1
+    fi
+else
+    print_error "Failed to build @librechat/client package"
+    print_info "Check /tmp/build-client-package.log for details"
+    exit 1
+fi
+echo ""
+
+# Build client application (optional but recommended)
+print_info "Building client application (step 5/5)..."
+print_info "This may take a few minutes..."
+set +e  # Don't exit on error for client build (it's optional)
+if npm run build:client 2>&1 | tee /tmp/build-client.log; then
+    print_success "Client application built successfully"
+    if [ -d "client/dist" ]; then
+        print_success "client/dist directory created"
+    else
+        print_warning "client/dist directory not found, but build reported success"
+    fi
+else
+    print_warning "Client build failed (optional step)"
+    print_info "You can still run the backend, but frontend may not work"
+    print_info "For development, use: npm run frontend:dev"
+    print_info "Check /tmp/build-client.log for details"
 fi
 set -e
 echo ""
