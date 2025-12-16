@@ -16,6 +16,8 @@ This repository contains a customized version of LibreChat with additional SaaS 
 
 ## Setup Instructions
 
+**Important:** Most commands in this guide should be run from the `InstiLibreChat` directory unless otherwise specified. After step 2, you'll be in the `InstiLibreChat` directory for the remaining steps.
+
 ### 1. Clone the Repository
 
 ```bash
@@ -89,10 +91,15 @@ Common environment variables include:
 - `PORT` - Server port (default: 3080)
 
 ```bash
-# Create .env file in InstiLibreChat directory
-cd InstiLibreChat
+# If you're in the root directory, navigate to InstiLibreChat first
+# (You should already be here from step 2)
+# cd InstiLibreChat
+
+# Create .env file
 touch .env
-# Edit .env with your configuration
+
+# Edit .env with your configuration using your preferred editor
+# For example: nano .env  or  vim .env  or  code .env
 ```
 
 ### 6. Start the Backend
