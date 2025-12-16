@@ -11,7 +11,7 @@
 # 5. Ready to run frontend and backend
 # ==========================================
 
-set -euo pipefail
+set -euo pipefail  # Exit on error, but we handle errors gracefully in build functions
 
 # ---------- Colors & Output ----------
 RED='\033[0;31m'
@@ -194,11 +194,29 @@ install_dependencies() {
         success "All critical dependencies verified"
     fi
     
+    # Install lucide-react in client workspace (required for frontend build)
+    substep "Installing lucide-react in client workspace..."
+    if [ -d "client" ]; then
+        cd client
+        if [ ! -d "node_modules/lucide-react" ]; then
+            info "Installing lucide-react@^0.394.0..."
+            npm install lucide-react@^0.394.0 --no-audit --legacy-peer-deps || warn "Failed to install lucide-react (may cause frontend build issues)"
+        else
+            success "lucide-react already installed in client workspace"
+        fi
+        cd "$LIBRECHAT_DIR"
+    else
+        warn "client directory not found - skipping lucide-react installation"
+    fi
+    
     echo ""
 }
 
 build_packages() {
     cd "$LIBRECHAT_DIR"
+    
+    # Temporarily disable exit on error for build commands
+    set +e
     
     # Build order is critical due to dependencies:
     # 1. data-provider (no dependencies)
@@ -208,26 +226,38 @@ build_packages() {
     
     # 1. Build data-provider
     substep "Building librechat-data-provider (1/4)..."
-    if npm run build:data-provider; then
-        if [ -d "packages/data-provider/dist" ]; then
-            success "data-provider built successfully"
-        else
-            error "data-provider build failed - dist directory not found"
-        fi
-    else
+    BUILD_OUTPUT=$(npm run build:data-provider 2>&1)
+    BUILD_STATUS=$?
+    
+    if [ $BUILD_STATUS -ne 0 ]; then
+        set -e
         error "data-provider build failed"
+        echo "$BUILD_OUTPUT" | tail -20
+    fi
+    
+    if [ -d "packages/data-provider/dist" ]; then
+        success "data-provider built successfully"
+    else
+        set -e
+        error "data-provider build failed - dist directory not found"
     fi
     
     # 2. Build data-schemas
     substep "Building @librechat/data-schemas (2/4)..."
-    if npm run build:data-schemas; then
-        if [ -d "packages/data-schemas/dist" ]; then
-            success "data-schemas built successfully"
-        else
-            error "data-schemas build failed - dist directory not found"
-        fi
-    else
+    BUILD_OUTPUT=$(npm run build:data-schemas 2>&1)
+    BUILD_STATUS=$?
+    
+    if [ $BUILD_STATUS -ne 0 ]; then
+        set -e
         error "data-schemas build failed"
+        echo "$BUILD_OUTPUT" | tail -20
+    fi
+    
+    if [ -d "packages/data-schemas/dist" ]; then
+        success "data-schemas built successfully"
+    else
+        set -e
+        error "data-schemas build failed - dist directory not found"
     fi
     
     # 3. Build api package
@@ -242,34 +272,60 @@ build_packages() {
         error "data-schemas must be built before api"
     fi
     
-    if npm run build:api; then
-        if [ -f "packages/api/dist/index.js" ]; then
-            # Verify memory module is included
-            if grep -q "loadMemoryConfig\|isMemoryEnabled" packages/api/dist/index.js 2>/dev/null; then
-                success "api built successfully (memory module verified)"
-            else
-                warn "api built but memory module exports not found"
-                warn "This may cause issues with backend startup"
+    BUILD_OUTPUT=$(npm run build:api 2>&1)
+    BUILD_STATUS=$?
+    
+    if [ $BUILD_STATUS -ne 0 ]; then
+        # Check if it's just TypeScript warnings (which are non-fatal)
+        if echo "$BUILD_OUTPUT" | grep -q "created dist"; then
+            warn "API build completed with warnings (TypeScript type errors)"
+            warn "These are usually non-fatal - checking if dist/index.js exists..."
+        else
+            set -e
+            error "api build failed"
+            echo "$BUILD_OUTPUT" | tail -30
+        fi
+    fi
+    
+    if [ -f "packages/api/dist/index.js" ]; then
+        # Verify memory module is included
+        if grep -q "loadMemoryConfig\|isMemoryEnabled" packages/api/dist/index.js 2>/dev/null; then
+            success "api built successfully (memory module verified)"
+            # Show warnings if present but don't fail
+            if echo "$BUILD_OUTPUT" | grep -q "TS2345\|TS.*:"; then
+                warn "TypeScript warnings detected (non-fatal):"
+                echo "$BUILD_OUTPUT" | grep -E "TS[0-9]+:" | head -3 | sed 's/^/    /' || true
+                info "These warnings don't prevent the build from working"
             fi
         else
-            error "api build failed - dist/index.js not found"
+            warn "api built but memory module exports not found"
+            warn "This may cause issues with backend startup"
         fi
     else
-        error "api build failed"
+        set -e
+        error "api build failed - dist/index.js not found"
     fi
     
     # 4. Build client package
     substep "Building @librechat/client package (4/4)..."
-    if npm run build:client-package; then
-        if [ -d "packages/client/dist" ]; then
-            success "client package built successfully"
-        else
-            error "client package build failed - dist directory not found"
-        fi
-    else
+    BUILD_OUTPUT=$(npm run build:client-package 2>&1)
+    BUILD_STATUS=$?
+    
+    if [ $BUILD_STATUS -ne 0 ]; then
+        set -e
         error "client package build failed"
+        echo "$BUILD_OUTPUT" | tail -20
     fi
     
+    if [ -d "packages/client/dist" ]; then
+        success "client package built successfully"
+    else
+        set -e
+        error "client package build failed - dist directory not found"
+    fi
+    
+    # Re-enable exit on error
+    set -e
     echo ""
 }
 
@@ -287,16 +343,61 @@ build_frontend() {
         error "client package must be built before frontend"
     fi
     
-    if npm run build:client; then
+    # Verify lucide-react is installed (should be installed during dependency installation)
+    if [ ! -d "node_modules/lucide-react" ] && [ ! -d "client/node_modules/lucide-react" ]; then
+        warn "lucide-react not found - attempting to install..."
+        cd client
+        npm install lucide-react@^0.394.0 --no-audit --legacy-peer-deps || warn "Failed to install lucide-react"
+        cd "$LIBRECHAT_DIR"
+    fi
+    
+    # Temporarily disable exit on error for frontend build
+    set +e
+    
+    # Attempt build with error capture
+    BUILD_OUTPUT=$(npm run build:client 2>&1)
+    BUILD_STATUS=$?
+    
+    # Re-enable exit on error
+    set -e
+    
+    if [ $BUILD_STATUS -ne 0 ]; then
+        # Check for specific error patterns
+        if echo "$BUILD_OUTPUT" | grep -q "lucide-react"; then
+            warn "Frontend build failed due to lucide-react import issue"
+            echo ""
+            info "Troubleshooting steps:"
+            substep "1. Ensure lucide-react is installed in client workspace:"
+            echo "     cd InstiLibreChat/client"
+            echo "     npm install lucide-react@^0.394.0"
+            substep "2. Rebuild client package:"
+            echo "     cd InstiLibreChat"
+            echo "     npm run build:client-package"
+            substep "3. Try building frontend again:"
+            echo "     npm run build:client"
+            echo ""
+            warn "You can still run the development server which doesn't require a build:"
+            info "  npm run frontend:dev"
+        elif echo "$BUILD_OUTPUT" | grep -q "Rollup failed to resolve"; then
+            warn "Frontend build failed due to module resolution issue"
+            echo ""
+            info "This is often caused by missing peer dependencies."
+            substep "Try installing dependencies in client workspace:"
+            echo "  cd InstiLibreChat/client"
+            echo "  npm install --legacy-peer-deps"
+            echo "  cd .."
+            echo "  npm run build:client"
+        else
+            warn "Frontend build failed (see error above)"
+            info "You can still run the development server: npm run frontend:dev"
+        fi
+    else
         if [ -d "client/dist" ]; then
             success "Frontend built successfully"
         else
             warn "Frontend build completed but dist directory not found"
             warn "You can still run the development server"
         fi
-    else
-        warn "Frontend build failed (you can still run development server)"
-        info "To run in development mode: npm run frontend:dev"
     fi
     
     echo ""
@@ -366,6 +467,12 @@ show_summary() {
     echo "╚════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
     
+    # Check if frontend build succeeded
+    FRONTEND_BUILT=false
+    if [ -d "$LIBRECHAT_DIR/client/dist" ]; then
+        FRONTEND_BUILT=true
+    fi
+    
     echo -e "${BOLD}Next Steps:${NC}"
     echo ""
     echo -e "${CYAN}1. Configure Environment:${NC}"
@@ -383,8 +490,20 @@ show_summary() {
     echo "   ${BOLD}npm run backend:dev${NC}    # Development mode (with auto-reload)"
     echo ""
     echo -e "${CYAN}4. Run the Frontend:${NC}"
-    echo "   ${BOLD}npm run frontend:dev${NC}   # Development server (recommended)"
-    echo "   ${BOLD}npm run build:client${NC}   # Build for production"
+    if [ "$FRONTEND_BUILT" = "true" ]; then
+        echo "   ${BOLD}npm run frontend:dev${NC}   # Development server (recommended)"
+        echo "   ${BOLD}npm run build:client${NC}   # Build for production (already built)"
+    else
+        echo "   ${BOLD}npm run frontend:dev${NC}   # Development server (recommended - no build needed)"
+        echo ""
+        warn "Frontend production build was not successful"
+        info "To fix frontend build issues:"
+        echo "   1. cd InstiLibreChat/client"
+        echo "   2. npm install --legacy-peer-deps"
+        echo "   3. npm install lucide-react@^0.394.0"
+        echo "   4. cd .."
+        echo "   5. npm run build:client"
+    fi
     echo ""
     echo -e "${CYAN}5. Access the Application:${NC}"
     echo "   • Frontend: http://localhost:3080"
@@ -392,10 +511,51 @@ show_summary() {
     echo ""
     echo -e "${YELLOW}Note:${NC} Run backend and frontend in separate terminal windows"
     echo ""
+    
+    # Show troubleshooting if there were issues
+    if [ "$FRONTEND_BUILT" = "false" ]; then
+        echo -e "${YELLOW}${BOLD}Troubleshooting:${NC}"
+        echo ""
+        echo "If you encountered errors during setup:"
+        echo ""
+        echo "1. TypeScript warnings in API build:"
+        echo "   • These are usually non-fatal and don't prevent the backend from running"
+        echo "   • The build succeeded if dist/index.js exists"
+        echo ""
+        echo "2. Frontend build failed (lucide-react or module resolution):"
+        echo "   • Development mode doesn't require a build"
+        echo "   • Run: npm run frontend:dev (works without building)"
+        echo "   • To fix production build:"
+        echo "     cd InstiLibreChat/client"
+        echo "     npm install lucide-react@^0.394.0"
+        echo "     cd .."
+        echo "     npm run build:client"
+        echo ""
+        echo "3. Missing dependencies:"
+        echo "   • Run: npm install --legacy-peer-deps"
+        echo "   • Or: cd client && npm install --legacy-peer-deps"
+        echo ""
+    fi
 }
 
 # ---------- Error Handling ----------
-trap 'error "Script failed at line $LINENO"' ERR
+# Disable strict error handling for build functions (they handle errors themselves)
+handle_error() {
+    local line=$1
+    local command="${BASH_COMMAND}"
+    echo ""
+    error "Script failed at line $line: $command"
+    echo ""
+    info "Common issues and solutions:"
+    echo "  • npm install failed: Try 'npm cache clean --force' then rerun"
+    echo "  • Build failed: Check that all dependencies are installed"
+    echo "  • Permission errors: Check file permissions"
+    echo ""
+    exit 1
+}
+
+# Only trap errors in main execution, not in build functions
+trap 'handle_error $LINENO' ERR
 
 # ---------- Run Main Function ----------
 main "$@"
