@@ -86,11 +86,36 @@ echo
 
 info "3/4 → api"
 info "Building @librechat/api (requires all peer dependencies)..."
+
+# Ensure data-provider is available (peer dependency)
+if [ ! -d "packages/data-provider/dist" ]; then
+  error "data-provider must be built before api. Run: npm run build:data-provider"
+fi
+
+# Ensure data-schemas is available (peer dependency)
+if [ ! -d "packages/data-schemas/dist" ]; then
+  error "data-schemas must be built before api. Run: npm run build:data-schemas"
+fi
+
+# Build API package
 cd packages/api
 npm run build
 cd "$LIBRECHAT_DIR"
-[ -f packages/api/dist/index.js ] || error "api build failed"
-success "api built"
+
+# Verify API build succeeded
+[ -f packages/api/dist/index.js ] || error "api build failed - dist/index.js not found"
+
+# Verify memory module is included in the build (critical for backend)
+if grep -q "loadMemoryConfig\|isMemoryEnabled" packages/api/dist/index.js 2>/dev/null; then
+  success "api built (memory module verified)"
+else
+  error "api build failed - memory module exports not found in bundle"
+  info "The memory module is required for the backend to start"
+  info "This usually means the path alias ~/memory/config is not resolving correctly"
+  info "Check rollup.config.js alias plugin configuration"
+  info "Try rebuilding: cd packages/api && npm run build"
+  exit 1
+fi
 echo
 
 info "4/4 → client package"
