@@ -53,9 +53,12 @@ This script will:
 - Build the client application
 - Verify all build artifacts
 
-Alternatively, use the frontend-only build script:
+**Alternative scripts:**
 
 ```bash
+# Install dependencies only (with optional builds)
+./install-dependencies.sh
+
 # Build only the frontend (assumes dependencies are already installed)
 ./build-frontend.sh
 ```
