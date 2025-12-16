@@ -198,11 +198,33 @@ fi
 echo ""
 
 # Install dependencies with better error handling
-print_info "Installing dependencies (this may take several minutes)..."
-set +e  # Don't exit on error immediately
-npm install 2>&1 | tee /tmp/npm-install.log
-NPM_INSTALL_EXIT_CODE=$?
-set -e  # Re-enable exit on error
+# Prefer npm ci for clean, reproducible installs (requires package-lock.json)
+if [ -f "package-lock.json" ]; then
+    print_info "package-lock.json found, using npm ci for clean install..."
+    print_info "npm ci is faster and more reliable for reproducible builds"
+    set +e  # Don't exit on error immediately
+    npm ci --no-audit 2>&1 | tee /tmp/npm-install.log
+    NPM_INSTALL_EXIT_CODE=$?
+    set -e  # Re-enable exit on error
+    
+    if [ $NPM_INSTALL_EXIT_CODE -ne 0 ]; then
+        print_warning "npm ci failed, falling back to npm install..."
+        print_info "This might be due to package-lock.json being out of sync"
+        echo ""
+        # Fall back to npm install
+        set +e
+        npm install 2>&1 | tee /tmp/npm-install.log
+        NPM_INSTALL_EXIT_CODE=$?
+        set -e
+    fi
+else
+    print_info "package-lock.json not found, using npm install..."
+    print_warning "Consider committing package-lock.json for reproducible builds"
+    set +e  # Don't exit on error immediately
+    npm install 2>&1 | tee /tmp/npm-install.log
+    NPM_INSTALL_EXIT_CODE=$?
+    set -e  # Re-enable exit on error
+fi
 
 if [ $NPM_INSTALL_EXIT_CODE -ne 0 ]; then
     print_error "Failed to install dependencies"
@@ -213,11 +235,14 @@ if [ $NPM_INSTALL_EXIT_CODE -ne 0 ]; then
     echo ""
     print_info "Troubleshooting steps:"
     print_info "1. Try cleaning npm cache: npm cache clean --force"
-    print_info "2. Try removing node_modules and package-lock.json:"
+    print_info "2. Try removing node_modules:"
+    print_info "   rm -rf node_modules"
+    print_info "   npm install"
+    print_info "3. If package-lock.json exists but npm ci fails, try:"
     print_info "   rm -rf node_modules package-lock.json"
     print_info "   npm install"
-    print_info "3. Check your internet connection"
-    print_info "4. Try with verbose output: npm install --verbose"
+    print_info "4. Check your internet connection"
+    print_info "5. Try with verbose output: npm install --verbose"
     exit 1
 fi
 
