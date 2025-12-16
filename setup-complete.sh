@@ -53,6 +53,10 @@ main() {
     step "Step 3: Cleaning previous builds"
     clean_builds
     
+    # Step 3.5: Setup required directories
+    step "Step 3.5: Setting up required directories"
+    setup_directories
+    
     # Step 4: Install dependencies
     step "Step 4: Installing dependencies"
     install_dependencies
@@ -151,6 +155,46 @@ clean_builds() {
     rm -rf api/dist 2>/dev/null || true
     
     success "Previous builds cleaned"
+    echo ""
+}
+
+setup_directories() {
+    cd "$LIBRECHAT_DIR"
+    
+    substep "Creating required directories with proper permissions..."
+    
+    # Create Meilisearch data directories (required for search functionality)
+    MEILI_DIRS=(
+        "meili_data"
+        "meili_data_v1.5"
+        "meili_data_v1.7"
+        "meili_data_v1.12"
+    )
+    
+    for dir in "${MEILI_DIRS[@]}"; do
+        if [ ! -d "$dir" ]; then
+            mkdir -p "$dir" 2>/dev/null || warn "Failed to create $dir directory"
+            # Set permissions (read/write/execute for owner, read/execute for group/others)
+            chmod 755 "$dir" 2>/dev/null || warn "Failed to set permissions for $dir"
+        fi
+    done
+    
+    # Create other required directories
+    REQUIRED_DIRS=(
+        "data-node"
+        "uploads"
+        "logs"
+        "api/logs"
+    )
+    
+    for dir in "${REQUIRED_DIRS[@]}"; do
+        if [ ! -d "$dir" ]; then
+            mkdir -p "$dir" 2>/dev/null || warn "Failed to create $dir directory"
+            chmod 755 "$dir" 2>/dev/null || warn "Failed to set permissions for $dir"
+        fi
+    done
+    
+    success "Required directories created"
     echo ""
 }
 
@@ -669,6 +713,15 @@ show_summary() {
         echo "3. Missing dependencies:"
         echo "   • Run: npm install --legacy-peer-deps"
         echo "   • Or: cd client && npm install --legacy-peer-deps"
+        echo ""
+        echo "4. Meilisearch permission error (Operation not permitted):"
+        echo "   • This error occurs when Meilisearch can't write to meili_data directory"
+        echo "   • Fix by creating the directory with proper permissions:"
+        echo "     cd InstiLibreChat"
+        echo "     mkdir -p meili_data_v1.12"
+        echo "     chmod 755 meili_data_v1.12"
+        echo "   • Or if using Docker, ensure the directory is mounted correctly"
+        echo "   • Check MEILI_HOST in your .env file matches your Meilisearch setup"
         echo ""
     fi
 }
