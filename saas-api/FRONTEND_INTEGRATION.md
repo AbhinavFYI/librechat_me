@@ -592,3 +592,35 @@ curl -X DELETE http://localhost:8080/api/v1/organizations/ORG_ID \
 - **404 Not Found**: Resource doesn't exist → Show error message
 - **400 Bad Request**: Validation error → Show error message
 
+# Server Configuration
+SERVER_HOST=0.0.0.0
+SERVER_PORT=8080
+SERVER_READ_TIMEOUT=15
+SERVER_WRITE_TIMEOUT=15
+SERVER_IDLE_TIMEOUT=60
+
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=aep014
+DB_PASSWORD=
+DB_NAME=saas_database
+DB_SSLMODE=disable
+
+
+# Application Configuration
+APP_ENV=development
+LOG_LEVEL=info
+STORAGE_PATH=uploads
+
+
+JWT_ACCESS_TTL=15
+JWT_REFRESH_TTL=7
+
+
+JWT_SECRET=16f8c0ef4a5d391b26034086c628469d3f9f497f08163ab9b40137092f2909ef
+JWT_REFRESH_SECRET=eaa5191f2914e30b9387fd84e254e4ba6fc51b4654968a9b0803b456a54b8418
+
+
+SMTP_USERNAME=abhinavkangale123@gmail.com
+SMTP_PASSWORD=tmnpmoiwcxiaajjx

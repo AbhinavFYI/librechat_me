@@ -14,6 +14,7 @@ import {
 } from '@librechat/client';
 import type { IconMapProps, AgentIconMapProps, IconsRecord } from '~/common';
 import UnknownIcon from './UnknownIcon';
+import FIAIcon from '~/components/Endpoints/FIAIcon';
 import { cn } from '~/utils';
 
 const AssistantAvatar = ({
@@ -61,10 +62,10 @@ const Bedrock = ({ className = '' }: IconMapProps) => {
 };
 
 export const icons: IconsRecord = {
-  [EModelEndpoint.azureOpenAI]: AzureMinimalIcon,
-  [EModelEndpoint.openAI]: GPTIcon,
+  [EModelEndpoint.azureOpenAI]: FIAIcon,
+  [EModelEndpoint.openAI]: FIAIcon,
   [EModelEndpoint.gptPlugins]: MinimalPlugin,
-  [EModelEndpoint.anthropic]: AnthropicIcon,
+  [EModelEndpoint.anthropic]: FIAIcon,
   [EModelEndpoint.chatGPTBrowser]: LightningIcon,
   [EModelEndpoint.google]: GoogleMinimalIcon,
   [EModelEndpoint.custom]: CustomMinimalIcon,

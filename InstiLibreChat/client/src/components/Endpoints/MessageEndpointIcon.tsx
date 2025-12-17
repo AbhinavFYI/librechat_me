@@ -14,6 +14,7 @@ import {
   CustomMinimalIcon,
 } from '@librechat/client';
 import UnknownIcon from '~/hooks/Endpoint/UnknownIcon';
+import FIAIcon from '~/components/Endpoints/FIAIcon';
 import { IconProps } from '~/common';
 import { cn } from '~/utils';
 
@@ -133,12 +134,12 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
     [EModelEndpoint.agents]: agentsIcon,
     [EModelEndpoint.azureAssistants]: assistantsIcon,
     [EModelEndpoint.azureOpenAI]: {
-      icon: <AzureMinimalIcon size={size * 0.5555555555555556} />,
+      icon: <FIAIcon size={size * 0.5555555555555556} />,
       bg: 'linear-gradient(0.375turn, #61bde2, #4389d0)',
       name: 'ChatGPT',
     },
     [EModelEndpoint.openAI]: {
-      icon: <GPTIcon size={size * 0.5555555555555556} />,
+      icon: <FIAIcon size={size * 0.5555555555555556} />,
       bg: getOpenAIColor(model),
       name: 'ChatGPT',
     },
@@ -152,7 +153,7 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
       name: getGoogleModelName(model),
     },
     [EModelEndpoint.anthropic]: {
-      icon: <AnthropicIcon size={size * 0.5555555555555556} />,
+      icon: <FIAIcon size={size * 0.5555555555555556} />,
       bg: '#d09a74',
       name: 'Claude',
     },
@@ -165,7 +166,7 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
       icon: <CustomMinimalIcon size={size * 0.7} />,
       name: 'Custom',
     },
-    null: { icon: <GPTIcon size={size * 0.7} />, bg: 'grey', name: 'N/A' },
+    null: { icon: <FIAIcon size={size * 0.7} />, bg: 'grey', name: 'N/A' },
     default: {
       icon: (
         <div className="h-6 w-6">

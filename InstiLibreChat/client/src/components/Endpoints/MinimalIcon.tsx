@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from '@librechat/client';
 import UnknownIcon from '~/hooks/Endpoint/UnknownIcon';
+import FIAIcon from '~/components/Endpoints/FIAIcon';
 import { IconProps } from '~/common';
 import { cn } from '~/utils';
 
@@ -26,17 +27,17 @@ const MinimalIcon: React.FC<IconProps> = (props) => {
 
   const endpointIcons = {
     [EModelEndpoint.azureOpenAI]: {
-      icon: <AzureMinimalIcon className={iconClassName} />,
+      icon: <FIAIcon className={iconClassName} />,
       name: props.chatGptLabel ?? 'ChatGPT',
     },
     [EModelEndpoint.openAI]: {
-      icon: <OpenAIMinimalIcon className={iconClassName} />,
+      icon: <FIAIcon className={iconClassName} />,
       name: props.chatGptLabel ?? 'ChatGPT',
     },
     [EModelEndpoint.gptPlugins]: { icon: <MinimalPlugin />, name: 'Plugins' },
     [EModelEndpoint.google]: { icon: <GoogleMinimalIcon />, name: props.modelLabel ?? 'Google' },
     [EModelEndpoint.anthropic]: {
-      icon: <AnthropicIcon className="icon-md shrink-0 dark:text-white" />,
+      icon: <FIAIcon className="icon-md shrink-0 dark:text-white" />,
       name: props.modelLabel ?? 'Claude',
     },
     [EModelEndpoint.custom]: {

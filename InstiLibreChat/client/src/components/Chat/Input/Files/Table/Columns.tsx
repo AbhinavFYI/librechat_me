@@ -12,6 +12,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 import type { TFile } from 'librechat-data-provider';
 import ImagePreview from '~/components/Chat/Input/Files/ImagePreview';
 import FilePreview from '~/components/Chat/Input/Files/FilePreview';
+import FIAIcon from '~/components/Endpoints/FIAIcon';
 import { TranslationKeys, useLocalize } from '~/hooks';
 import { SortFilterHeader } from './SortFilterHeader';
 import { formatDate, getFileType } from '~/utils';
@@ -146,7 +147,7 @@ export const columns: ColumnDef<TFile>[] = [
       if (source === FileSources.openai) {
         return (
           <div className="flex flex-wrap items-center gap-2">
-            <OpenAIMinimalIcon className="icon-sm text-green-600/50" />
+            <FIAIcon className="icon-sm text-green-600/50" size={20} />
             {'OpenAI'}
           </div>
         );

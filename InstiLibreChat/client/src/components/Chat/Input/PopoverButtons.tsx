@@ -6,6 +6,7 @@ import { useChatContext } from '~/Providers';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils/';
 import store from '~/store';
+import FIAIcon from '~/components/Endpoints/FIAIcon';
 
 type TPopoverButton = {
   label: string;
@@ -74,7 +75,7 @@ export default function PopoverButtons({
           setSettingsView(SettingsViews.default);
           setShowAgentSettings((prev) => !prev);
         },
-        icon: <GPTIcon className={cn('mr-1 w-[14px]', iconClass)} size={24} />,
+        icon: <FIAIcon className={cn('mr-1 w-[14px]', iconClass)} size={24} />,
       },
     ],
   };
