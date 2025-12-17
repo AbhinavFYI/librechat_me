@@ -15,9 +15,8 @@ npm install vite
 echo "💾 Installing lucide-react..."
 npm install lucide-react
 
-# Build client
-echo "🏗 Building client..."
-npm run build:client
+echo "💾 Installing winston-daily-rotate-file..."
+npm install winston-daily-rotate-file
 
 # Re-install lucide-react and rebuild client (as requested)
 echo "🔄 Ensuring lucide-react is installed and rebuilding client..."
@@ -26,8 +25,7 @@ cd ..
 npm run build:client
 
 # Install backend dependencies
-echo "💾 Installing winston-daily-rotate-file..."
-npm install winston-daily-rotate-file
+
 
 # Start backend
 echo "🚀 Starting backend..."
