@@ -1,0 +1,56 @@
+saas-api/internal/handlers/documents.go
+  b164c8b 6,13,128,137-202
+saas-api/cmd/api/main.go
+  human 109,111-115,117-119,124-126,143-146,203
+  b164c8b 19,21,23,73-108,110,121-123,127-142,147-183,188-202,204-217,240,451-452,458-460
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.21",
+  "base_commit_sha": "818cf527c6dd9342fe5ba95b1edec8a9aca8d742",
+  "prompts": {
+    "b164c8b": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "e005ba38-9d7f-4f5a-a1c3-34fbee46a1e0",
+        "model": "default"
+      },
+      "human_author": "AbhinavFYI <abhinavshrijay.edge@fyers.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "document-service.ts:88  GET http://localhost:8080/api/v1/documents 404 (Not Found)\n\n\n\nfetchDocuments @ document-service.ts:88\n\n(anonymous) @ DocumentSelector.tsx:32\n\ncallCallback2 @ chunk-ER7BCVAJ.js?v=8c301c82:10558\n\ninvokeGuardedCallbackDev @ chunk-ER7BCVAJ.js?v=8c301c82:10583\n\ninvokeGuardedCallback @ chunk-ER7BCVAJ.js?v=8c301c82:10617\n\ninvokeGuardedCallbackAndCatchFirstError @ chunk-ER7BCVAJ.js?v=8c301c82:10620\n\nexecuteDispatch @ chunk-ER7BCVAJ.js?v=8c301c82:13924\n\nprocessDispatchQueueItemsInOrder @ chunk-ER7BCVAJ.js?v=8c301c82:13944\n\nprocessDispatchQueue @ chunk-ER7BCVAJ.js?v=8c301c82:13953\n\ndispatchEventsForPlugins @ chunk-ER7BCVAJ.js?v=8c301c82:13961\n\n(anonymous) @ chunk-ER7BCVAJ.js?v=8c301c82:14084\n\nbatchedUpdates$1 @ chunk-ER7BCVAJ.js?v=8c301c82:25844\n\nbatchedUpdates @ chunk-ER7BCVAJ.js?v=8c301c82:10463\n\ndispatchEventForPluginEventSystem @ chunk-ER7BCVAJ.js?v=8c301c82:14083\n\ndispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-ER7BCVAJ.js?v=8c301c82:12362\n\ndispatchEvent @ chunk-ER7BCVAJ.js?v=8c301c82:12356\n\ndispatchDiscreteEvent @ chunk-ER7BCVAJ.js?v=8c301c82:12333Understand this error\n\ndocument-service.ts:123 Document fetch error: Error: Fetch failed\n\n    at fetchDocuments (document-service.ts:98:13)\n\n    at async DocumentSelector.tsx:32:24\n\nfetchDocuments @ document-service.ts:123\n\nawait in fetchDocuments\n\n(anonymous) @ DocumentSelector.tsx:32\n\ncallCallback2 @ chunk-ER7BCVAJ.js?v=8c301c82:10558\n\ninvokeGuardedCallbackDev @ chunk-ER7BCVAJ.js?v=8c301c82:10583\n\ninvokeGuardedCallback @ chunk-ER7BCVAJ.js?v=8c301c82:10617\n\ninvokeGuardedCallbackAndCatchFirstError @ chunk-ER7BCVAJ.js?v=8c301c82:10620\n\nexecuteDispatch @ chunk-ER7BCVAJ.js?v=8c301c82:13924\n\nprocessDispatchQueueItemsInOrder @ chunk-ER7BCVAJ.js?v=8c301c82:13944\n\nprocessDispatchQueue @ chunk-ER7BCVAJ.js?v=8c301c82:13953\n\ndispatchEventsForPlugins @ chunk-ER7BCVAJ.js?v=8c301c82:13961\n\n(anonymous) @ chunk-ER7BCVAJ.js?v=8c301c82:14084\n\nbatchedUpdates$1 @ chunk-ER7BCVAJ.js?v=8c301c82:25844\n\nbatchedUpdates @ chunk-ER7BCVAJ.js?v=8c301c82:10463\n\ndispatchEventForPluginEventSystem @ chunk-ER7BCVAJ.js?v=8c301c82:14083\n\ndispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-ER7BCVAJ.js?v=8c301c82:12362\n\ndispatchEvent @ chunk-ER7BCVAJ.js?v=8c301c82:12356\n\ndispatchDiscreteEvent @ chunk-ER7BCVAJ.js?v=8c301c82:12333Understand this error\n\nDocumentSelector.tsx:69 Error loading documents: Error: Fetch failed\n\n    at fetchDocuments (document-service.ts:98:13)\n\n    at async DocumentSelector.tsx:32:24\n\n(anonymous) @ DocumentSelector.tsx:69\n\nawait in (anonymous)\n\ncallCallback2 @ chunk-ER7BCVAJ.js?v=8c301c82:10558\n\ninvokeGuardedCallbackDev @ chunk-ER7BCVAJ.js?v=8c301c82:10583\n\ninvokeGuardedCallback @ chunk-ER7BCVAJ.js?v=8c301c82:10617\n\ninvokeGuardedCallbackAndCatchFirstError @ chunk-ER7BCVAJ.js?v=8c301c82:10620\n\nexecuteDispatch @ chunk-ER7BCVAJ.js?v=8c301c82:13924\n\nprocessDispatchQueueItemsInOrder @ chunk-ER7BCVAJ.js?v=8c301c82:13944\n\nprocessDispatchQueue @ chunk-ER7BCVAJ.js?v=8c301c82:13953\n\ndispatchEventsForPlugins @ chunk-ER7BCVAJ.js?v=8c301c82:13961\n\n(anonymous) @ chunk-ER7BCVAJ.js?v=8c301c82:14084\n\nbatchedUpdates$1 @ chunk-ER7BCVAJ.js?v=8c301c82:25844\n\nbatchedUpdates @ chunk-ER7BCVAJ.js?v=8c301c82:10463\n\ndispatchEventForPluginEventSystem @ chunk-ER7BCVAJ.js?v=8c301c82:14083\n\ndispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-ER7BCVAJ.js?v=8c301c82:12362\n\ndispatchEvent @ chunk-ER7BCVAJ.js?v=8c301c82:12356\n\ndispatchDiscreteEvent @ chunk-ER7BCVAJ.js?v=8c301c82:12333Understand this error\n\ndocument-service.ts:88  GET http://localhost:8080/api/v1/documents 404 (Not Found)\n\nfetchDocuments @ document-service.ts:88\n\n(anonymous) @ DocumentSelector.tsx:32\n\ncallCallback2 @ chunk-ER7BCVAJ.js?v=8c301c82:10558\n\ninvokeGuardedCallbackDev @ chunk-ER7BCVAJ.js?v=8c301c82:10583\n\ninvokeGuardedCallback @ chunk-ER7BCVAJ.js?v=8c301c82:10617\n\ninvokeGuardedCallbackAndCatchFirstError @ chunk-ER7BCVAJ.js?v=8c301c82:10620\n\nexecuteDispatch @ chunk-ER7BCVAJ.js?v=8c301c82:13924\n\nprocessDispatchQueueItemsInOrder @ chunk-ER7BCVAJ.js?v=8c301c82:13944\n\nprocessDispatchQueue @ chunk-ER7BCVAJ.js?v=8c301c82:13953\n\ndispatchEventsForPlugins @ chunk-ER7BCVAJ.js?v=8c301c82:13961\n\n(anonymous) @ chunk-ER7BCVAJ.js?v=8c301c82:14084\n\nbatchedUpdates$1 @ chunk-ER7BCVAJ.js?v=8c301c82:25844\n\nbatchedUpdates @ chunk-ER7BCVAJ.js?v=8c301c82:10463\n\ndispatchEventForPluginEventSystem @ chunk-ER7BCVAJ.js?v=8c301c82:14083\n\ndispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-ER7BCVAJ.js?v=8c301c82:12362\n\ndispatchEvent @ chunk-ER7BCVAJ.js?v=8c301c82:12356\n\ndispatchDiscreteEvent @ chunk-ER7BCVAJ.js?v=8c301c82:12333Understand this error\n\ndocument-service.ts:123 Document fetch error: Error: Fetch failed\n\n    at fetchDocuments (document-service.ts:98:13)\n\n    at async DocumentSelector.tsx:32:24\n\nfetchDocuments @ document-service.ts:123\n\nawait in fetchDocuments\n\n(anonymous) @ DocumentSelector.tsx:32\n\ncallCallback2 @ chunk-ER7BCVAJ.js?v=8c301c82:10558\n\ninvokeGuardedCallbackDev @ chunk-ER7BCVAJ.js?v=8c301c82:10583\n\ninvokeGuardedCallback @ chunk-ER7BCVAJ.js?v=8c301c82:10617\n\ninvokeGuardedCallbackAndCatchFirstError @ chunk-ER7BCVAJ.js?v=8c301c82:10620\n\nexecuteDispatch @ chunk-ER7BCVAJ.js?v=8c301c82:13924\n\nprocessDispatchQueueItemsInOrder @ chunk-ER7BCVAJ.js?v=8c301c82:13944\n\nprocessDispatchQueue @ chunk-ER7BCVAJ.js?v=8c301c82:13953\n\ndispatchEventsForPlugins @ chunk-ER7BCVAJ.js?v=8c301c82:13961\n\n(anonymous) @ chunk-ER7BCVAJ.js?v=8c301c82:14084\n\nbatchedUpdates$1 @ chunk-ER7BCVAJ.js?v=8c301c82:25844\n\nbatchedUpdates @ chunk-ER7BCVAJ.js?v=8c301c82:10463\n\ndispatchEventForPluginEventSystem @ chunk-ER7BCVAJ.js?v=8c301c82:14083\n\ndispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-ER7BCVAJ.js?v=8c301c82:12362\n\ndispatchEvent @ chunk-ER7BCVAJ.js?v=8c301c82:12356\n\ndispatchDiscreteEvent @ chunk-ER7BCVAJ.js?v=8c301c82:12333Understand this error\n\nDocumentSelector.tsx:69 Error loading documents: Error: Fetch failed\n\n    at fetchDocuments (document-service.ts:98:13)\n\n    at async DocumentSelector.tsx:32:24",
+          "timestamp": "2025-12-18T05:47:28.022Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Investigating the 404 on `/api/v1/documents`. Examining the relevant files to understand the issue.",
+          "timestamp": "2025-12-18T05:47:32.769Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "glob_file_search",
+          "input": {
+            "globPattern": "**/document-service.ts"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "glob_file_search",
+          "input": {
+            "globPattern": "**/DocumentSelector.tsx"
+          }
+        },
+        {
+          "type": "assistant",
+          "text": "Reading the frontend files to see the exact URL being used:",
+          "timestamp": "2025-12-18T05:48:16.827Z"
+        }
+      ],
+      "total_additions": 326,
+      "total_deletions": 100,
+      "accepted_lines": 210,
+      "overriden_lines": 17
+    }
+  }
+}
