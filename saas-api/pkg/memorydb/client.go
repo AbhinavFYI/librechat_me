@@ -2,7 +2,6 @@ package memorydb
 
 import (
 	"context"
-	"crypto/tls"
 	"saas-api/cmd/configs"
 	"time"
 
@@ -10,23 +9,18 @@ import (
 )
 
 type RedisClient struct {
-	*redis.ClusterClient
+	client redis.UniversalClient
 }
 
 func NewRedisClient(ctx context.Context, config *configs.Config) (*RedisClient, error) {
-	client := redis.NewClusterClient(&redis.ClusterOptions{
-		Addrs: []string{
-			config.MemoryDBRedisURL, // Add all your cluster node addresses here
-		},
-		Username: config.MemoryDBRedisUsername, // If using Redis ACL
-		Password: config.MemoryDBRedisPassword, // If authentication is required
-		TLSConfig: &tls.Config{
-			MinVersion: tls.VersionTLS12,
-			// Uncomment if you need to skip certificate verification (not recommended for production)
-			// InsecureSkipVerify: true,
-		},
+	// Use UniversalClient which works with both standalone and cluster Redis
+	client := redis.NewUniversalClient(&redis.UniversalOptions{
+		Addrs:        []string{config.MemoryDBRedisURL},
+		Username:     config.MemoryDBRedisUsername,
+		Password:     config.MemoryDBRedisPassword,
 		ReadTimeout:  time.Second * 5,
 		WriteTimeout: time.Second * 5,
+		PoolSize:     10,
 	})
 
 	if err := client.Ping(ctx).Err(); err != nil {
@@ -34,9 +28,29 @@ func NewRedisClient(ctx context.Context, config *configs.Config) (*RedisClient, 
 		return nil, err
 	}
 
-	return &RedisClient{client}, nil
+	return &RedisClient{client: client}, nil
 }
 
 func (r *RedisClient) Ping(ctx context.Context) error {
-	return r.ClusterClient.Ping(ctx).Err()
+	return r.client.Ping(ctx).Err()
+}
+
+// Get retrieves a value from Redis
+func (r *RedisClient) Get(ctx context.Context, key string) (string, error) {
+	return r.client.Get(ctx, key).Result()
+}
+
+// Set stores a value in Redis
+func (r *RedisClient) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error {
+	return r.client.Set(ctx, key, value, expiration).Err()
+}
+
+// Del deletes a key from Redis
+func (r *RedisClient) Del(ctx context.Context, keys ...string) error {
+	return r.client.Del(ctx, keys...).Err()
+}
+
+// Close closes the Redis connection
+func (r *RedisClient) Close() error {
+	return r.client.Close()
 }
