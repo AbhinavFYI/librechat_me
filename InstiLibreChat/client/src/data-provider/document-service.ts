@@ -61,7 +61,7 @@ export const uploadDocument = async (
   formData.append('db_backend', 'docling_postgres');
   formData.append('owner', ownerValue);
   
-  // Add org_id if provided (required for superadmins, optional for org users)
+  // Add org_id if provided (optional for superadmins, required for org users)
   if (orgId) {
     formData.append('org_id', orgId);
   } else {
@@ -70,9 +70,11 @@ export const uploadDocument = async (
     if (userDataStr) {
       try {
         const userData = JSON.parse(userDataStr);
+        // Only add org_id if user is not a superadmin or if they have an org_id
         if (userData.org_id) {
           formData.append('org_id', userData.org_id);
         }
+        // Superadmins without org_id can upload without it
       } catch (e) {
         console.warn('Failed to parse user data for org_id:', e);
       }

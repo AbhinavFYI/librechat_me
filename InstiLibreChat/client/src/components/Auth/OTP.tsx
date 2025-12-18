@@ -84,16 +84,12 @@ function OTP() {
         }
         
         // Check and store admin access status immediately during login
+        // Based on org_role: show admin panel if org_role === 'admin' OR is_super_admin === true
         const isSuperAdmin = userData.is_super_admin === true;
-        let hasAdminPermission = false;
+        const orgRole = userData.org_role || userData.orgRole;
+        const isOrgAdmin = orgRole === 'admin';
         
-        if (data.permissions && Array.isArray(data.permissions)) {
-          hasAdminPermission = data.permissions.some(
-            (p: any) => p && p.resource === 'admin' && p.action === 'read'
-          );
-        }
-        
-        const canAccessAdmin = isSuperAdmin || hasAdminPermission;
+        const canAccessAdmin = isSuperAdmin || isOrgAdmin;
         localStorage.setItem('canAccessAdmin', JSON.stringify(canAccessAdmin));
         
         // Step 1: Login to proxy server - this syncs user to MongoDB and sets JWT cookie

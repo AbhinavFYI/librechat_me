@@ -235,22 +235,82 @@ func (p *DocumentWorkerPool) updateJobStatus(jobID int64, status defines.JobStat
 			errMsg = &msg
 		}
 
-		// TODO: Worker pool needs to be updated to use UUID instead of int64
-		// For now, skip database updates from worker pool
-		_ = status
-		_ = errMsg
-		// switch status {
-		// case defines.JobStatusEmbedding:
-		// 	p.documentRepo.MarkEmbedding(p.ctx, jobID)
-		// case defines.JobStatusCompleted:
-		// 	p.documentRepo.MarkProcessed(p.ctx, jobID)
-		// case defines.JobStatusFailed:
-		// 	if errMsg != nil {
-		// 		p.documentRepo.MarkFailed(p.ctx, jobID, *errMsg)
-		// 	}
-		// default:
-		// 	p.documentRepo.UpdateStatus(p.ctx, jobID, repositories.DocumentStatus(status), errMsg)
-		// }
+		// Update document status based on job status
+		switch status {
+		case defines.JobStatusEmbedding:
+			// Update status to embedding
+			doc, getErr := p.documentRepo.GetByID(p.ctx, jobID)
+			if getErr != nil {
+				fmt.Printf("❌ Failed to get document %d for embedding status update: %v\n", jobID, getErr)
+			} else {
+				doc.Status = repositories.DocumentStatusEmbedding
+				if updateErr := p.documentRepo.Update(p.ctx, doc); updateErr != nil {
+					fmt.Printf("❌ Failed to update document %d to embedding status: %v\n", jobID, updateErr)
+				} else {
+					fmt.Printf("✅ Document %d status updated to: embedding\n", jobID)
+				}
+			}
+		case defines.JobStatusCompleted:
+			// Update status to completed
+			doc, getErr := p.documentRepo.GetByID(p.ctx, jobID)
+			if getErr != nil {
+				fmt.Printf("❌ Failed to get document %d for completed status update: %v\n", jobID, getErr)
+			} else {
+				doc.Status = repositories.DocumentStatusCompleted
+				now := time.Now()
+				doc.ProcessedAt = &now
+				if updateErr := p.documentRepo.Update(p.ctx, doc); updateErr != nil {
+					fmt.Printf("❌ Failed to update document %d to completed status: %v\n", jobID, updateErr)
+				} else {
+					fmt.Printf("✅ Document %d status updated to: completed\n", jobID)
+				}
+			}
+		case defines.JobStatusFailed:
+			// Update status to failed with error message
+			doc, getErr := p.documentRepo.GetByID(p.ctx, jobID)
+			if getErr != nil {
+				fmt.Printf("❌ Failed to get document %d for failed status update: %v\n", jobID, getErr)
+			} else {
+				doc.Status = repositories.DocumentStatusFailed
+				if errMsg != nil {
+					doc.Content.ErrorMessage = errMsg
+				}
+				if updateErr := p.documentRepo.Update(p.ctx, doc); updateErr != nil {
+					fmt.Printf("❌ Failed to update document %d to failed status: %v\n", jobID, updateErr)
+				} else {
+					fmt.Printf("✅ Document %d status updated to: failed\n", jobID)
+				}
+			}
+		case defines.JobStatusProcessing:
+			// Update status to processing
+			doc, getErr := p.documentRepo.GetByID(p.ctx, jobID)
+			if getErr != nil {
+				fmt.Printf("❌ Failed to get document %d for processing status update: %v\n", jobID, getErr)
+			} else {
+				doc.Status = repositories.DocumentStatusProcessing
+				if updateErr := p.documentRepo.Update(p.ctx, doc); updateErr != nil {
+					fmt.Printf("❌ Failed to update document %d to processing status: %v\n", jobID, updateErr)
+				} else {
+					fmt.Printf("✅ Document %d status updated to: processing\n", jobID)
+				}
+			}
+		default:
+			// Update to custom status
+			doc, getErr := p.documentRepo.GetByID(p.ctx, jobID)
+			if getErr != nil {
+				fmt.Printf("❌ Failed to get document %d for status update: %v\n", jobID, getErr)
+			} else {
+				doc.Status = repositories.DocumentStatus(status)
+				if errMsg != nil {
+					doc.Content.ErrorMessage = errMsg
+				}
+				if updateErr := p.documentRepo.Update(p.ctx, doc); updateErr != nil {
+					fmt.Printf("❌ Failed to update document %d status: %v\n", jobID, updateErr)
+				} else {
+					fmt.Printf("✅ Document %d status updated to: %s\n", jobID, status)
+				}
+			}
+		}
 	}
 }
 

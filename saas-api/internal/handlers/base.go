@@ -4,8 +4,6 @@ import (
 	"context"
 	"saas-api/internal/middleware"
 	"saas-api/internal/services"
-
-	"github.com/google/uuid"
 )
 
 // BaseHandler provides common functionality and dependencies for all handlers
@@ -50,7 +48,7 @@ func NewHandlers(services *services.Services, storagePath string, authService *s
 
 	// Get document service for file handler (if available)
 	var docService interface {
-		DeleteDocument(ctx context.Context, documentID uuid.UUID) error
+		DeleteDocument(ctx context.Context, documentID int64) error
 	}
 	if services.Document != nil {
 		docService = services.Document

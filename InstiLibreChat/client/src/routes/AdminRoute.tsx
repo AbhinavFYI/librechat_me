@@ -46,28 +46,18 @@ export default function AdminRoute() {
       }
       
       // If not in localStorage, check from userInfo
+      // Check based on org_role: show admin panel if org_role === 'admin' OR is_super_admin === true
       if (!canAccessAdmin) {
         const isSuperAdmin = userInfo.is_super_admin === true;
-        const storedPerms = localStorage.getItem('permissions');
-        let hasAdminPermission = false;
-        
-        if (storedPerms) {
-          try {
-            const perms = JSON.parse(storedPerms);
-            hasAdminPermission = perms.some(
-              (p: any) => p && p.resource === 'admin' && p.action === 'read'
-            );
-          } catch (e) {
-            // Ignore parse errors
-          }
-        }
+        const orgRole = userInfo.org_role || userInfo.orgRole;
+        const isOrgAdmin = orgRole === 'admin';
 
-        canAccessAdmin = isSuperAdmin || hasAdminPermission;
+        canAccessAdmin = isSuperAdmin || isOrgAdmin;
         // Update localStorage
         localStorage.setItem('canAccessAdmin', JSON.stringify(canAccessAdmin));
       }
 
-      // Only super admins or users with admin permission can access admin panel
+      // Only super admins or users with org_role === 'admin' can access admin panel
       // Verified users (email_verified && active) should NOT see the admin panel
       if (!canAccessAdmin) {
         // Immediately redirect to chat (Stock research)
@@ -107,23 +97,13 @@ export default function AdminRoute() {
   }
   
   // If not in localStorage, check from userInfo
+  // Check based on org_role: show admin panel if org_role === 'admin' OR is_super_admin === true
   if (!canAccessAdmin) {
     const isSuperAdmin = userInfo.is_super_admin === true;
-    const storedPerms = localStorage.getItem('permissions');
-    let hasAdminPermission = false;
-    
-    if (storedPerms) {
-      try {
-        const perms = JSON.parse(storedPerms);
-        hasAdminPermission = perms.some(
-          (p: any) => p && p.resource === 'admin' && p.action === 'read'
-        );
-      } catch (e) {
-        // Ignore parse errors
-      }
-    }
+    const orgRole = userInfo.org_role || userInfo.orgRole;
+    const isOrgAdmin = orgRole === 'admin';
 
-    canAccessAdmin = isSuperAdmin || hasAdminPermission;
+    canAccessAdmin = isSuperAdmin || isOrgAdmin;
     // Update localStorage
     localStorage.setItem('canAccessAdmin', JSON.stringify(canAccessAdmin));
   }

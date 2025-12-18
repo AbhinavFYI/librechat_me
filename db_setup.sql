@@ -605,15 +605,14 @@ EXCEPTION
 END $$;
 
 CREATE TABLE documents (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id BIGSERIAL PRIMARY KEY,
   
-  -- Multi-tenant org scope
-  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  -- Multi-tenant org scope (nullable for superadmin documents)
+  org_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
   
   -- Hierarchy
   folder_id UUID REFERENCES folders(id) ON DELETE SET NULL,
-  parent_id UUID REFERENCES documents(id) ON DELETE CASCADE,
-  doc_id UUID,
+  parent_id BIGINT REFERENCES documents(id) ON DELETE CASCADE,
   
   -- Minimal identity
   name VARCHAR(512) NOT NULL,

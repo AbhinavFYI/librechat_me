@@ -380,13 +380,13 @@ export const saasApi = {
     return handleResponse(response);
   },
 
-  async downloadFile(id: string): Promise<Blob> {
+  async downloadFile(id: number): Promise<Blob> {
     const token = getAuthToken();
     const headers: HeadersInit = {};
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-    const url = `${API_BASE_URL}/files/${id}?download=true`;
+    const url = `${API_BASE_URL}/documents/${id}/download`;
     console.log('Downloading file:', url);
     
     const response = await fetch(url, {
@@ -486,11 +486,11 @@ export const saasApi = {
     return handleResponse(response);
   },
 
-  // Files
+  // Files (now using documents API)
   async getFiles(folderId?: string, page = 1, limit = 1000) {
     const url = folderId
-      ? `${API_BASE_URL}/files?folder_id=${folderId}&page=${page}&limit=${limit}`
-      : `${API_BASE_URL}/files?page=${page}&limit=${limit}`;
+      ? `${API_BASE_URL}/documents?folder_id=${folderId}&page=${page}&limit=${limit}`
+      : `${API_BASE_URL}/documents?page=${page}&limit=${limit}`;
     const response = await fetch(url, {
       method: 'GET',
       headers: getAuthHeaders(),
@@ -498,8 +498,8 @@ export const saasApi = {
     return handleResponse(response);
   },
 
-  async getFile(id: string) {
-    const response = await fetch(`${API_BASE_URL}/files/${id}`, {
+  async getFile(id: number) {
+    const response = await fetch(`${API_BASE_URL}/documents/${id}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -507,7 +507,8 @@ export const saasApi = {
   },
 
   async createFile(data: any) {
-    const response = await fetch(`${API_BASE_URL}/files`, {
+    // Files are created via document upload
+    const response = await fetch(`${API_BASE_URL}/documents/upload`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
@@ -531,7 +532,7 @@ export const saasApi = {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE_URL}/files/upload`, {
+    const response = await fetch(`${API_BASE_URL}/documents/upload`, {
       method: 'POST',
       headers,
       body: formData,
@@ -539,8 +540,8 @@ export const saasApi = {
     return handleResponse(response);
   },
 
-  async updateFile(id: string, data: any) {
-    const response = await fetch(`${API_BASE_URL}/files/${id}`, {
+  async updateFile(id: number, data: any) {
+    const response = await fetch(`${API_BASE_URL}/documents/${id}`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
@@ -548,8 +549,8 @@ export const saasApi = {
     return handleResponse(response);
   },
 
-  async deleteFile(id: string) {
-    const response = await fetch(`${API_BASE_URL}/files/${id}`, {
+  async deleteFile(id: number) {
+    const response = await fetch(`${API_BASE_URL}/documents/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });

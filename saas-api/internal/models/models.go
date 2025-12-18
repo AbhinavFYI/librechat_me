@@ -432,7 +432,7 @@ type AssignFolderPermissionRequest struct {
 
 // File models
 type File struct {
-	ID         uuid.UUID  `json:"id"`
+	ID         int64      `json:"id"` // Changed from uuid.UUID to int64 to match documents table
 	OrgID      uuid.UUID  `json:"org_id"`
 	FolderID   *uuid.UUID `json:"folder_id,omitempty"`
 	Name       string     `json:"name"`

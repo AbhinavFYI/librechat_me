@@ -25,7 +25,7 @@ interface FolderNode {
 }
 
 interface FileNode {
-  id: string;
+  id: number; // Changed from string to number (documents use int64 IDs)
   name: string;
   extension?: string;
   size_bytes?: number;

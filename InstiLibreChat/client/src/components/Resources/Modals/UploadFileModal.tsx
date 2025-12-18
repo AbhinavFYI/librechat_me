@@ -104,54 +104,28 @@ export default function UploadFileModal({ folderId, orgId, folders = [], onClose
     setError(null);
 
     try {
-      // Step 1: Upload document to document service (same as chat upload)
-      // Pass orgId to uploadDocument for superadmins
-      const response = await uploadDocument(selectedFile, undefined, orgId || undefined);
+      // Upload document directly with folder_id using saasApi
+      // This will automatically assign to the specified folder or Resources if no folder
+      const response = await saasApi.uploadFile(
+        selectedFile, 
+        selectedFolderId || undefined, // Pass folder ID if selected
+        orgId || undefined
+      );
 
-      if (response.code === 202 || response.s === 'ok') {
-        // Step 2: Store folder association in our database if folder is selected
-        if (selectedFolderId) {
-          try {
-            // Get document data from response - handle different response structures
-            const responseData = response.data || response;
-            const documentId = responseData.document_id || responseData.id || responseData.documentId;
-            const filePath = responseData.file_path || responseData.filePath || responseData.path || '';
-            
-            // Create file record in our database with folder association
-            await saasApi.createFile({
-              name: selectedFile.name,
-              file_path: filePath,
-              document_id: documentId,
-              folder_id: selectedFolderId,
-              org_id: orgId || undefined,
-              size_bytes: selectedFile.size,
-              mime_type: selectedFile.type,
-            });
-            
-            showToast({
-              message: `Document "${selectedFile.name}" uploaded successfully and associated with folder`,
-              status: 'success',
-            });
-          } catch (dbError: any) {
-            // Document uploaded but folder association failed
-            console.warn('Failed to store folder association:', dbError);
-            showToast({
-              message: `Document uploaded but failed to associate with folder: ${dbError.message || 'Unknown error'}`,
-              status: 'warning',
-            });
-          }
-        } else {
-          // No folder selected, just upload the document
-          showToast({
-            message: `Document "${selectedFile.name}" uploaded successfully and is being processed`,
-            status: 'success',
-          });
-        }
+      if (response) {
+        const folderMessage = selectedFolderId 
+          ? 'uploaded successfully and associated with folder' 
+          : 'uploaded successfully to Resources folder';
+        
+        showToast({
+          message: `Document "${selectedFile.name}" ${folderMessage}`,
+          status: 'success',
+        });
         
         onSuccess();
         onClose();
       } else {
-        throw new Error(response.message || 'Upload failed');
+        throw new Error('Upload failed');
       }
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to upload file';

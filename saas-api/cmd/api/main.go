@@ -22,7 +22,6 @@ import (
 
 	"saas-api/cmd/configs"
 
-	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 
 	"github.com/gin-gonic/gin"
@@ -233,26 +232,16 @@ func main() {
 	personaHandler := handlers.NewPersonaHandler(personaRepo)
 	folderHandler := handlers.NewFolderHandler(folderRepo, docRepo)
 
-	// Get document service for file handler (if available)
-	var docService interface {
-		DeleteDocument(ctx context.Context, documentID uuid.UUID) error
-	}
-	if documentHandler != nil {
-		// Get the document service from the services
-		baseService := services.NewBaseService(repos, redisClient, weaviateClient)
-		minimalConfigsConfig := &configs.Config{}
-		svcs := services.NewServices(baseService, userRepo, tokenRepo, tokenService, minimalConfigsConfig)
-		docService = svcs.Document
-	}
-
-	fileHandler := handlers.NewFileHandler(folderRepo, docRepo, docService, cfg.App.StoragePath)
+	// File handler removed - all file operations now use /api/v1/documents
+	// The fileHandler is no longer needed as we use a unified documents API
+	// fileHandler := handlers.NewFileHandler(folderRepo, docRepo, docService, cfg.App.StoragePath)
 	staticHandler := handlers.NewStaticHandler(cfg.App.StoragePath, docRepo)
 	libreChatHandler := handlers.NewLibreChatHandler()
 	auditLogHandler := handlers.NewAuditLogHandler(auditLogRepo)
 	screenerHandler := handlers.NewScreenerHandler(screenerRepo, userRepo)
 
 	// Setup router
-	router := setupRouter(cfg, authHandler, userHandler, orgHandler, roleHandler, permHandler, templateHandler, personaHandler, folderHandler, fileHandler, staticHandler, libreChatHandler, auditLogHandler, screenerHandler, documentHandler, authMW, rlsMW, permMW)
+	router := setupRouter(cfg, authHandler, userHandler, orgHandler, roleHandler, permHandler, templateHandler, personaHandler, folderHandler, staticHandler, libreChatHandler, auditLogHandler, screenerHandler, documentHandler, authMW, rlsMW, permMW)
 
 	// Create HTTP server
 	srv := &http.Server{
@@ -297,7 +286,7 @@ func setupRouter(
 	templateHandler *handlers.TemplateHandler,
 	personaHandler *handlers.PersonaHandler,
 	folderHandler *handlers.FolderHandler,
-	fileHandler *handlers.FileHandler,
+	// fileHandler *handlers.FileHandler,
 	staticHandler *handlers.StaticHandler,
 	libreChatHandler *handlers.LibreChatHandler,
 	auditLogHandler *handlers.AuditLogHandler,
@@ -431,15 +420,20 @@ func setupRouter(
 			}
 
 			// Files - Only admin and superadmin can create/update/delete
-			files := protected.Group("/files")
-			{
-				files.POST("", permMW.RequirePermission("files", "create"), fileHandler.Create)
-				files.POST("/upload", permMW.RequirePermission("files", "create"), fileHandler.Upload)
-				files.GET("", fileHandler.List)
-				files.GET("/:id", fileHandler.GetByID)
-				files.PUT("/:id", permMW.RequirePermission("files", "update"), fileHandler.Update)
-				files.DELETE("/:id", permMW.RequirePermission("files", "delete"), fileHandler.Delete)
-			}
+			// DEPRECATED: /api/v1/files routes - Use /api/v1/documents instead
+			// All file operations now go through the documents API for consistency
+			// Keeping these commented out for reference, can be removed later
+			/*
+				files := protected.Group("/files")
+				{
+					files.POST("", permMW.RequirePermission("files", "create"), fileHandler.Create)
+					files.POST("/upload", permMW.RequirePermission("files", "create"), fileHandler.Upload)
+					files.GET("", fileHandler.List)
+					files.GET("/:id", fileHandler.GetByID)
+					files.PUT("/:id", permMW.RequirePermission("files", "update"), fileHandler.Update)
+					files.DELETE("/:id", permMW.RequirePermission("files", "delete"), fileHandler.Delete)
+				}
+			*/
 
 			// Audit Logs - Read access for authenticated users
 			auditLogs := protected.Group("/audit-logs")
