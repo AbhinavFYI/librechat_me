@@ -3,12 +3,14 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
 
+	"saas-api/internal/models"
 	"saas-api/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -123,13 +125,81 @@ func (h *DocumentHandler) UploadDocument() gin.HandlerFunc {
 			Metadata: metadata,
 		}
 
-		// Call service
+		// Call service to create document entry
 		response, err := h.Services.Document.UploadDocument(c.Request.Context(), req)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": err.Error(),
 			})
 			return
+		}
+
+		// Also create an entry in the files table
+		if orgID != nil {
+			// Get file repository from services
+			fileRepo := h.Services.GetRepositories().File
+			if fileRepo != nil {
+				// Parse user ID to UUID
+				userUUID, err := uuid.Parse(userIDStr)
+				if err == nil {
+					// Extract extension from filename
+					ext := filepath.Ext(filename)
+					if ext != "" {
+						ext = strings.ToLower(ext[1:]) // Remove the dot
+					}
+
+					// Determine MIME type (simplified)
+					mimeType := "application/octet-stream"
+					if ext != "" {
+						// Basic MIME type detection
+						switch ext {
+						case "pdf":
+							mimeType = "application/pdf"
+						case "doc", "docx":
+							mimeType = "application/msword"
+						case "xls", "xlsx":
+							mimeType = "application/vnd.ms-excel"
+						case "txt":
+							mimeType = "text/plain"
+						case "jpg", "jpeg":
+							mimeType = "image/jpeg"
+						case "png":
+							mimeType = "image/png"
+						}
+					}
+
+					// Parse folder_id to UUID if provided
+					var folderUUID *uuid.UUID
+					if folderID != nil {
+						if parsedFolderID, err := uuid.Parse(*folderID); err == nil {
+							folderUUID = &parsedFolderID
+						}
+					}
+
+					// Get file size
+					fileSize := file.Size
+
+					// Create file entry
+					fileEntry := &models.File{
+						ID:         uuid.New(),
+						OrgID:      *orgID,
+						FolderID:   folderUUID,
+						Name:       filename,
+						Extension:  &ext,
+						MimeType:   &mimeType,
+						SizeBytes:  &fileSize,
+						StorageKey: filePath, // Use the same path as document
+						Version:    1,
+						CreatedBy:  &userUUID,
+					}
+
+					// Create file entry (ignore errors - document is already created)
+					if err := fileRepo.Create(c.Request.Context(), fileEntry); err != nil {
+						log.Printf("Warning: Failed to create file entry: %v", err)
+						// Don't fail the request, document is already created
+					}
+				}
+			}
 		}
 
 		c.JSON(http.StatusOK, gin.H{

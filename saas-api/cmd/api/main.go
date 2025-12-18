@@ -16,7 +16,11 @@ import (
 	"saas-api/internal/middleware"
 	"saas-api/internal/repositories"
 	"saas-api/internal/services"
+	"saas-api/pkg/memorydb"
 	"saas-api/pkg/postgres"
+	"saas-api/pkg/weaviate"
+
+	"saas-api/cmd/configs"
 
 	"github.com/joho/godotenv"
 
@@ -66,9 +70,151 @@ func main() {
 	auditLogRepo := repositories.NewAuditLogRepository(db)
 	screenerRepo := repositories.NewScreenerRepository(db)
 
+	// Initialize Redis and Weaviate clients for document service
+	ctx := context.Background()
+
+	// Create minimal configs.Config for Redis and Weaviate
+	// Import configs package to use its Config type
+	type MinimalConfig struct {
+		MemoryDBRedisURL      string
+		MemoryDBRedisUsername string
+		MemoryDBRedisPassword string
+		WeaviateHost          string
+		WeaviatePort          string
+		WeaviateScheme        string
+	}
+
+	minimalConfig := &MinimalConfig{
+		MemoryDBRedisURL:      os.Getenv("REDIS_URL"),
+		MemoryDBRedisUsername: os.Getenv("REDIS_USERNAME"),
+		MemoryDBRedisPassword: os.Getenv("REDIS_PASSWORD"),
+		WeaviateHost:          os.Getenv("WEAVIATE_HOST"),
+		WeaviatePort:          os.Getenv("WEAVIATE_PORT"),
+		WeaviateScheme:        os.Getenv("WEAVIATE_SCHEME"),
+	}
+
+	// Set defaults
+	if minimalConfig.WeaviateHost == "" {
+		minimalConfig.WeaviateHost = "10.10.6.13"
+	}
+	if minimalConfig.WeaviatePort == "" {
+		minimalConfig.WeaviatePort = "7080"
+	}
+	if minimalConfig.WeaviateScheme == "" {
+		minimalConfig.WeaviateScheme = "http"
+	}
+
+	// Initialize Redis client
+	var redisClient *memorydb.RedisClient
+	if minimalConfig.MemoryDBRedisURL != "" {
+		log.Printf("Attempting to connect to Redis at: %s", minimalConfig.MemoryDBRedisURL)
+		// Create a configs.Config-compatible struct
+		redisConfig := struct {
+			MemoryDBRedisURL      string
+			MemoryDBRedisUsername string
+			MemoryDBRedisPassword string
+		}{
+			MemoryDBRedisURL:      minimalConfig.MemoryDBRedisURL,
+			MemoryDBRedisUsername: minimalConfig.MemoryDBRedisUsername,
+			MemoryDBRedisPassword: minimalConfig.MemoryDBRedisPassword,
+		}
+
+		// Create a proper configs.Config
+		redisConfigFull := &configs.Config{
+			MemoryDBRedisURL:      redisConfig.MemoryDBRedisURL,
+			MemoryDBRedisUsername: redisConfig.MemoryDBRedisUsername,
+			MemoryDBRedisPassword: redisConfig.MemoryDBRedisPassword,
+		}
+
+		var err error
+		redisClient, err = memorydb.NewRedisClient(ctx, redisConfigFull)
+		if err != nil {
+			log.Printf("❌ Failed to initialize Redis client: %v. Document service will not be available.", err)
+			redisClient = nil
+		} else {
+			log.Printf("✅ Redis client initialized successfully")
+		}
+	} else {
+		log.Printf("⚠️  REDIS_URL not set. Document service will not be available.")
+	}
+
+	// Initialize Weaviate client
+	var weaviateClient *weaviate.WeaviateClient
+	weaviateConfigFull := &configs.Config{
+		WeaviateHost:   minimalConfig.WeaviateHost,
+		WeaviatePort:   minimalConfig.WeaviatePort,
+		WeaviateScheme: minimalConfig.WeaviateScheme,
+	}
+
+	log.Printf("Attempting to connect to Weaviate at: %s://%s:%s", minimalConfig.WeaviateScheme, minimalConfig.WeaviateHost, minimalConfig.WeaviatePort)
+
+	// Try to initialize Weaviate (it may panic, so we catch it)
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("❌ Failed to initialize Weaviate client: %v. Document service will not be available.", r)
+				weaviateClient = nil
+			}
+		}()
+		weaviateClient = weaviate.NewWeaviateClient(weaviateConfigFull)
+		if weaviateClient != nil {
+			log.Printf("✅ Weaviate client initialized successfully")
+		}
+	}()
+
+	// Initialize document repositories
+	docRepo := repositories.NewDocumentRepository(db, db)
+
+	// Create repositories struct for document service
+	repos := &repositories.Repositories{
+		User:         userRepo,
+		Organization: orgRepo,
+		Role:         roleRepo,
+		Permission:   permRepo,
+		RefreshToken: tokenRepo,
+		Document:     docRepo,
+		Folder:       folderRepo,
+		File:         fileRepo,
+		Template:     templateRepo,
+		Persona:      personaRepo,
+		AuditLog:     auditLogRepo,
+		Screener:     screenerRepo,
+	}
+
 	// Initialize services
 	tokenService := auth.NewTokenService(cfg)
 	authService := services.NewAuthService(userRepo, tokenRepo, tokenService, cfg)
+
+	// Initialize document service (only if Redis and Weaviate are available)
+	var documentHandler *handlers.DocumentHandler
+	log.Printf("Checking document service dependencies - Redis: %v, Weaviate: %v", redisClient != nil, weaviateClient != nil)
+
+	if redisClient != nil && weaviateClient != nil {
+		log.Println("Initializing document service...")
+		baseService := services.NewBaseService(repos, redisClient, weaviateClient)
+
+		// Create services struct - this will create DocumentService internally
+		// We need to pass a configs.Config, but we'll create a minimal one
+		minimalConfigsConfig := &configs.Config{} // Empty config, document service uses env vars
+		svcs := services.NewServices(baseService, userRepo, tokenRepo, tokenService, minimalConfigsConfig)
+
+		// Initialize document schema
+		if err := svcs.Document.InitSchema(ctx); err != nil {
+			log.Printf("Warning: Failed to initialize document schema: %v", err)
+		}
+
+		documentHandler = handlers.NewDocumentHandler(svcs)
+		log.Println("✅ Document service initialized successfully")
+	} else {
+		if redisClient == nil {
+			log.Println("⚠️  Redis client is nil - Document service will not be available")
+		}
+		if weaviateClient == nil {
+			log.Println("⚠️  Weaviate client is nil - Document service will not be available")
+		}
+		log.Println("⚠️  Document service not initialized (Redis or Weaviate unavailable)")
+		log.Println("   To enable document service, ensure REDIS_URL and WEAVIATE_HOST are set in environment")
+	}
 
 	// Initialize middleware
 	authMW := middleware.NewAuthMiddleware(tokenService)
@@ -91,9 +237,7 @@ func main() {
 	screenerHandler := handlers.NewScreenerHandler(screenerRepo, userRepo)
 
 	// Setup router
-	// Note: Document routes are not included here as they require Redis and Weaviate
-	// Document functionality is available through the dependency injection container
-	router := setupRouter(cfg, authHandler, userHandler, orgHandler, roleHandler, permHandler, templateHandler, personaHandler, folderHandler, fileHandler, staticHandler, libreChatHandler, auditLogHandler, screenerHandler, nil, authMW, rlsMW, permMW)
+	router := setupRouter(cfg, authHandler, userHandler, orgHandler, roleHandler, permHandler, templateHandler, personaHandler, folderHandler, fileHandler, staticHandler, libreChatHandler, auditLogHandler, screenerHandler, documentHandler, authMW, rlsMW, permMW)
 
 	// Create HTTP server
 	srv := &http.Server{
@@ -304,12 +448,16 @@ func setupRouter(
 				documents := protected.Group("/documents")
 				{
 					documents.POST("/upload", authMW.RequireAuth(), documentHandler.UploadDocument())
-					documents.GET("/documents", documentHandler.GetDocumentsWithFilter())
+					documents.GET("", documentHandler.GetDocuments())                  // Simple GET endpoint
+					documents.GET("/filter", documentHandler.GetDocumentsWithFilter()) // Filtered endpoint
 					documents.GET("/search", documentHandler.SearchDocuments())
 					documents.GET("/jobs/:job_id", documentHandler.GetJobStatus())
 					documents.GET("/jobs", documentHandler.GetAllJobs())
 					documents.DELETE("/:document_id", documentHandler.DeleteDocument())
 				}
+				log.Println("✅ Document routes registered: /api/v1/documents")
+			} else {
+				log.Println("⚠️  Document routes NOT registered - documentHandler is nil")
 			}
 		}
 
