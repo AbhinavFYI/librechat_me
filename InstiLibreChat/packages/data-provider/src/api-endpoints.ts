@@ -16,7 +16,7 @@ if (
   // If accessing through proxy (localhost:9443), use proxy URL for API calls
   // This ensures cookies set by the proxy are available for API requests
   if (window.location.origin.includes('localhost:9443')) {
-    BASE_URL = 'http://localhost:9443';
+    BASE_URL = 'http://localhost';
   } else if (window.location.origin.includes('localhost:3090')) {
     // If accessing directly (not through proxy), check if we should use proxy
     // This allows the frontend to work both ways

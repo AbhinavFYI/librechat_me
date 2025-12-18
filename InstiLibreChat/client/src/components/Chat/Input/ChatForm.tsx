@@ -34,8 +34,6 @@ import EditBadges from './EditBadges';
 import BadgeRow from './BadgeRow';
 import Mention from './Mention';
 import MCPServerSelector from './MCPServerSelector';
-// TemplatePersonaSelector has been split into TemplateSelector and PersonaSelector
-// They are now used in ChatView.tsx instead
 import LandingPageButtons from './LandingPageButtons';
 import store from '~/store';
 
@@ -114,7 +112,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   );
 
   const handleContainerClick = useCallback(() => {
-    /** Check if the device is a touchscreen */
     if (window.matchMedia?.('(pointer: coarse)').matches) {
       return;
     }
@@ -201,7 +198,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const baseClasses = useMemo(
     () =>
       cn(
-        'md:py-3.5 m-0 w-full resize-none py-[13px] placeholder-black/50 bg-transparent dark:placeholder-white/50 [&:has(textarea:focus)]:shadow-[0_2px_6px_rgba(0,0,0,.05)]',
+        'px-1.5 py-3 m-0 w-full resize-none placeholder-[#9F9F9F] bg-white text-[12px] font-inter',
         isCollapsed ? 'max-h-[52px]' : 'max-h-[45vh] md:max-h-[55vh]',
         isMoreThanThreeRows ? 'pl-5' : 'px-5',
       ),
@@ -247,11 +244,10 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
           <div
             onClick={handleContainerClick}
             className={cn(
-              'relative flex w-full flex-grow flex-col overflow-hidden rounded-t-3xl border pb-4 text-text-primary transition-all duration-200 sm:rounded-3xl sm:pb-0',
+              'relative flex w-full flex-grow flex-col overflow-hidden rounded-[2px]',
+              'bg-white border border-[#2434E7]',
+              'transition-all duration-200',
               isTextAreaFocused ? 'shadow-lg' : 'shadow-md',
-              isTemporary
-                ? 'border-violet-800/60 bg-violet-950/10'
-                : 'border-border-light bg-surface-chat',
             )}
           >
             <TextareaHeader addedConvo={addedConvo} setAddedConvo={setAddedConvo} />
@@ -267,6 +263,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                 <div className="relative flex-1">
                   <TextareaAutosize
                     {...registerProps}
+                    placeholder="Ask FIA"
                     ref={(e) => {
                       ref(e);
                       (textAreaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current =
@@ -318,11 +315,11 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
             )}
             <div
               className={cn(
-                '@container items-between flex gap-2 pb-2',
+                '@container items-between flex gap-2 pb-2 px-3',
                 isRTL ? 'flex-row-reverse' : 'flex-row',
               )}
             >
-              <div className={`${isRTL ? 'mr-2' : 'ml-2'}`}>
+              <div>
                 <AttachFileChat conversation={conversation} disableInputs={disableInputs} />
               </div>
               <BadgeRow
@@ -344,7 +341,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                   isSubmitting={isSubmitting}
                 />
               )}
-              <div className={`${isRTL ? 'ml-2' : 'mr-2'}`}>
+              <div>
                 {(isSubmitting || isSubmittingAdded) && (showStopButton || showStopAdded) ? (
                   <StopButton stop={handleStopGenerating} setShowStopButton={setShowStopButton} />
                 ) : (

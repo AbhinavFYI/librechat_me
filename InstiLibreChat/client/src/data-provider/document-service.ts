@@ -4,7 +4,7 @@
  */
 
 // External document service URL
-const DOCUMENT_API_BASE = 'http://10.10.6.13:8080/api/v1';
+const DOCUMENT_API_BASE = 'http://localhost:8080/api/v1';
 
 export interface DocumentUploadResponse {
   code?: number;
@@ -84,7 +84,7 @@ export const uploadDocument = async (
  */
 export const fetchDocuments = async (): Promise<DocumentListResponse> => {
   try {
-    // API endpoint: http://10.10.6.13:8080/api/v1/documents
+    // API endpoint: http://localhost:8080/api/v1/documents
     const response = await fetch(`${DOCUMENT_API_BASE}/documents`, {
       method: 'GET',
       headers: {
