@@ -4,9 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
-
 	"saas-api/pkg/postgres"
+	"time"
 
 	"github.com/google/uuid"
 )
