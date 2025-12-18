@@ -51,7 +51,7 @@ func Load() *Config {
 			IdleTimeout:  getEnvAsInt("SERVER_IDLE_TIMEOUT", 60),
 		},
 		Database: DatabaseConfig{
-			Host:     getEnv("DB_HOST", "localhost"),
+			Host:     getEnv("DB_HOST", "127.0.0.1"), // Use 127.0.0.1 instead of localhost to avoid IPv6 issues
 			Port:     getEnv("DB_PORT", "5432"),
 			User:     getEnv("DB_USER", "aep014"), // Default to system user if not set
 			Password: getEnv("DB_PASSWORD", ""),

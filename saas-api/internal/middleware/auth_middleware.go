@@ -182,7 +182,6 @@ func (m *AuthMiddleware) RequireAuthForStatic() gin.HandlerFunc {
 			Message: "Authorization required. Provide token via Authorization header, 'token' query parameter, or 'access_token' cookie.",
 		})
 		c.Abort()
-		return
 	}
 }
 

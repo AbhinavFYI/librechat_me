@@ -12,11 +12,11 @@ import (
 
 	"saas-api/config"
 	"saas-api/internal/auth"
-	"saas-api/internal/database"
 	"saas-api/internal/handlers"
 	"saas-api/internal/middleware"
 	"saas-api/internal/repositories"
 	"saas-api/internal/services"
+	"saas-api/pkg/postgres"
 
 	"github.com/joho/godotenv"
 
@@ -25,7 +25,21 @@ import (
 
 func main() {
 	// Load .env file
-	if err := godotenv.Load(); err != nil {
+	envPaths := []string{
+		"../../.env", // From cmd/api/ to saas-api/.env
+		".env",       // Current directory
+	}
+
+	envLoaded := false
+	for _, path := range envPaths {
+		if err := godotenv.Load(path); err == nil {
+			log.Printf("✅ Loaded .env from: %s", path)
+			envLoaded = true
+			break
+		}
+	}
+
+	if !envLoaded {
 		log.Println("No .env file found, using environment variables")
 	}
 
@@ -33,7 +47,7 @@ func main() {
 	cfg := config.Load()
 
 	// Initialize database
-	db, err := database.NewDB(cfg)
+	db, err := postgres.NewDB(cfg)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
@@ -77,7 +91,9 @@ func main() {
 	screenerHandler := handlers.NewScreenerHandler(screenerRepo, userRepo)
 
 	// Setup router
-	router := setupRouter(cfg, authHandler, userHandler, orgHandler, roleHandler, permHandler, templateHandler, personaHandler, folderHandler, fileHandler, staticHandler, libreChatHandler, auditLogHandler, screenerHandler, authMW, rlsMW, permMW)
+	// Note: Document routes are not included here as they require Redis and Weaviate
+	// Document functionality is available through the dependency injection container
+	router := setupRouter(cfg, authHandler, userHandler, orgHandler, roleHandler, permHandler, templateHandler, personaHandler, folderHandler, fileHandler, staticHandler, libreChatHandler, auditLogHandler, screenerHandler, nil, authMW, rlsMW, permMW)
 
 	// Create HTTP server
 	srv := &http.Server{
@@ -127,6 +143,7 @@ func setupRouter(
 	libreChatHandler *handlers.LibreChatHandler,
 	auditLogHandler *handlers.AuditLogHandler,
 	screenerHandler *handlers.ScreenerHandler,
+	documentHandler *handlers.DocumentHandler, // Can be nil if not initialized
 	authMW *middleware.AuthMiddleware,
 	rlsMW *middleware.RLSMiddleware,
 	permMW *middleware.PermissionMiddleware,
@@ -279,6 +296,20 @@ func setupRouter(
 				screeners.GET("/saved", screenerHandler.GetSavedScreeners)
 				screeners.POST("/:id/run", screenerHandler.RunSavedScreener)
 				screeners.DELETE("/:id", screenerHandler.DeleteScreener)
+			}
+
+			// Documents - Upload, list, search, and delete documents
+			// Only register if documentHandler is provided (requires Redis and Weaviate)
+			if documentHandler != nil {
+				documents := protected.Group("/documents")
+				{
+					documents.POST("/upload", authMW.RequireAuth(), documentHandler.UploadDocument())
+					documents.GET("/documents", documentHandler.GetDocumentsWithFilter())
+					documents.GET("/search", documentHandler.SearchDocuments())
+					documents.GET("/jobs/:job_id", documentHandler.GetJobStatus())
+					documents.GET("/jobs", documentHandler.GetAllJobs())
+					documents.DELETE("/:document_id", documentHandler.DeleteDocument())
+				}
 			}
 		}
 

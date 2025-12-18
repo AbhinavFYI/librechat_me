@@ -3,8 +3,7 @@ package middleware
 import (
 	"context"
 	"fmt"
-
-	"saas-api/internal/database"
+	database "saas-api/pkg/postgres"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +24,7 @@ func (m *RLSMiddleware) SetRLSContext() gin.HandlerFunc {
 
 		// Set PostgreSQL session variables for RLS
 		ctx := c.Request.Context()
-		
+
 		// Execute SET commands for RLS in a transaction context
 		// Note: RLS variables need to be set per-connection
 		// This is a simplified version - in production, you may want to use connection pooling with context
@@ -45,4 +44,3 @@ func (m *RLSMiddleware) SetRLSContext() gin.HandlerFunc {
 		c.Next()
 	}
 }
-

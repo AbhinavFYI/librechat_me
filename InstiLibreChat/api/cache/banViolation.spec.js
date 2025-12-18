@@ -25,7 +25,7 @@ describe('banViolation', () => {
 
   beforeEach(() => {
     req = {
-      ip: '127.0.0.1',
+      ip: '',
       cookies: {
         refreshToken: 'someToken',
       },
