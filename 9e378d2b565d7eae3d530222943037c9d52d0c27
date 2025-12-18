@@ -1,0 +1,57 @@
+InstiLibreChat/client/src/components/Chat/Input/ChatForm.tsx
+  human 247-249,318
+  d0375c6 322,344
+InstiLibreChat/client/public/assets/FIA.svg
+  d0375c6 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.21",
+  "base_commit_sha": "9e378d2b565d7eae3d530222943037c9d52d0c27",
+  "prompts": {
+    "d0375c6": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "2af3550d-2b6a-43a5-b95d-9508a9a90b90",
+        "model": "default"
+      },
+      "human_author": "AbhinavFYI <abhinavshrijay.edge@fyers.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "can u change the chat box of to this \n\n<div style={{width: '100%', height: '100%', background: 'var(--Surface-standard, white)', overflow: 'hidden', borderRadius: 2, outline: '1px var(--Stroke-primary, #2434E7) solid', outlineOffset: '-1px', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'inline-flex'}}>\n\n    <div style={{width: 442, flex: '1 1 0', paddingLeft: 6, paddingRight: 6, paddingTop: 12, paddingBottom: 12, justifyContent: 'flex-start', alignItems: 'center', display: 'inline-flex'}}>\n\n        <div data-text-type=\"Placeholder\" style={{flex: '1 1 0', justifyContent: 'flex-start', alignItems: 'center', display: 'flex'}}>\n\n            <div style={{flex: '1 1 0', textBoxTrim: 'trim-both', textBoxEdge: 'cap alphabetic', justifyContent: 'flex-end', display: 'flex', flexDirection: 'column', color: 'var(--Subject-soft, #9F9F9F)', fontSize: 12, fontFamily: 'Inter', fontWeight: '400', lineHeight: 16, wordWrap: 'break-word'}}>Ask FIA</div>\n\n        </div>\n\n    </div>\n\n    <div style={{alignSelf: 'stretch', padding: 12, justifyContent: 'space-between', alignItems: 'center', display: 'inline-flex'}}>\n\n        <div style={{justifyContent: 'flex-start', alignItems: 'center', gap: 6, display: 'flex'}}>\n\n            <div data-type=\"Naked\" style={{justifyContent: 'flex-end', alignItems: 'center', display: 'flex'}}>\n\n                <div data-state=\"Default\" style={{justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex'}}>\n\n                    <div data-size=\"Small\" style={{width: 24, height: 24, overflow: 'hidden', borderRadius: 2, justifyContent: 'center', alignItems: 'center', display: 'flex'}}>\n\n                        <div data-size=\"Default\" style={{width: 16, height: 16, position: 'relative'}}>\n\n                            <div data-name=\"Import\" style={{width: 16, height: 16, left: 0, top: 0, position: 'absolute', borderRadius: 2}}>\n\n                                <div style={{width: 12.80, height: 10.40, left: 1.60, top: 2.80, position: 'absolute', background: 'var(--Subject-standard, #2A2A2A)'}} />\n\n                            </div>\n\n                        </div>\n\n                    </div>\n\n                </div>\n\n            </div>\n\n            <div data-type=\"Naked\" style={{justifyContent: 'flex-end', alignItems: 'center', display: 'flex'}}>\n\n                <div data-state=\"Default\" style={{justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex'}}>\n\n                    <div data-size=\"Small\" style={{width: 24, height: 24, overflow: 'hidden', borderRadius: 2, justifyContent: 'center', alignItems: 'center', display: 'flex'}}>\n\n                        <div data-size=\"Default\" style={{width: 16, height: 16, position: 'relative'}}>\n\n                            <div data-name=\"Customise\" style={{width: 16, height: 16, left: 0, top: 0, position: 'absolute', borderRadius: 2}}>\n\n                                <div style={{width: 12.80, height: 12.80, left: 1.60, top: 1.60, position: 'absolute', background: 'var(--Subject-standard, #2A2A2A)'}} />\n\n                            </div>\n\n                        </div>\n\n                    </div>\n\n                </div>\n\n            </div>\n\n        </div>\n\n        <div style={{justifyContent: 'flex-start', alignItems: 'center', gap: 6, display: 'flex'}}>\n\n            <div data-emphasis=\"No fill\" data-show-dot=\"false\" data-type=\"Neutral\" style={{justifyContent: 'flex-end', alignItems: 'center', gap: 2, display: 'flex'}}>\n\n                <div style={{textBoxTrim: 'trim-both', textBoxEdge: 'cap alphabetic', justifyContent: 'center', display: 'flex', flexDirection: 'column', color: 'var(--Subject-neutral, #6D6D6D)', fontSize: 11, fontFamily: 'Inter', fontWeight: '400', lineHeight: 14, wordWrap: 'break-word'}}>0/500</div>\n\n            </div>\n\n            <div data-type=\"Primary\" style={{justifyContent: 'flex-end', alignItems: 'center', display: 'flex'}}>\n\n                <div data-state=\"Disabled\" style={{opacity: 0.50, justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex'}}>\n\n                    <div data-size=\"Small\" style={{width: 24, height: 24, paddingLeft: 8, paddingRight: 8, opacity: 0.30, background: 'var(--Surface-two-primary, #2434E7)', overflow: 'hidden', borderRadius: 2, outline: '1px var(--Stroke-primary, #2434E7) solid', outlineOffset: '-1px', justifyContent: 'center', alignItems: 'center', display: 'flex'}}>\n\n                        <div data-size=\"Default\" style={{width: 16, height: 16, position: 'relative'}}>\n\n                            <div data-name=\"Arrow up\" style={{width: 16, height: 16, left: 0, top: 0, position: 'absolute', borderRadius: 2}}>\n\n                                <div style={{width: 11.34, height: 13.45, left: 2.33, top: 1.27, position: 'absolute', background: 'var(--Subject-two-primary, #F2F4FF)'}} />\n\n                            </div>\n\n                        </div>\n\n                    </div>\n\n                </div>\n\n            </div>\n\n        </div>\n\n    </div>\n\n</div>",
+          "timestamp": "2025-12-18T04:10:36.234Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Locating the chat box component and updating it to match the provided structure.",
+          "timestamp": "2025-12-18T04:10:42.286Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Reading the ChatForm component to understand its structure:",
+          "timestamp": "2025-12-18T04:11:28.577Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Updating ChatForm to match the new design while preserving functionality:",
+          "timestamp": "2025-12-18T04:11:44.747Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Updating ChatForm to match the new design. Checking for icon components:",
+          "timestamp": "2025-12-18T04:11:56.861Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Updating ChatForm to match the new design. Adding character count and updating the structure:",
+          "timestamp": "2025-12-18T04:12:42.576Z"
+        }
+      ],
+      "total_additions": 208,
+      "total_deletions": 129,
+      "accepted_lines": 14,
+      "overriden_lines": 10
+    }
+  }
+}
