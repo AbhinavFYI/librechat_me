@@ -52,13 +52,32 @@ function getAuthHeaders(): HeadersInit {
  */
 export const uploadDocument = async (
   file: File,
-  owner?: string
+  owner?: string,
+  orgId?: string
 ): Promise<DocumentUploadResponse> => {
   const ownerValue = owner || 'default_user';
   const formData = new FormData();
   formData.append('file', file);
   formData.append('db_backend', 'docling_postgres');
   formData.append('owner', ownerValue);
+  
+  // Add org_id if provided (required for superadmins, optional for org users)
+  if (orgId) {
+    formData.append('org_id', orgId);
+  } else {
+    // Try to get org_id from user data in localStorage
+    const userDataStr = localStorage.getItem('user');
+    if (userDataStr) {
+      try {
+        const userData = JSON.parse(userDataStr);
+        if (userData.org_id) {
+          formData.append('org_id', userData.org_id);
+        }
+      } catch (e) {
+        console.warn('Failed to parse user data for org_id:', e);
+      }
+    }
+  }
 
   try {
     const response = await fetch(`${DOCUMENT_API_BASE}/documents/upload`, {

@@ -11,14 +11,14 @@ import (
 )
 
 type FolderHandler struct {
-	folderRepo *repositories.FolderRepository
-	fileRepo   *repositories.FileRepository
+	folderRepo   *repositories.FolderRepository
+	documentRepo *repositories.DocumentRepository
 }
 
-func NewFolderHandler(folderRepo *repositories.FolderRepository, fileRepo *repositories.FileRepository) *FolderHandler {
+func NewFolderHandler(folderRepo *repositories.FolderRepository, documentRepo *repositories.DocumentRepository) *FolderHandler {
 	return &FolderHandler{
-		folderRepo: folderRepo,
-		fileRepo:   fileRepo,
+		folderRepo:   folderRepo,
+		documentRepo: documentRepo,
 	}
 }
 
@@ -242,7 +242,12 @@ func (h *FolderHandler) GetTree(c *gin.Context) {
 
 	// Also get files for each folder
 	for _, folder := range folders {
-		files, _ := h.fileRepo.GetByFolder(c.Request.Context(), folder.ID)
+		documents, _ := h.documentRepo.GetByFolder(c.Request.Context(), folder.ID)
+		// Convert documents to files
+		files := make([]*models.File, len(documents))
+		for i, doc := range documents {
+			files[i] = documentToFile(doc)
+		}
 		folder.Files = files
 		// Recursively get files for children
 		h.populateFiles(c, folder)
@@ -252,7 +257,12 @@ func (h *FolderHandler) GetTree(c *gin.Context) {
 }
 
 func (h *FolderHandler) populateFiles(c *gin.Context, folder *models.Folder) {
-	files, _ := h.fileRepo.GetByFolder(c.Request.Context(), folder.ID)
+	documents, _ := h.documentRepo.GetByFolder(c.Request.Context(), folder.ID)
+	// Convert documents to files
+	files := make([]*models.File, len(documents))
+	for i, doc := range documents {
+		files[i] = documentToFile(doc)
+	}
 	folder.Files = files
 	for _, child := range folder.Children {
 		h.populateFiles(c, child)
@@ -322,7 +332,12 @@ func (h *FolderHandler) GetByID(c *gin.Context) {
 	// Super admin - allow access to any folder
 
 	// Get files in this folder
-	files, _ := h.fileRepo.GetByFolder(c.Request.Context(), id)
+	documents, _ := h.documentRepo.GetByFolder(c.Request.Context(), id)
+	// Convert documents to files
+	files := make([]*models.File, len(documents))
+	for i, doc := range documents {
+		files[i] = documentToFile(doc)
+	}
 	folder.Files = files
 
 	// Get permissions

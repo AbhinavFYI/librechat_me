@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"strconv"
 	"strings"
 	"time"
 
@@ -69,23 +68,23 @@ type UploadDocumentRequest struct {
 
 // UploadDocumentResponse represents the response after uploading a document
 type UploadDocumentResponse struct {
-	DocumentID      int64         `json:"document_id"`
+	DocumentID      string        `json:"document_id"`
 	Filename        string        `json:"filename"`
 	Status          string        `json:"status"`
-	ProcessingJobID int64         `json:"processing_job_id"`
+	ProcessingJobID string        `json:"processing_job_id"`
 	TimeTaken       time.Duration `json:"time_taken"`
 }
 
 // DocumentInfo represents a document's full information
 type DocumentInfo struct {
-	DocumentID   int64                  `json:"document_id"`
+	DocumentID   string                 `json:"document_id"`
 	Name         string                 `json:"name"`
 	FilePath     string                 `json:"file_path"`
 	FolderID     *string                `json:"folder_id,omitempty"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 	Status       string                 `json:"status"`
 	ErrorMessage *string                `json:"error_message,omitempty"`
-	UploadedAt   time.Time              `json:"uploaded_at"`
+	UploadedAt   *time.Time             `json:"uploaded_at,omitempty"`
 	ProcessedAt  *time.Time             `json:"processed_at,omitempty"`
 }
 
@@ -99,76 +98,86 @@ func (s *DocumentService) UploadDocument(ctx context.Context, req *UploadDocumen
 	jsonFilePath := path.Join(s.JsonBasePath, path.Base(filePathWithoutExtension)+"_chunks.json")
 
 	// Create document record in database first to get the ID
-	doc := &repositories.Document{
-		UserID:       req.UserID,
-		OrgID:        req.OrgID,
-		Name:         filename,
-		FilePath:     req.FilePath,
-		JsonFilePath: jsonFilePath,
-		FolderID:     req.FolderID,
-		Metadata:     req.Metadata,
-		Status:       repositories.DocumentStatusPending,
+	// Parse user ID
+	userUUID, err := uuid.Parse(req.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID: %w", err)
 	}
 
-	documentID, err := s.repositories.Document.Create(ctx, doc)
+	// Validate and parse org ID
+	if req.OrgID == nil {
+		return nil, fmt.Errorf("org_id is required")
+	}
+	orgID := *req.OrgID
+
+	// Convert folder ID from *string to *uuid.UUID
+	var folderUUID *uuid.UUID
+	if req.FolderID != nil {
+		parsed, err := uuid.Parse(*req.FolderID)
+		if err == nil {
+			folderUUID = &parsed
+		}
+	}
+
+	doc := &repositories.Document{
+		ID:           uuid.New(),
+		OrgID:        orgID,
+		Name:         filename,
+		FilePath:     &req.FilePath,
+		JsonFilePath: &jsonFilePath,
+		FolderID:     folderUUID,
+		Metadata:     req.Metadata,
+		Status:       repositories.DocumentStatusPending,
+		CreatedBy:    &userUUID,
+	}
+
+	err = s.repositories.Document.Create(ctx, doc)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create document record: %w", err)
 	}
 
-	// Submit job to worker pool (async processing) with the database ID
-	job, err := s.WorkerPool.SubmitJob(documentID, req.FilePath, jsonFilePath, req.FolderID, req.Metadata)
-	if err != nil {
-		// Update document status to failed if job submission fails
-		s.repositories.Document.MarkFailed(ctx, documentID, err.Error())
-		return nil, err
-	}
-
 	return &UploadDocumentResponse{
-		DocumentID:      documentID,
+		DocumentID:      doc.ID.String(),
 		Filename:        filename,
-		Status:          string(job.Status),
-		ProcessingJobID: documentID,
+		Status:          string(doc.Status),
+		ProcessingJobID: doc.ID.String(),
 		TimeTaken:       time.Since(startTime),
 	}, nil
 }
 
 // GetJobStatus returns the status of a document processing job
 func (s *DocumentService) GetJobStatus(ctx context.Context, jobID string) (*DocumentInfo, error) {
-	// Parse jobID as int64
-	id, err := strconv.ParseInt(jobID, 10, 64)
+	// Parse jobID as UUID
+	id, err := uuid.Parse(jobID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid job ID: %s", jobID)
 	}
 
-	// First check in-memory job status
-	job, err := s.WorkerPool.GetJobStatus(id)
-	if err == nil && job != nil {
-		return &DocumentInfo{
-			DocumentID:  job.ID,
-			Name:        path.Base(job.FilePath),
-			FilePath:    job.FilePath,
-			FolderID:    job.FolderID,
-			Metadata:    job.Metadata,
-			Status:      string(job.Status),
-			UploadedAt:  job.CreatedAt,
-			ProcessedAt: job.CompletedAt,
-		}, nil
-	}
-
-	// Fall back to database
+	// Get document from database
 	doc, err := s.repositories.Document.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
+	var filePath string
+	if doc.FilePath != nil {
+		filePath = *doc.FilePath
+	}
+
+	var folderIDStr *string
+	if doc.FolderID != nil {
+		folderID := doc.FolderID.String()
+		folderIDStr = &folderID
+	}
+
 	return &DocumentInfo{
-		DocumentID:   doc.ID,
+		DocumentID:   doc.ID.String(),
 		Name:         doc.Name,
-		FilePath:     doc.FilePath,
-		FolderID:     doc.FolderID,
+		FilePath:     filePath,
+		FolderID:     folderIDStr,
 		Metadata:     doc.Metadata,
 		Status:       string(doc.Status),
-		ErrorMessage: doc.ErrorMessage,
+		ErrorMessage: doc.Content.ErrorMessage,
 		UploadedAt:   doc.UploadedAt,
 		ProcessedAt:  doc.ProcessedAt,
 	}, nil
@@ -197,21 +206,34 @@ type GetDocumentsResponse struct {
 
 // GetDocuments retrieves all documents with their status
 func (s *DocumentService) GetDocuments(ctx context.Context) ([]DocumentInfo, error) {
-	docs, _, err := s.repositories.Document.ListByFolder(ctx, nil, nil, 1, 100)
+	// Use zero UUID for "all orgs" query
+	var zeroUUID uuid.UUID
+	docs, _, err := s.repositories.Document.ListByFolder(ctx, nil, zeroUUID, 1, 100)
 	if err != nil {
 		return nil, err
 	}
 
 	result := make([]DocumentInfo, len(docs))
 	for i, doc := range docs {
+		var filePath string
+		if doc.FilePath != nil {
+			filePath = *doc.FilePath
+		}
+
+		var folderIDStr *string
+		if doc.FolderID != nil {
+			folderID := doc.FolderID.String()
+			folderIDStr = &folderID
+		}
+
 		result[i] = DocumentInfo{
-			DocumentID:   doc.ID,
+			DocumentID:   doc.ID.String(),
 			Name:         doc.Name,
-			FilePath:     doc.FilePath,
-			FolderID:     doc.FolderID,
+			FilePath:     filePath,
+			FolderID:     folderIDStr,
 			Metadata:     doc.Metadata,
 			Status:       string(doc.Status),
-			ErrorMessage: doc.ErrorMessage,
+			ErrorMessage: doc.Content.ErrorMessage,
 			UploadedAt:   doc.UploadedAt,
 			ProcessedAt:  doc.ProcessedAt,
 		}
@@ -222,21 +244,47 @@ func (s *DocumentService) GetDocuments(ctx context.Context) ([]DocumentInfo, err
 
 // GetDocumentsWithFilter retrieves documents with optional folder filter and pagination
 func (s *DocumentService) GetDocumentsWithFilter(ctx context.Context, req *GetDocumentsRequest) (*GetDocumentsResponse, error) {
-	docs, totalCount, err := s.repositories.Document.ListByFolder(ctx, req.FolderID, req.OrgID, req.Page, req.Limit)
+	// Convert folder ID from *string to *uuid.UUID
+	var folderUUID *uuid.UUID
+	if req.FolderID != nil {
+		parsed, err := uuid.Parse(*req.FolderID)
+		if err == nil {
+			folderUUID = &parsed
+		}
+	}
+
+	// Use zero UUID if orgID is nil
+	orgID := uuid.UUID{}
+	if req.OrgID != nil {
+		orgID = *req.OrgID
+	}
+
+	docs, totalCount, err := s.repositories.Document.ListByFolder(ctx, folderUUID, orgID, req.Page, req.Limit)
 	if err != nil {
 		return nil, err
 	}
 
 	result := make([]DocumentInfo, len(docs))
 	for i, doc := range docs {
+		var filePath string
+		if doc.FilePath != nil {
+			filePath = *doc.FilePath
+		}
+
+		var folderIDStr *string
+		if doc.FolderID != nil {
+			folderID := doc.FolderID.String()
+			folderIDStr = &folderID
+		}
+
 		result[i] = DocumentInfo{
-			DocumentID:   doc.ID,
+			DocumentID:   doc.ID.String(),
 			Name:         doc.Name,
-			FilePath:     doc.FilePath,
-			FolderID:     doc.FolderID,
+			FilePath:     filePath,
+			FolderID:     folderIDStr,
 			Metadata:     doc.Metadata,
 			Status:       string(doc.Status),
-			ErrorMessage: doc.ErrorMessage,
+			ErrorMessage: doc.Content.ErrorMessage,
 			UploadedAt:   doc.UploadedAt,
 			ProcessedAt:  doc.ProcessedAt,
 		}
@@ -244,7 +292,7 @@ func (s *DocumentService) GetDocumentsWithFilter(ctx context.Context, req *GetDo
 
 	return &GetDocumentsResponse{
 		Documents:  result,
-		TotalCount: totalCount,
+		TotalCount: int(totalCount),
 		Page:       req.Page,
 		Limit:      req.Limit,
 	}, nil
@@ -267,17 +315,23 @@ func (s *DocumentService) SearchDocuments(ctx context.Context,
 }
 
 // DeleteDocument deletes a document from both Weaviate and PostgreSQL
-func (s *DocumentService) DeleteDocument(ctx context.Context, documentID int64) error {
+func (s *DocumentService) DeleteDocument(ctx context.Context, documentID uuid.UUID) error {
 	// First, verify the document exists
 	doc, err := s.repositories.Document.GetByID(ctx, documentID)
 	if err != nil {
 		return fmt.Errorf("document not found: %w", err)
 	}
 
-	// Delete from Weaviate
-	err = s.GetWeaviateClient().DeleteDocumentClasses(ctx, documentID)
+	// Delete from Weaviate (convert UUID to int64 for Weaviate - using hash or first 8 bytes)
+	// Weaviate uses document ID as int64, so we need to convert UUID
+	// For now, we'll use a hash of the UUID to get a consistent int64
+	docIDInt64 := int64(documentID[0])<<56 | int64(documentID[1])<<48 | int64(documentID[2])<<40 | int64(documentID[3])<<32 |
+		int64(documentID[4])<<24 | int64(documentID[5])<<16 | int64(documentID[6])<<8 | int64(documentID[7])
+
+	err = s.GetWeaviateClient().DeleteDocumentClasses(ctx, docIDInt64)
 	if err != nil {
-		return fmt.Errorf("failed to delete document from Weaviate: %w", err)
+		// Log but don't fail - Weaviate might not have this document
+		fmt.Printf("Warning: Failed to delete document from Weaviate: %v\n", err)
 	}
 
 	// Delete from PostgreSQL
@@ -286,11 +340,6 @@ func (s *DocumentService) DeleteDocument(ctx context.Context, documentID int64) 
 		return fmt.Errorf("failed to delete document from database: %w", err)
 	}
 
-	// Remove from worker pool if exists
-	s.WorkerPool.jobsMu.Lock()
-	delete(s.WorkerPool.jobs, documentID)
-	s.WorkerPool.jobsMu.Unlock()
-
-	fmt.Printf("Document %s (ID: %d) deleted successfully\n", doc.Name, documentID)
+	fmt.Printf("Document %s (ID: %s) deleted successfully\n", doc.Name, documentID)
 	return nil
 }

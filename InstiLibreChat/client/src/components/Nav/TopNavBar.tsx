@@ -242,20 +242,59 @@ export default function TopNavBar() {
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
     localStorage.removeItem('permissions');
+    localStorage.removeItem('canAccessAdmin'); // Clear admin access flag on logout
     logout();
   };
 
-  const isSuperAdmin = userInfo?.is_super_admin || false;
-  const hasOrgId = userInfo?.org_id;
-  const canAccessAdmin =
-    isSuperAdmin ||
-    (permissionManager && permissionManager.hasPermission('admin', 'read')) ||
-    (hasOrgId && !isSuperAdmin);
+  // Check admin access - only show Admin tab for super admins or users with admin permission
+  // Verified users (email_verified && active) should NOT see the admin panel
+  // First check localStorage (set during login for immediate availability)
+  let canAccessAdmin = false;
+  
+  // Check localStorage first (set during login)
+  const storedCanAccessAdmin = localStorage.getItem('canAccessAdmin');
+  if (storedCanAccessAdmin !== null) {
+    try {
+      canAccessAdmin = JSON.parse(storedCanAccessAdmin) === true;
+    } catch (e) {
+      // If parsing fails, fall through to check userInfo
+    }
+  }
+  
+  // If not in localStorage or userInfo is available, re-check from userInfo
+  if (!canAccessAdmin && userInfo) {
+    // Explicitly check for super admin
+    const isSuperAdmin = userInfo.is_super_admin === true;
+    
+    // Check for admin permission
+    const storedPerms = localStorage.getItem('permissions');
+    let hasAdminPermission = false;
+    
+    if (storedPerms) {
+      try {
+        const perms = JSON.parse(storedPerms);
+        hasAdminPermission = perms.some(
+          (p: any) => p && p.resource === 'admin' && p.action === 'read'
+        );
+      } catch (e) {
+        // Ignore parse errors
+      }
+    }
 
-  // Always show Templates, Stock research, Screeners, and Resources; conditionally show Admin
+    // Only super admins or users with explicit admin permission can access
+    canAccessAdmin = isSuperAdmin || hasAdminPermission;
+    
+    // Update localStorage with the current check
+    localStorage.setItem('canAccessAdmin', JSON.stringify(canAccessAdmin));
+  }
+
+  // Show only 4 tabs for verified users: Stock research, Screeners, Resources, Templates
+  // Admin is only shown for super admins or users with admin permission
   const menus = ['Admin', 'Stock research', 'Screeners', 'Resources', 'Templates'].filter((menu) => {
-    if (menu === 'Admin' && !canAccessAdmin) {
-      return false;
+    if (menu === 'Admin') {
+      // Only show Admin if user explicitly has access (super admin or admin permission)
+      // Default to false if userInfo is not loaded or user doesn't have access
+      return canAccessAdmin;
     }
     // Always show Templates, Stock research, Screeners, and Resources
     return true;

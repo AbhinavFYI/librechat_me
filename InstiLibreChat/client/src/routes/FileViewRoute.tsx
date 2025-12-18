@@ -52,7 +52,7 @@ export default function FileViewRoute() {
       }
       
       // Construct static URL from storage_key
-      // storage_key format: {storagePath}/{org_id}/{folder_path}/{file_name}
+      // storage_key format: {storagePath}/{org_id}/{folder_path}/{file_name} or {org_id}/{folder_path}/{file_name}
       // static route format: /static/resources/folder/file/{org_id}/{folder_path}/{file_name}
       let staticUrl = '';
       if (file.storage_key) {
@@ -61,12 +61,18 @@ export default function FileViewRoute() {
         const storagePath = 'uploads'; // Default storage path
         let filePath = file.storage_key;
         
-        // Remove storage path prefix if present
+        // Remove storage path prefix if present (handle both with and without leading slash)
         if (filePath.startsWith(storagePath + '/')) {
           filePath = filePath.substring(storagePath.length + 1);
         } else if (filePath.startsWith('/' + storagePath + '/')) {
           filePath = filePath.substring(storagePath.length + 2);
+        } else if (filePath.startsWith('/')) {
+          // Remove leading slash if present
+          filePath = filePath.substring(1);
         }
+        
+        // Normalize path separators for URL (use forward slashes)
+        filePath = filePath.replace(/\\/g, '/');
         
         // Append token as query parameter for authentication (needed for img/iframe tags)
         staticUrl = `/static/resources/folder/file/${filePath}${token ? `?token=${encodeURIComponent(token)}` : ''}`;
@@ -378,7 +384,11 @@ export default function FileViewRoute() {
           filePath = filePath.substring(storagePath.length + 1);
         } else if (filePath.startsWith('/' + storagePath + '/')) {
           filePath = filePath.substring(storagePath.length + 2);
+        } else if (filePath.startsWith('/')) {
+          filePath = filePath.substring(1);
         }
+        // Normalize path separators for URL
+        filePath = filePath.replace(/\\/g, '/');
         // Append token as query parameter for authentication
         staticImageUrl = `${window.location.origin}/static/resources/folder/file/${filePath}${token ? `?token=${encodeURIComponent(token)}` : ''}`;
       } else {
@@ -429,7 +439,11 @@ export default function FileViewRoute() {
         filePath = filePath.substring(storagePath.length + 1);
       } else if (filePath.startsWith('/' + storagePath + '/')) {
         filePath = filePath.substring(storagePath.length + 2);
+      } else if (filePath.startsWith('/')) {
+        filePath = filePath.substring(1);
       }
+      // Normalize path separators for URL
+      filePath = filePath.replace(/\\/g, '/');
       // Append token as query parameter for authentication
       staticFileUrl = `${window.location.origin}/static/resources/folder/file/${filePath}${token ? `?token=${encodeURIComponent(token)}` : ''}`;
     } else {

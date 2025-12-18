@@ -1,0 +1,18 @@
+[
+  {
+    "chunk_id": "report.pdf_chunk_0000",
+    "content": "USER\nsummarise the doc jswconsolidated html",
+    "content_type": "text",
+    "page_number": 1,
+    "section_title": "USER",
+    "chunk_index": 0
+  },
+  {
+    "chunk_id": "report.pdf_chunk_0001",
+    "content": "ASSISTANT\nThe document jswconsolidated.html is:\n- Entity: JSW Cement Limited\n- Type: Notes to the Restated Consolidated Financial Information\n- Scope: Consolidated (group-level) financial notes, presented in INR (? in millions):\nIn substance, this kind of document typically:\n- Explains the accounting policies used for restated consolidated financials.\n- Provides detailed breakdowns and explanations for line items in the consolidated balance sheet; P&L, cash and equity: flow,\n- Covers subsidiaries, consolidation principles, related party transactions, contingencies, commitments, and significant estimatesljudgments.\nIf you tell me what you care about (e.g-, revenue trends, debt; contingencies, segment info), I can focus the summary on those aspects and try more targeted searches within this file.",
+    "content_type": "text",
+    "page_number": 1,
+    "section_title": "ASSISTANT",
+    "chunk_index": 1
+  }
+]

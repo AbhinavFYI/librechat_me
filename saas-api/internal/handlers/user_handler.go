@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"saas-api/internal/models"
 	"saas-api/internal/repositories"
@@ -426,6 +427,20 @@ func (h *UserHandler) Update(c *gin.Context) {
 				Message: "Invalid org_role. Must be one of: admin, user, viewer",
 			})
 			return
+		}
+	}
+	if req.EmailVerified != nil {
+		user.EmailVerified = *req.EmailVerified
+		// Set EmailVerifiedAt timestamp when email is verified
+		if *req.EmailVerified {
+			if user.EmailVerifiedAt == nil {
+				now := time.Now()
+				user.EmailVerifiedAt = &now
+			}
+			// If already verified, keep existing timestamp
+		} else {
+			// Clear EmailVerifiedAt when email is unverified
+			user.EmailVerifiedAt = nil
 		}
 	}
 	if req.Timezone != nil {

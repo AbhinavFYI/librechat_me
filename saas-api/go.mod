@@ -5,10 +5,10 @@ go 1.24.10
 toolchain go1.24.11
 
 require (
-	github.com/FyersDev/godotenv-ssm v1.0.2
 	github.com/FyersDev/trading-logger-go v1.2.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-openapi/strfmt v0.25.0
+	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
@@ -25,7 +25,6 @@ require (
 
 require (
 	github.com/adhocore/gronx v1.19.5 // indirect
-	github.com/aws/aws-sdk-go v1.44.298 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.39.5 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.2 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.31.16 // indirect
@@ -82,7 +81,6 @@ require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
-	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect

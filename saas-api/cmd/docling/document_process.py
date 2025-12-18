@@ -18,7 +18,21 @@ Usage:
     python document_process.py <input> <output> [options]
 """
 import os
+import ssl
+import certifi
 import logging
+
+# Bypass SSL certificate verification for downloads (macOS fix)
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
+
+# Also disable SSL warnings
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -38,7 +52,6 @@ import json
 import threading
 import tempfile
 from docling.pipeline.standard_pdf_pipeline import StandardPdfPipeline
-import urllib3
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 from dataclasses import dataclass, asdict

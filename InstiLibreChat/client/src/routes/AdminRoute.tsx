@@ -8,6 +8,7 @@ export default function AdminRoute() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Fetch user info
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
@@ -30,6 +31,57 @@ export default function AdminRoute() {
     fetchUserInfo();
   }, [navigate]);
 
+  // Redirect verified users immediately if they don't have admin access
+  useEffect(() => {
+    if (!loading && userInfo) {
+      // First check localStorage (set during login for immediate availability)
+      let canAccessAdmin = false;
+      const storedCanAccessAdmin = localStorage.getItem('canAccessAdmin');
+      if (storedCanAccessAdmin !== null) {
+        try {
+          canAccessAdmin = JSON.parse(storedCanAccessAdmin) === true;
+        } catch (e) {
+          // If parsing fails, fall through to check userInfo
+        }
+      }
+      
+      // If not in localStorage, check from userInfo
+      if (!canAccessAdmin) {
+        const isSuperAdmin = userInfo.is_super_admin === true;
+        const storedPerms = localStorage.getItem('permissions');
+        let hasAdminPermission = false;
+        
+        if (storedPerms) {
+          try {
+            const perms = JSON.parse(storedPerms);
+            hasAdminPermission = perms.some(
+              (p: any) => p && p.resource === 'admin' && p.action === 'read'
+            );
+          } catch (e) {
+            // Ignore parse errors
+          }
+        }
+
+        canAccessAdmin = isSuperAdmin || hasAdminPermission;
+        // Update localStorage
+        localStorage.setItem('canAccessAdmin', JSON.stringify(canAccessAdmin));
+      }
+
+      // Only super admins or users with admin permission can access admin panel
+      // Verified users (email_verified && active) should NOT see the admin panel
+      if (!canAccessAdmin) {
+        // Immediately redirect to chat (Stock research)
+        const baseHref = document.querySelector('base')?.getAttribute('href') || '/';
+        const lastConversationId = localStorage.getItem('lastConversationId');
+        if (lastConversationId && lastConversationId !== 'new') {
+          navigate(`${baseHref}c/${lastConversationId}`, { replace: true });
+        } else {
+          navigate(`${baseHref}c/new`, { replace: true });
+        }
+      }
+    }
+  }, [loading, userInfo, navigate]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -42,31 +94,49 @@ export default function AdminRoute() {
     return null;
   }
 
-  // Check if user has access to admin
-  const isSuperAdmin = userInfo.is_super_admin;
-  const hasOrgId = userInfo.org_id;
-  const storedPerms = localStorage.getItem('permissions');
-  let hasAdminPermission = false;
-  
-  if (storedPerms) {
+  // Check if user has access to admin (re-check for render)
+  // First check localStorage (set during login)
+  let canAccessAdmin = false;
+  const storedCanAccessAdmin = localStorage.getItem('canAccessAdmin');
+  if (storedCanAccessAdmin !== null) {
     try {
-      const perms = JSON.parse(storedPerms);
-      hasAdminPermission = perms.some(
-        (p: any) => p.resource === 'admin' && p.action === 'read'
-      );
+      canAccessAdmin = JSON.parse(storedCanAccessAdmin) === true;
     } catch (e) {
-      // Ignore parse errors
+      // If parsing fails, fall through to check userInfo
     }
   }
-
-  const canAccessAdmin = isSuperAdmin || hasAdminPermission || (hasOrgId && !isSuperAdmin);
-
+  
+  // If not in localStorage, check from userInfo
   if (!canAccessAdmin) {
+    const isSuperAdmin = userInfo.is_super_admin === true;
+    const storedPerms = localStorage.getItem('permissions');
+    let hasAdminPermission = false;
+    
+    if (storedPerms) {
+      try {
+        const perms = JSON.parse(storedPerms);
+        hasAdminPermission = perms.some(
+          (p: any) => p && p.resource === 'admin' && p.action === 'read'
+        );
+      } catch (e) {
+        // Ignore parse errors
+      }
+    }
+
+    canAccessAdmin = isSuperAdmin || hasAdminPermission;
+    // Update localStorage
+    localStorage.setItem('canAccessAdmin', JSON.stringify(canAccessAdmin));
+  }
+
+  // CRITICAL: Never render AdminDashboard if user doesn't have access
+  if (!canAccessAdmin) {
+    // Show access denied message while redirect is happening
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <p className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Access Denied</p>
           <p className="text-gray-500 dark:text-gray-400">You don't have permission to access the Admin section.</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">Redirecting to Stock research...</p>
         </div>
       </div>
     );

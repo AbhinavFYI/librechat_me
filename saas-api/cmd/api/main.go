@@ -22,6 +22,7 @@ import (
 
 	"saas-api/cmd/configs"
 
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 
 	"github.com/gin-gonic/gin"
@@ -66,7 +67,8 @@ func main() {
 	templateRepo := repositories.NewTemplateRepository(db)
 	personaRepo := repositories.NewPersonaRepository(db)
 	folderRepo := repositories.NewFolderRepository(db)
-	fileRepo := repositories.NewFileRepository(db)
+	// FileRepository is deprecated - using DocumentRepository instead
+	// fileRepo := repositories.NewFileRepository(db)
 	auditLogRepo := repositories.NewAuditLogRepository(db)
 	screenerRepo := repositories.NewScreenerRepository(db)
 
@@ -174,7 +176,7 @@ func main() {
 		RefreshToken: tokenRepo,
 		Document:     docRepo,
 		Folder:       folderRepo,
-		File:         fileRepo,
+		File:         nil, // Deprecated - using DocumentRepository instead
 		Template:     templateRepo,
 		Persona:      personaRepo,
 		AuditLog:     auditLogRepo,
@@ -229,9 +231,22 @@ func main() {
 	permHandler := handlers.NewPermissionHandler(permRepo)
 	templateHandler := handlers.NewTemplateHandler(templateRepo)
 	personaHandler := handlers.NewPersonaHandler(personaRepo)
-	folderHandler := handlers.NewFolderHandler(folderRepo, fileRepo)
-	fileHandler := handlers.NewFileHandler(fileRepo, folderRepo, cfg.App.StoragePath)
-	staticHandler := handlers.NewStaticHandler(cfg.App.StoragePath)
+	folderHandler := handlers.NewFolderHandler(folderRepo, docRepo)
+
+	// Get document service for file handler (if available)
+	var docService interface {
+		DeleteDocument(ctx context.Context, documentID uuid.UUID) error
+	}
+	if documentHandler != nil {
+		// Get the document service from the services
+		baseService := services.NewBaseService(repos, redisClient, weaviateClient)
+		minimalConfigsConfig := &configs.Config{}
+		svcs := services.NewServices(baseService, userRepo, tokenRepo, tokenService, minimalConfigsConfig)
+		docService = svcs.Document
+	}
+
+	fileHandler := handlers.NewFileHandler(folderRepo, docRepo, docService, cfg.App.StoragePath)
+	staticHandler := handlers.NewStaticHandler(cfg.App.StoragePath, docRepo)
 	libreChatHandler := handlers.NewLibreChatHandler()
 	auditLogHandler := handlers.NewAuditLogHandler(auditLogRepo)
 	screenerHandler := handlers.NewScreenerHandler(screenerRepo, userRepo)
@@ -448,8 +463,7 @@ func setupRouter(
 				documents := protected.Group("/documents")
 				{
 					documents.POST("/upload", authMW.RequireAuth(), documentHandler.UploadDocument())
-					documents.GET("", documentHandler.GetDocuments())                  // Simple GET endpoint
-					documents.GET("/filter", documentHandler.GetDocumentsWithFilter()) // Filtered endpoint
+					documents.GET("", documentHandler.GetDocumentsWithFilter())
 					documents.GET("/search", documentHandler.SearchDocuments())
 					documents.GET("/jobs/:job_id", documentHandler.GetJobStatus())
 					documents.GET("/jobs", documentHandler.GetAllJobs())

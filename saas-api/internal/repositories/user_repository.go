@@ -208,17 +208,21 @@ func (r *UserRepository) Update(ctx context.Context, user *models.User) error {
 			avatar_url = COALESCE($4, avatar_url),
 			status = COALESCE($5, status),
 			org_role = COALESCE($6, org_role),
-			timezone = COALESCE($7, timezone),
-			locale = COALESCE($8, locale),
+			email_verified = COALESCE($7, email_verified),
+			email_verified_at = COALESCE($8, email_verified_at),
+			timezone = COALESCE($9, timezone),
+			locale = COALESCE($10, locale),
 			updated_at = NOW()
-		WHERE id = $9 AND deleted_at IS NULL
-		RETURNING updated_at
+		WHERE id = $11 AND deleted_at IS NULL
+		RETURNING updated_at, email_verified_at
 	`
 
+	var emailVerifiedAt *time.Time
 	err := r.db.Pool.QueryRow(ctx, query,
 		user.FirstName, user.LastName, user.Phone, user.AvatarURL,
-		user.Status, user.OrgRole, user.Timezone, user.Locale, user.ID,
-	).Scan(&user.UpdatedAt)
+		user.Status, user.OrgRole, user.EmailVerified,
+		user.EmailVerifiedAt, user.Timezone, user.Locale, user.ID,
+	).Scan(&user.UpdatedAt, &emailVerifiedAt)
 
 	if err == pgx.ErrNoRows {
 		return errors.ErrNotFound
@@ -226,6 +230,9 @@ func (r *UserRepository) Update(ctx context.Context, user *models.User) error {
 	if err != nil {
 		return errors.WrapError(err, "INTERNAL_ERROR", "Failed to update user", errors.ErrInternalServer.Status)
 	}
+
+	// Update the EmailVerifiedAt field in the user object
+	user.EmailVerifiedAt = emailVerifiedAt
 
 	return nil
 }

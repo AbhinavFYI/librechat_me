@@ -82,13 +82,13 @@ func (h *DocumentHandler) UploadDocument() gin.HandlerFunc {
 			}
 		}
 
-		// Try to get org_id from form data first
+		// Try to get org_id from form data first (required for superadmins to specify target org)
 		if orgIDStr := c.PostForm("org_id"); orgIDStr != "" {
 			if parsedOrgID, err := uuid.Parse(orgIDStr); err == nil {
 				orgID = &parsedOrgID
 			}
-		} else {
-			// Fallback to context
+		} else if !isSuperAdminBool {
+			// Non-superadmin: fallback to context org_id
 			if orgIDVal, exists := c.Get("org_id"); exists && orgIDVal != nil {
 				if orgIDStr, ok := orgIDVal.(string); ok && orgIDStr != "" {
 					if parsedOrgID, err := uuid.Parse(orgIDStr); err == nil {
@@ -98,10 +98,10 @@ func (h *DocumentHandler) UploadDocument() gin.HandlerFunc {
 			}
 		}
 
-		// Non-superadmin users must have org_id
-		if !isSuperAdminBool && orgID == nil {
+		// org_id is required for all users (superadmins must specify target org)
+		if orgID == nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "org_id is required for non-superadmin users",
+				"error": "org_id is required. Please specify the target organization.",
 			})
 			return
 		}
@@ -468,11 +468,11 @@ func (h *DocumentHandler) DeleteDocument() gin.HandlerFunc {
 			return
 		}
 
-		// Parse document_id as int64
-		documentID, err := strconv.ParseInt(documentIDStr, 10, 64)
+		// Parse document_id as UUID
+		documentID, err := uuid.Parse(documentIDStr)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "invalid document_id format, expected integer",
+				"error": "invalid document_id format, expected UUID",
 			})
 			return
 		}

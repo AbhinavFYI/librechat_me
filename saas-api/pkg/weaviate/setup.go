@@ -12,7 +12,7 @@ func NewWeaviateClient(config *configs.Config) *WeaviateClient {
 	// Build host with port - weaviate-go-client expects "host:port" format
 	host := config.WeaviateHost
 	if host == "" {
-		host = "10.10.6.13"
+		host = "localhost"
 	}
 	port := config.WeaviatePort
 	if port == "" {

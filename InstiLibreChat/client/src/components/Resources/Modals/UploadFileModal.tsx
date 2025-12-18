@@ -105,7 +105,8 @@ export default function UploadFileModal({ folderId, orgId, folders = [], onClose
 
     try {
       // Step 1: Upload document to document service (same as chat upload)
-      const response = await uploadDocument(selectedFile);
+      // Pass orgId to uploadDocument for superadmins
+      const response = await uploadDocument(selectedFile, undefined, orgId || undefined);
 
       if (response.code === 202 || response.s === 'ok') {
         // Step 2: Store folder association in our database if folder is selected

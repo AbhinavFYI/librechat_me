@@ -83,6 +83,19 @@ function OTP() {
           localStorage.setItem('permissions', JSON.stringify(data.permissions));
         }
         
+        // Check and store admin access status immediately during login
+        const isSuperAdmin = userData.is_super_admin === true;
+        let hasAdminPermission = false;
+        
+        if (data.permissions && Array.isArray(data.permissions)) {
+          hasAdminPermission = data.permissions.some(
+            (p: any) => p && p.resource === 'admin' && p.action === 'read'
+          );
+        }
+        
+        const canAccessAdmin = isSuperAdmin || hasAdminPermission;
+        localStorage.setItem('canAccessAdmin', JSON.stringify(canAccessAdmin));
+        
         // Step 1: Login to proxy server - this syncs user to MongoDB and sets JWT cookie
         try {
           // Ensure we have a valid email

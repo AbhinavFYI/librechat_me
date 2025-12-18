@@ -1,0 +1,26 @@
+[
+  {
+    "chunk_id": "new_(2).pdf_chunk_0000",
+    "content": "USER\nwhat is the",
+    "content_type": "text",
+    "page_number": 1,
+    "section_title": "USER",
+    "chunk_index": 0
+  },
+  {
+    "chunk_id": "new_(2).pdf_chunk_0001",
+    "content": "ASSISTANT\nDec 10, 2025, 03.46 PM\nDec 10, 2025, 03.46 PM\nYour question seems to be incomplete (\"what is the ') . Based on the parts of the Urban Company RHP we just surfaced, here are a few \"what is the explanations that are clearly defined in the document If you had something specific in mind, reply with the full question and |'Il go to that directly:\n1. What is the Securities Premium (in \"other equity\")?\nFrom \"Nature and purpose of items of other equity\":\n- The Securities premium account is used to recognize the premium on the issue of equity shares (i.e-, the amount received over face value)\n- It is utilized in accordance with the Companies Act, 2013 can be used for bonus shares, writing off expenses, as allowed by law) . (e.g , etc:,\n2. What is the Employee Stock Options Reserve?\n- The employee stock options reserve is used to recognize the fair value of options at grant date under the Company's ESOP schemes:\n- It relates to options granted to employees of the Group under the holding company's employee stock option plans_\n3. What is Net Transaction Value (NTV)?\nFrom the KPI table and its detailed note:\n- NTV represents the monetary value of all transactions processed through Urban Company's platform:\n- Services NTV: value paid by consumers for services (gross of taxes, net of discounts, net of cancellations; excludes tips).\n- Native NTV: value of \"Native\" products (e.g-, water purifiers, electronic door locks) sold across:\n- Urban Company",
+    "content_type": "text",
+    "page_number": 1,
+    "section_title": "ASSISTANT",
+    "chunk_index": 1
+  },
+  {
+    "chunk_id": "new_(2).pdf_chunk_0002",
+    "content": "Chat Conversation Report\nReport Date: December 10, 2025",
+    "content_type": "text",
+    "page_number": 1,
+    "section_title": "Chat Conversation Report",
+    "chunk_index": 2
+  }
+]

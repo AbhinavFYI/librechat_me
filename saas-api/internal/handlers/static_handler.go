@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
+	"saas-api/internal/repositories"
 	"saas-api/pkg/errors"
 	"strings"
 
@@ -13,12 +15,14 @@ import (
 )
 
 type StaticHandler struct {
-	storagePath string
+	storagePath  string
+	documentRepo *repositories.DocumentRepository
 }
 
-func NewStaticHandler(storagePath string) *StaticHandler {
+func NewStaticHandler(storagePath string, documentRepo *repositories.DocumentRepository) *StaticHandler {
 	return &StaticHandler{
-		storagePath: storagePath,
+		storagePath:  storagePath,
+		documentRepo: documentRepo,
 	}
 }
 
@@ -59,23 +63,144 @@ func (h *StaticHandler) ServeFile(c *gin.Context) {
 
 	// Construct file path on disk
 	// Path format: {storagePath}/{requestPath}
-	fullPath := filepath.Join(h.storagePath, requestPath)
+	// But if requestPath already starts with storagePath, use it as-is
+	var fullPath string
+	if strings.HasPrefix(requestPath, h.storagePath+"/") || strings.HasPrefix(requestPath, h.storagePath+"\\") {
+		// Path already includes storage path prefix
+		fullPath = filepath.Clean(requestPath)
+	} else {
+		// Path is relative to storage path
+		fullPath = filepath.Join(h.storagePath, requestPath)
+	}
+
+	// Normalize path separators
+	fullPath = filepath.Clean(fullPath)
+
+	// Debug logging
+	fmt.Printf("Static handler: Looking for file at path: %s (requestPath: %s, storagePath: %s)\n", fullPath, requestPath, h.storagePath)
 
 	// Check if file exists
 	fileInfo, err := os.Stat(fullPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			c.JSON(http.StatusNotFound, errors.ErrorResponse{
-				Error:   errors.ErrNotFound.Code,
-				Message: fmt.Sprintf("File not found: %s", requestPath),
+			// Try alternative paths in case of legacy storage_key formats
+			// 1. Try with storage path prefix if not already included
+			altPath1 := filepath.Join(h.storagePath, requestPath)
+			if altPath1 != fullPath {
+				if info, err2 := os.Stat(altPath1); err2 == nil {
+					fileInfo = info
+					fullPath = altPath1
+					err = nil
+				}
+			}
+
+			// 2. If still not found, try removing storage path prefix if it exists
+			if err != nil && strings.HasPrefix(requestPath, h.storagePath+"/") {
+				relPath := strings.TrimPrefix(requestPath, h.storagePath+"/")
+				altPath2 := filepath.Join(h.storagePath, relPath)
+				if info, err2 := os.Stat(altPath2); err2 == nil {
+					fileInfo = info
+					fullPath = altPath2
+					err = nil
+				}
+			}
+
+			// 3. If still not found, try to lookup file in database by path pattern
+			if err != nil && h.documentRepo != nil {
+				fmt.Printf("File not found on disk, trying database lookup for: %s\n", requestPath)
+
+				// Try to find document by file_path pattern
+				dbDoc, dbErr := h.documentRepo.GetByStorageKeyPattern(context.Background(), requestPath)
+				if dbErr == nil && dbDoc != nil {
+					var dbFilePath string
+					if dbDoc.FilePath != nil {
+						dbFilePath = *dbDoc.FilePath
+					} else if dbDoc.Content.Path != nil {
+						dbFilePath = *dbDoc.Content.Path
+					}
+
+					if dbFilePath != "" {
+						fmt.Printf("Found document in database by pattern: file_path=%s\n", dbFilePath)
+						// Found document in database, construct path from file_path
+						if !filepath.IsAbs(dbFilePath) {
+							dbFilePath = filepath.Join(h.storagePath, dbFilePath)
+						}
+						dbFilePath = filepath.Clean(dbFilePath)
+						fmt.Printf("Trying database file_path: %s\n", dbFilePath)
+
+						// Try the database file_path
+						if info, err2 := os.Stat(dbFilePath); err2 == nil {
+							fmt.Printf("File found at database file_path: %s\n", dbFilePath)
+							fileInfo = info
+							fullPath = dbFilePath
+							err = nil
+						} else {
+							fmt.Printf("File not found at database file_path: %s, trying filename lookup\n", dbFilePath)
+							// Also try by filename and path segments
+							pathParts := strings.Split(requestPath, "/")
+							if len(pathParts) > 0 {
+								filename := pathParts[len(pathParts)-1]
+								var orgID *uuid.UUID
+								if len(pathParts) > 1 {
+									if parsedUUID, parseErr := uuid.Parse(pathParts[0]); parseErr == nil {
+										orgID = &parsedUUID
+									}
+								}
+								pathSegments := pathParts[:len(pathParts)-1]
+
+								fmt.Printf("Trying filename lookup: filename=%s, orgID=%v, pathSegments=%v\n", filename, orgID, pathSegments)
+								dbDoc2, dbErr2 := h.documentRepo.GetByFilenameAndPath(context.Background(), orgID, filename, pathSegments)
+								if dbErr2 == nil && dbDoc2 != nil {
+									var dbFilePath2 string
+									if dbDoc2.FilePath != nil {
+										dbFilePath2 = *dbDoc2.FilePath
+									} else if dbDoc2.Content.Path != nil {
+										dbFilePath2 = *dbDoc2.Content.Path
+									}
+
+									if dbFilePath2 != "" {
+										fmt.Printf("Found document in database by filename: file_path=%s\n", dbFilePath2)
+										if !filepath.IsAbs(dbFilePath2) {
+											dbFilePath2 = filepath.Join(h.storagePath, dbFilePath2)
+										}
+										dbFilePath2 = filepath.Clean(dbFilePath2)
+										fmt.Printf("Trying filename lookup path: %s\n", dbFilePath2)
+
+										if info, err2 := os.Stat(dbFilePath2); err2 == nil {
+											fmt.Printf("File found at filename lookup path: %s\n", dbFilePath2)
+											fileInfo = info
+											fullPath = dbFilePath2
+											err = nil
+										} else {
+											fmt.Printf("File not found at filename lookup path: %s\n", dbFilePath2)
+										}
+									}
+								} else {
+									fmt.Printf("Document not found in database by filename: %v\n", dbErr2)
+								}
+							}
+						}
+					}
+				} else {
+					fmt.Printf("Document not found in database by pattern: %v\n", dbErr)
+				}
+			}
+		}
+
+		if err != nil {
+			if os.IsNotExist(err) {
+				c.JSON(http.StatusNotFound, errors.ErrorResponse{
+					Error:   errors.ErrNotFound.Code,
+					Message: fmt.Sprintf("File not found: %s (tried: %s)", requestPath, fullPath),
+				})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, errors.ErrorResponse{
+				Error:   errors.ErrInternalServer.Code,
+				Message: fmt.Sprintf("Failed to access file: %v", err),
 			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, errors.ErrorResponse{
-			Error:   errors.ErrInternalServer.Code,
-			Message: "Failed to access file",
-		})
-		return
 	}
 
 	// Check if it's a directory
@@ -99,11 +224,10 @@ func (h *StaticHandler) ServeFile(c *gin.Context) {
 		}
 	}
 
-	// Validate access
-	if pathOrgUUID != nil {
-		// Path contains org_id - validate user has access to this org
-		if !isSuperAdminBool {
-			// Regular user - must belong to the same org
+	// Validate access - Super admins can access any file regardless of org_id
+	if !isSuperAdminBool {
+		if pathOrgUUID != nil {
+			// Path contains org_id - validate user has access to this org
 			if userOrgID == nil {
 				c.JSON(http.StatusForbidden, errors.ErrorResponse{
 					Error:   errors.ErrForbidden.Code,
@@ -129,12 +253,9 @@ func (h *StaticHandler) ServeFile(c *gin.Context) {
 				})
 				return
 			}
-		}
-		// Super admin can access any org's files
-	} else {
-		// Path doesn't contain org_id (legacy format like "LLAMA/Whatsapp/login2.png")
-		// Only allow super admin access
-		if !isSuperAdminBool {
+		} else {
+			// Path doesn't contain org_id (legacy format like "LLAMA/Whatsapp/login2.png")
+			// Only allow super admin access
 			c.JSON(http.StatusForbidden, errors.ErrorResponse{
 				Error:   errors.ErrForbidden.Code,
 				Message: "You do not have access to this file",
@@ -142,6 +263,7 @@ func (h *StaticHandler) ServeFile(c *gin.Context) {
 			return
 		}
 	}
+	// Super admin can access any file - no validation needed
 
 	// Access validated, determine MIME type and serve the file
 	ext := filepath.Ext(fullPath)

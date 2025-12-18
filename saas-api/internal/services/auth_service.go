@@ -39,7 +39,10 @@ func NewAuthService(
 }
 
 // canLoginViaOTP checks if a user can login via OTP
-// Returns true if user is super admin OR has org_role = "admin"
+// Returns true if user is:
+// - Super admin, OR
+// - Has org_role = "admin", OR
+// - Is verified (email_verified = true) AND active (status = "active")
 // OrgRole (admin/user/viewer) is separate from Roles (permissions)
 func (s *AuthService) canLoginViaOTP(ctx context.Context, user *models.User) (bool, error) {
 	// Super admins can always login via OTP
@@ -53,7 +56,13 @@ func (s *AuthService) canLoginViaOTP(ctx context.Context, user *models.User) (bo
 		return true, nil
 	}
 
-	log.Printf("canLoginViaOTP: User %s is not super admin and does not have org_role = admin", user.Email)
+	// Check if user is verified and active
+	if user.EmailVerified && user.Status == "active" {
+		log.Printf("canLoginViaOTP: User %s is verified and active", user.Email)
+		return true, nil
+	}
+
+	log.Printf("canLoginViaOTP: User %s is not authorized to login via OTP (not super admin, org admin, or verified+active)", user.Email)
 	return false, nil
 }
 
@@ -81,9 +90,11 @@ func (s *AuthService) Login(ctx context.Context, req *models.LoginRequest, ipAdd
 		return nil, errors.ErrUnauthorized
 	}
 
-	// Check if user is active
-	if user.Status != "active" {
-		return nil, errors.NewError("ACCOUNT_INACTIVE", "Account is not active", 403)
+	// Check if user can login: status must be "active" OR (email_verified is true AND status is "pending")
+	// This allows verified users created by admins to login even if status is still pending
+	canLogin := user.Status == "active" || (user.EmailVerified && user.Status == "pending")
+	if !canLogin {
+		return nil, errors.NewError("ACCOUNT_INACTIVE", "Account is not active or verified", 403)
 	}
 
 	// Update login info
@@ -251,22 +262,16 @@ func (s *AuthService) SendOTP(ctx context.Context, email string) (*models.SendOT
 		return nil, errors.NewError("USER_NOT_FOUND", "User not found", 404)
 	}
 
-	log.Printf("SendOTP: User found - Email: %s, IsSuperAdmin: %v, Status: %s", email, user.IsSuperAdmin, user.Status)
+	log.Printf("SendOTP: User found - Email: %s, IsSuperAdmin: %v, Status: %s, EmailVerified: %v", email, user.IsSuperAdmin, user.Status, user.EmailVerified)
 
-	// Check if user is active
-	if user.Status != "active" {
-		log.Printf("SendOTP: User %s is not active (status: %s)", email, user.Status)
-		return nil, errors.NewError("ACCOUNT_INACTIVE", "Account is not active", 403)
-	}
-
-	// Check if user can login via OTP (super admin or org admin)
+	// Check if user can login via OTP (super admin, org admin, or verified+active)
 	canLogin, err := s.canLoginViaOTP(ctx, user)
 	if err != nil {
 		return nil, errors.WrapError(err, "INTERNAL_ERROR", "Failed to check user permissions", errors.ErrInternalServer.Status)
 	}
 	if !canLogin {
-		log.Printf("SendOTP: User %s is not authorized to login via OTP (not super admin or org admin)", email)
-		return nil, errors.NewError("UNAUTHORIZED", "Only super admins and organization admins can login via OTP", 403)
+		log.Printf("SendOTP: User %s is not authorized to login via OTP", email)
+		return nil, errors.NewError("UNAUTHORIZED", "Only super admins, organization admins, or verified active users can login via OTP", 403)
 	}
 
 	// Generate OTP
@@ -314,19 +319,14 @@ func (s *AuthService) VerifyOTP(ctx context.Context, email, otp, ipAddress, user
 		return nil, errors.ErrUnauthorized
 	}
 
-	// Check if user is active
-	if user.Status != "active" {
-		return nil, errors.NewError("ACCOUNT_INACTIVE", "Account is not active", 403)
-	}
-
-	// Check if user can login via OTP (super admin or org admin)
+	// Check if user can login via OTP (super admin, org admin, or verified+active)
 	canLogin, err := s.canLoginViaOTP(ctx, user)
 	if err != nil {
 		return nil, errors.WrapError(err, "INTERNAL_ERROR", "Failed to check user permissions", errors.ErrInternalServer.Status)
 	}
 	if !canLogin {
-		log.Printf("VerifyOTP: User %s is not authorized to login via OTP (not super admin or org admin)", email)
-		return nil, errors.NewError("UNAUTHORIZED", "Only super admins and organization admins can login via OTP", 403)
+		log.Printf("VerifyOTP: User %s is not authorized to login via OTP", email)
+		return nil, errors.NewError("UNAUTHORIZED", "Only super admins, organization admins, or verified active users can login via OTP", 403)
 	}
 
 	// Update login info
@@ -400,19 +400,14 @@ func (s *AuthService) ResendOTP(ctx context.Context, email string) (*models.Send
 		}, nil
 	}
 
-	// Check if user is active
-	if user.Status != "active" {
-		return nil, errors.NewError("ACCOUNT_INACTIVE", "Account is not active", 403)
-	}
-
-	// Check if user can login via OTP (super admin or org admin)
+	// Check if user can login via OTP (super admin, org admin, or verified+active)
 	canLogin, err := s.canLoginViaOTP(ctx, user)
 	if err != nil {
 		return nil, errors.WrapError(err, "INTERNAL_ERROR", "Failed to check user permissions", errors.ErrInternalServer.Status)
 	}
 	if !canLogin {
-		log.Printf("ResendOTP: User %s is not authorized to login via OTP (not super admin or org admin)", email)
-		return nil, errors.NewError("UNAUTHORIZED", "Only super admins and organization admins can login via OTP", 403)
+		log.Printf("ResendOTP: User %s is not authorized to login via OTP", email)
+		return nil, errors.NewError("UNAUTHORIZED", "Only super admins, organization admins, or verified active users can login via OTP", 403)
 	}
 
 	// Generate new OTP

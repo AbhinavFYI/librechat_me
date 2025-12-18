@@ -132,14 +132,15 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	FirstName *string `json:"first_name"`
-	LastName  *string `json:"last_name"`
-	Phone     *string `json:"phone"`
-	AvatarURL *string `json:"avatar_url"`
-	Status    *string `json:"status"`
-	OrgRole   *string `json:"org_role,omitempty"` // Optional: Update OrgRole - "admin", "user", "viewer"
-	Timezone  *string `json:"timezone"`
-	Locale    *string `json:"locale"`
+	FirstName     *string `json:"first_name"`
+	LastName      *string `json:"last_name"`
+	Phone         *string `json:"phone"`
+	AvatarURL     *string `json:"avatar_url"`
+	Status        *string `json:"status"`
+	OrgRole       *string `json:"org_role,omitempty"`       // Optional: Update OrgRole - "admin", "user", "viewer"
+	EmailVerified *bool   `json:"email_verified,omitempty"` // Optional: Update email verification status
+	Timezone      *string `json:"timezone"`
+	Locale        *string `json:"locale"`
 }
 
 type LoginRequest struct {

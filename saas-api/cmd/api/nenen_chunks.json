@@ -1,0 +1,34 @@
+[
+  {
+    "chunk_id": "nenen.pdf_chunk_0000",
+    "content": "USER\nin detail",
+    "content_type": "text",
+    "page_number": 1,
+    "section_title": "USER",
+    "chunk_index": 0
+  },
+  {
+    "chunk_id": "nenen.pdf_chunk_0001",
+    "content": "Document Details:\n- Document Name: Analysis pdf\n- Relevant Section: ASSISTANT, Page 1",
+    "content_type": "text",
+    "page_number": 1,
+    "section_title": "Document Details:",
+    "chunk_index": 1
+  },
+  {
+    "chunk_id": "nenen.pdf_chunk_0002",
+    "content": "Detailed Information:\n- The document covers a detailed analysis of the financial structure of JSW Cement:\n- The finance function is led at the board level by a combined commercial and finance role rather than a separate CFO role\n- The Chief Financial Officer (CFO) of JSW Cement Limited is Narinder Singh Kahlon:\n- His designation is Director Finance & Commercial and Chief Financial Officer:\n- He has a status of a Whole-time director (service) , with a service term of three years starting from May 8, 2024. He is liable to retire by rotation and has been on the Board since May 8, 2018.\n- The CFO role is integrated with finance plus commercial responsibilities, reflecting a broader strategic view over pricing, commercial decisions, and capital allocation.\n- His presence on the Board signals that finance is central to strategic decision-making; including expansion projects and capital structure/IPO-related decisions:\n- The report date is December 10, 2025.\nPlease note that the search didn't return any tables related to your query in the document:",
+    "content_type": "text",
+    "page_number": 1,
+    "section_title": "Detailed Information:",
+    "chunk_index": 2
+  },
+  {
+    "chunk_id": "nenen.pdf_chunk_0003",
+    "content": "Chat Conversation Report\nDec 18, 2025, 12.54 PM\nDec 18, 2025, 12.54 PM",
+    "content_type": "text",
+    "page_number": 1,
+    "section_title": "Chat Conversation Report",
+    "chunk_index": 3
+  }
+]

@@ -594,34 +594,79 @@ COMMENT ON COLUMN folders.path IS 'Canonical path like /root/team/reports';
 COMMENT ON COLUMN folders.parent_id IS 'Parent folder ID (NULL for root folders)';
 
 -- ============================================================================
--- TABLE: files
+-- TABLE: documents (Unified files and documents table)
 -- ============================================================================
 
-CREATE TABLE files (
+-- Create document_status enum if it doesn't exist
+DO $$ BEGIN
+  CREATE TYPE document_status AS ENUM ('pending', 'processing', 'embedding', 'completed', 'failed');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+CREATE TABLE documents (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  org_id UUID REFERENCES organizations(id) ON DELETE CASCADE NOT NULL,
+  
+  -- Multi-tenant org scope
+  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  
+  -- Hierarchy
   folder_id UUID REFERENCES folders(id) ON DELETE SET NULL,
-  name TEXT NOT NULL,
-  extension TEXT,
-  mime_type TEXT,
-  size_bytes BIGINT,
-  checksum TEXT,
-  storage_key TEXT NOT NULL, -- S3/local path
-  version INT DEFAULT 1,
-  created_by UUID REFERENCES users(id),
-  updated_by UUID REFERENCES users(id),
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
+  parent_id UUID REFERENCES documents(id) ON DELETE CASCADE,
+  doc_id UUID,
+  
+  -- Minimal identity
+  name VARCHAR(512) NOT NULL,
+  
+  -- File storage pointers
+  file_path VARCHAR(1024),
+  json_file_path VARCHAR(1024),
+  
+  -- Status
+  status document_status DEFAULT 'completed',
+  
+  -- JSONB metadata for flexible storage
+  content JSONB DEFAULT '{
+    "description": null,
+    "path": null,
+    "mime_type": null,
+    "size_bytes": 0,
+    "version": 1,
+    "checksum": null,
+    "is_folder": false,
+    "error_message": null,
+    "processing_data": {}
+  }'::jsonb NOT NULL,
+  metadata JSONB DEFAULT '{}' NOT NULL,
+  
+  -- Audit
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+  uploaded_at TIMESTAMP,
+  processed_at TIMESTAMP,
+  updated_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
+  deleted_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  deleted_at TIMESTAMP
 );
 
-CREATE INDEX idx_files_org ON files(org_id);
-CREATE INDEX idx_files_folder ON files(folder_id) WHERE folder_id IS NOT NULL;
-CREATE INDEX idx_files_created_by ON files(created_by) WHERE created_by IS NOT NULL;
-CREATE INDEX idx_files_created ON files(created_at DESC);
+-- Indexes
+CREATE INDEX idx_documents_org ON documents(org_id) WHERE deleted_at IS NULL;
+CREATE INDEX idx_documents_folder ON documents(folder_id) WHERE folder_id IS NOT NULL AND deleted_at IS NULL;
+CREATE INDEX idx_documents_parent ON documents(parent_id) WHERE parent_id IS NOT NULL AND deleted_at IS NULL;
+CREATE INDEX idx_documents_status ON documents(status) WHERE deleted_at IS NULL;
+CREATE INDEX idx_documents_created_by ON documents(created_by) WHERE created_by IS NOT NULL AND deleted_at IS NULL;
+CREATE INDEX idx_documents_created ON documents(created_at DESC) WHERE deleted_at IS NULL;
+CREATE INDEX idx_documents_file_path ON documents(file_path) WHERE file_path IS NOT NULL AND deleted_at IS NULL;
+CREATE INDEX idx_documents_content ON documents USING gin(content);
+CREATE INDEX idx_documents_metadata ON documents USING gin(metadata);
 
-COMMENT ON TABLE files IS 'Files stored within organizations and folders';
-COMMENT ON COLUMN files.storage_key IS 'S3/local storage path or key';
-COMMENT ON COLUMN files.version IS 'File version number for versioning support';
+COMMENT ON TABLE documents IS 'Unified table for files and documents with vector embeddings support';
+COMMENT ON COLUMN documents.file_path IS 'Physical file path relative to storage root (e.g., {org_id}/{folder_path}/{filename})';
+COMMENT ON COLUMN documents.json_file_path IS 'Path to processed JSON chunks for vector embeddings';
+COMMENT ON COLUMN documents.status IS 'Processing status: pending, processing, embedding, completed, failed';
+COMMENT ON COLUMN documents.content IS 'JSONB containing file metadata (mime_type, size_bytes, version, checksum, etc.)';
+COMMENT ON COLUMN documents.metadata IS 'JSONB for extensible metadata without schema changes';
 
 -- ============================================================================
 -- TABLE: folder_permissions
@@ -731,8 +776,8 @@ CREATE TRIGGER update_folders_updated_at
   FOR EACH ROW 
   EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_files_updated_at 
-  BEFORE UPDATE ON files
+CREATE TRIGGER update_documents_updated_at 
+  BEFORE UPDATE ON documents
   FOR EACH ROW 
   EXECUTE FUNCTION update_updated_at_column();
 
@@ -788,7 +833,7 @@ ALTER TABLE role_permissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE org_invitations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE folders ENABLE ROW LEVEL SECURITY;
-ALTER TABLE files ENABLE ROW LEVEL SECURITY;
+ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE folder_permissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
 
@@ -849,8 +894,8 @@ CREATE POLICY folders_isolation_policy ON folders
     org_id = current_setting('app.current_org_id', true)::uuid
   );
 
--- Files: Users see files in their org
-CREATE POLICY files_isolation_policy ON files
+-- Documents: Users see documents in their org
+CREATE POLICY documents_isolation_policy ON documents
   FOR ALL
   USING (
     current_setting('app.is_super_admin', true)::boolean = true OR
@@ -883,7 +928,7 @@ CREATE POLICY settings_isolation_policy ON settings
 COMMENT ON POLICY org_isolation_policy ON organizations IS 'RLS: Enforce multi-tenant isolation';
 COMMENT ON POLICY user_isolation_policy ON users IS 'RLS: Users can only see users in their org';
 COMMENT ON POLICY folders_isolation_policy ON folders IS 'RLS: Users can only see folders in their org';
-COMMENT ON POLICY files_isolation_policy ON files IS 'RLS: Users can only see files in their org';
+COMMENT ON POLICY documents_isolation_policy ON documents IS 'RLS: Users can only see documents in their org';
 COMMENT ON POLICY settings_isolation_policy ON settings IS 'RLS: Super admins see all, org admins see org screeners, users see only their own';
 
 -- ============================================================================
@@ -1271,7 +1316,14 @@ INSERT INTO permissions (resource, action, description, is_system) VALUES
   ('folders', 'delete', 'Delete folders', true),
   ('folders', 'list', 'List all folders', true),
   
-  -- Files Management
+  -- Documents Management (unified files and documents)
+  ('documents', 'create', 'Create new documents/files', true),
+  ('documents', 'read', 'View document/file details', true),
+  ('documents', 'update', 'Update document/file information', true),
+  ('documents', 'delete', 'Delete documents/files', true),
+  ('documents', 'list', 'List all documents/files', true),
+  
+  -- Legacy Files permissions (for backward compatibility)
   ('files', 'create', 'Create new files', true),
   ('files', 'read', 'View file details', true),
   ('files', 'update', 'Update file information', true),

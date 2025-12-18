@@ -275,17 +275,39 @@ async function uploadLocalFile({ req, file, file_id }) {
   const bytes = Buffer.byteLength(inputBuffer);
 
   const { uploads } = appConfig.paths;
-  const userPath = path.join(uploads, req.user.id);
+  
+  // Try to get org_id from user object (if available from saas-api integration)
+  // Check multiple possible property names
+  const orgId = req.user?.org_id || req.user?.orgId || req.user?.organization_id || req.user?.organizationId;
+  
+  let targetPath, filepath;
+  if (orgId) {
+    // Save to org's resources root directory: {uploads}/{org_id}/{filename}
+    const orgPath = path.join(uploads, String(orgId));
+    if (!fs.existsSync(orgPath)) {
+      fs.mkdirSync(orgPath, { recursive: true });
+    }
+    
+    // Use original filename (sanitized) instead of file_id prefix for resources
+    const sanitizedFilename = path.basename(inputFilePath);
+    const newPath = path.join(orgPath, sanitizedFilename);
+    
+    await fs.promises.writeFile(newPath, inputBuffer);
+    // Return path relative to uploads: {org_id}/{filename}
+    filepath = path.posix.join('/', 'uploads', String(orgId), sanitizedFilename);
+  } else {
+    // Fallback to user directory if org_id not available
+    const userPath = path.join(uploads, req.user.id);
+    if (!fs.existsSync(userPath)) {
+      fs.mkdirSync(userPath, { recursive: true });
+    }
 
-  if (!fs.existsSync(userPath)) {
-    fs.mkdirSync(userPath, { recursive: true });
+    const fileName = `${file_id}__${path.basename(inputFilePath)}`;
+    const newPath = path.join(userPath, fileName);
+
+    await fs.promises.writeFile(newPath, inputBuffer);
+    filepath = path.posix.join('/', 'uploads', req.user.id, path.basename(newPath));
   }
-
-  const fileName = `${file_id}__${path.basename(inputFilePath)}`;
-  const newPath = path.join(userPath, fileName);
-
-  await fs.promises.writeFile(newPath, inputBuffer);
-  const filepath = path.posix.join('/', 'uploads', req.user.id, path.basename(newPath));
 
   let height, width;
   if (file.mimetype && file.mimetype.startsWith('image/')) {

@@ -1,8 +1,11 @@
 package handlers
 
 import (
+	"context"
 	"saas-api/internal/middleware"
 	"saas-api/internal/services"
+
+	"github.com/google/uuid"
 )
 
 // BaseHandler provides common functionality and dependencies for all handlers
@@ -45,12 +48,20 @@ type Handlers struct {
 func NewHandlers(services *services.Services, storagePath string, authService *services.AuthService, authMW *middleware.AuthMiddleware) *Handlers {
 	repos := services.GetRepositories()
 
+	// Get document service for file handler (if available)
+	var docService interface {
+		DeleteDocument(ctx context.Context, documentID uuid.UUID) error
+	}
+	if services.Document != nil {
+		docService = services.Document
+	}
+
 	return &Handlers{
 		Auth:         NewAuthHandler(authService, authMW, repos.Organization),
 		User:         NewUserHandler(repos.User, repos.Role, repos.Organization),
 		Document:     NewDocumentHandler(services),
-		Folder:       NewFolderHandler(repos.Folder, repos.File),
-		File:         NewFileHandler(repos.File, repos.Folder, storagePath),
+		Folder:       NewFolderHandler(repos.Folder, repos.Document), // Update folder handler if needed
+		File:         NewFileHandler(repos.Folder, repos.Document, docService, storagePath),
 		Permission:   NewPermissionHandler(repos.Permission),
 		Role:         NewRoleHandler(repos.Role),
 		Organization: NewOrganizationHandler(repos.Organization, repos.Role, repos.Permission),
@@ -59,6 +70,6 @@ func NewHandlers(services *services.Services, storagePath string, authService *s
 		Template:     NewTemplateHandler(repos.Template),
 		LibreChat:    NewLibreChatHandler(),
 		Screener:     NewScreenerHandler(repos.Screener, repos.User),
-		Static:       NewStaticHandler(storagePath),
+		Static:       NewStaticHandler(storagePath, repos.Document),
 	}
 }

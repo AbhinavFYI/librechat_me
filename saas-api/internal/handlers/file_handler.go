@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,17 +18,71 @@ import (
 )
 
 type FileHandler struct {
-	fileRepo    *repositories.FileRepository
-	folderRepo  *repositories.FolderRepository
+	folderRepo      *repositories.FolderRepository
+	documentRepo    *repositories.DocumentRepository
+	documentService interface {
+		DeleteDocument(ctx context.Context, documentID uuid.UUID) error
+	}
 	storagePath string // Base path for file storage: {storagePath}/{org_id}/folder/files
 }
 
-func NewFileHandler(fileRepo *repositories.FileRepository, folderRepo *repositories.FolderRepository, storagePath string) *FileHandler {
+func NewFileHandler(folderRepo *repositories.FolderRepository, documentRepo *repositories.DocumentRepository, documentService interface {
+	DeleteDocument(ctx context.Context, documentID uuid.UUID) error
+}, storagePath string) *FileHandler {
 	return &FileHandler{
-		fileRepo:    fileRepo,
-		folderRepo:  folderRepo,
-		storagePath: storagePath,
+		folderRepo:      folderRepo,
+		documentRepo:    documentRepo,
+		documentService: documentService,
+		storagePath:     storagePath,
 	}
+}
+
+// Helper function to convert Document to File model for API compatibility
+func documentToFile(doc *repositories.Document) *models.File {
+	file := &models.File{
+		ID:            doc.ID,
+		OrgID:         doc.OrgID,
+		FolderID:      doc.FolderID,
+		Name:          doc.Name,
+		StorageKey:    "",
+		Version:       1,
+		CreatedBy:     doc.CreatedBy,
+		UpdatedBy:     doc.UpdatedBy,
+		CreatedAt:     doc.CreatedAt,
+		UpdatedAt:     doc.UpdatedAt,
+		CreatedByName: doc.CreatedByName,
+		UpdatedByName: doc.UpdatedByName,
+		FolderName:    doc.FolderName,
+	}
+
+	// Extract from content JSONB
+	if doc.Content.MimeType != nil {
+		file.MimeType = doc.Content.MimeType
+	}
+	if doc.Content.SizeBytes != nil {
+		file.SizeBytes = doc.Content.SizeBytes
+	}
+	if doc.Content.Checksum != nil {
+		file.Checksum = doc.Content.Checksum
+	}
+	if doc.Content.Version != nil {
+		file.Version = *doc.Content.Version
+	}
+
+	// Extract extension from name
+	if ext := filepath.Ext(doc.Name); ext != "" {
+		extLower := strings.ToLower(ext[1:])
+		file.Extension = &extLower
+	}
+
+	// Use file_path as storage_key
+	if doc.FilePath != nil {
+		file.StorageKey = *doc.FilePath
+	} else if doc.Content.Path != nil {
+		file.StorageKey = *doc.Content.Path
+	}
+
+	return file
 }
 
 func (h *FileHandler) Create(c *gin.Context) {
@@ -108,50 +163,65 @@ func (h *FileHandler) Create(c *gin.Context) {
 		ext = strings.ToLower(ext[1:]) // Remove the dot
 	}
 
-	// Generate storage key: {base_path}/{org_id}/{folder_path}/{file_name}
+	// Generate storage key: {org_id}/{folder_path}/{file_name} (relative to storage path, not including storage path prefix)
 	var storageKey string
 	if req.FolderID != nil {
 		folder, err := h.folderRepo.GetByID(c.Request.Context(), *req.FolderID)
 		if err == nil {
-			storageKey = filepath.Join(h.storagePath, orgUUID.String(), folder.Path, req.Name)
+			// Strip leading slash from folder path if present (folder.Path is like "/root/team/reports")
+			folderPath := strings.TrimPrefix(folder.Path, "/")
+			storageKey = filepath.Join(orgUUID.String(), folderPath, req.Name)
 		} else {
 			// If folder not found, store in org root
-			storageKey = filepath.Join(h.storagePath, orgUUID.String(), req.Name)
+			storageKey = filepath.Join(orgUUID.String(), req.Name)
 		}
 	} else {
 		// No folder, store in org root
-		storageKey = filepath.Join(h.storagePath, orgUUID.String(), req.Name)
+		storageKey = filepath.Join(orgUUID.String(), req.Name)
 	}
 
-	// Normalize path separators
+	// Normalize path separators (use forward slashes for consistency)
 	storageKey = filepath.Clean(storageKey)
+	storageKey = strings.ReplaceAll(storageKey, "\\", "/")
 
-	file := &models.File{
-		ID:         uuid.New(),
-		OrgID:      orgUUID,
-		FolderID:   req.FolderID,
-		Name:       req.Name,
-		Extension:  &ext,
-		StorageKey: storageKey,
-		Version:    1,
-		CreatedBy:  &uid,
+	// Determine MIME type from extension
+	mimeType := getMimeType(ext)
+
+	// Create document (file) in documents table
+	doc := &repositories.Document{
+		ID:        uuid.New(),
+		OrgID:     orgUUID,
+		FolderID:  req.FolderID,
+		Name:      req.Name,
+		FilePath:  &storageKey,
+		Status:    repositories.DocumentStatusCompleted,
+		CreatedBy: &uid,
+		Content: repositories.DocumentContent{
+			MimeType:  &mimeType,
+			SizeBytes: new(int64), // Will be set to 0 initially
+			Version:   new(int),
+			IsFolder:  new(bool),
+		},
+		Metadata: make(map[string]interface{}),
+	}
+	*doc.Content.SizeBytes = 0
+	*doc.Content.Version = 1
+	*doc.Content.IsFolder = false
+
+	if ext != "" {
+		doc.Content.Path = &storageKey
 	}
 
-	if err := h.fileRepo.Create(c.Request.Context(), file); err != nil {
-		if appErr, ok := err.(*errors.AppError); ok {
-			c.JSON(appErr.Status, errors.ErrorResponse{
-				Error:   appErr.Code,
-				Message: appErr.Message,
-			})
-			return
-		}
+	if err := h.documentRepo.Create(c.Request.Context(), doc); err != nil {
 		c.JSON(http.StatusInternalServerError, errors.ErrorResponse{
 			Error:   errors.ErrInternalServer.Code,
-			Message: "Failed to create file",
+			Message: fmt.Sprintf("Failed to create file: %v", err),
 		})
 		return
 	}
 
+	// Convert to File model for API response
+	file := documentToFile(doc)
 	c.JSON(http.StatusCreated, file)
 }
 
@@ -222,13 +292,25 @@ func (h *FileHandler) List(c *gin.Context) {
 		}
 	}
 
-	files, total, err := h.fileRepo.List(c.Request.Context(), orgUUID, folderID, page, limit)
+	// Convert folderID from *uuid.UUID to *uuid.UUID for document repo
+	var docFolderID *uuid.UUID
+	if folderID != nil {
+		docFolderID = folderID
+	}
+
+	documents, total, err := h.documentRepo.ListByFolder(c.Request.Context(), docFolderID, orgUUID, page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errors.ErrorResponse{
 			Error:   errors.ErrInternalServer.Code,
-			Message: "Failed to list files",
+			Message: fmt.Sprintf("Failed to list files: %v", err),
 		})
 		return
+	}
+
+	// Convert documents to files for API compatibility
+	files := make([]*models.File, len(documents))
+	for i, doc := range documents {
+		files[i] = documentToFile(doc)
 	}
 
 	totalPages := int((total + int64(limit) - 1) / int64(limit))
@@ -252,25 +334,17 @@ func (h *FileHandler) GetByID(c *gin.Context) {
 		return
 	}
 
-	file, err := h.fileRepo.GetByID(c.Request.Context(), id)
+	doc, err := h.documentRepo.GetByID(c.Request.Context(), id)
 	if err != nil {
-		if appErr, ok := err.(*errors.AppError); ok && appErr == errors.ErrNotFound {
-			c.JSON(http.StatusNotFound, errors.ErrorResponse{
-				Error:   errors.ErrNotFound.Code,
-				Message: "File not found",
-			})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, errors.ErrorResponse{
-			Error:   errors.ErrInternalServer.Code,
-			Message: "Failed to get file",
+		c.JSON(http.StatusNotFound, errors.ErrorResponse{
+			Error:   errors.ErrNotFound.Code,
+			Message: "File not found",
 		})
 		return
 	}
 
 	// Check organization access - users can only access files from their own organization
 	// Super admins can access files from any organization
-	// Users from the same org can access each other's files
 	isSuperAdmin, _ := c.Get("is_super_admin")
 	if isSuperAdmin == nil || !isSuperAdmin.(bool) {
 		// Regular user - check if file belongs to their organization
@@ -293,7 +367,7 @@ func (h *FileHandler) GetByID(c *gin.Context) {
 		}
 
 		userOrgUUID, err := uuid.Parse(userOrgIDStr)
-		if err != nil || userOrgUUID != file.OrgID {
+		if err != nil || userOrgUUID != doc.OrgID {
 			c.JSON(http.StatusForbidden, errors.ErrorResponse{
 				Error:   errors.ErrForbidden.Code,
 				Message: "You do not have access to this file. Files can only be accessed by users from the same organization.",
@@ -303,25 +377,35 @@ func (h *FileHandler) GetByID(c *gin.Context) {
 	}
 	// Super admin - allow access to any file
 
+	// Convert to File model
+	file := documentToFile(doc)
+
 	// Check if download/preview is requested (default to serving file)
 	downloadParam := c.Query("download")
 	// Always serve file if download parameter is present (true, 1, or empty means serve file)
 	// Only return JSON if explicitly requested with download=false
 	if downloadParam != "false" {
-		// Determine the actual file path
-		// StorageKey might be absolute or relative to storagePath
-		filePath := file.StorageKey
+		// Determine the actual file path from document
+		var filePath string
+		if doc.FilePath != nil {
+			filePath = *doc.FilePath
+		} else if doc.Content.Path != nil {
+			filePath = *doc.Content.Path
+		} else {
+			c.JSON(http.StatusNotFound, errors.ErrorResponse{
+				Error:   errors.ErrNotFound.Code,
+				Message: "File path not found in document",
+			})
+			return
+		}
 
-		// Check if the path is already a valid absolute path that exists
-		// If not, try to construct it relative to storagePath
-		if filepath.IsAbs(filePath) {
-			// It's an absolute path - check if it exists
-			if _, err := os.Stat(filePath); os.IsNotExist(err) {
-				// Absolute path doesn't exist, try relative to storagePath
-				// Remove leading slash if present and join with storagePath
-				relPath := strings.TrimPrefix(filePath, "/")
-				filePath = filepath.Join(h.storagePath, relPath)
-			}
+		// Check if the path already includes storage path prefix
+		if strings.HasPrefix(filePath, h.storagePath+"/") || strings.HasPrefix(filePath, h.storagePath+"\\") {
+			// Path already includes storage path prefix (legacy format)
+			filePath = filepath.Clean(filePath)
+		} else if filepath.IsAbs(filePath) {
+			// It's an absolute path - use as-is
+			filePath = filepath.Clean(filePath)
 		} else {
 			// Relative path - join with storagePath
 			filePath = filepath.Join(h.storagePath, filePath)
@@ -332,42 +416,29 @@ func (h *FileHandler) GetByID(c *gin.Context) {
 
 		// Serve file for download
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
-			// Try the original storageKey as well
-			if filePath != file.StorageKey {
-				if _, err2 := os.Stat(file.StorageKey); os.IsNotExist(err2) {
-					c.JSON(http.StatusNotFound, errors.ErrorResponse{
-						Error:   errors.ErrNotFound.Code,
-						Message: fmt.Sprintf("File not found on disk. Tried: %s and %s", filePath, file.StorageKey),
-					})
-					return
-				}
-				filePath = file.StorageKey
-			} else {
-				c.JSON(http.StatusNotFound, errors.ErrorResponse{
-					Error:   errors.ErrNotFound.Code,
-					Message: fmt.Sprintf("File not found on disk: %s", filePath),
-				})
-				return
-			}
+			c.JSON(http.StatusNotFound, errors.ErrorResponse{
+				Error:   errors.ErrNotFound.Code,
+				Message: fmt.Sprintf("File not found on disk: %s", filePath),
+			})
+			return
 		}
 
 		// Set appropriate content type based on file extension
 		// Prioritize extension-based detection to ensure correct MIME type
 		mimeType := "application/octet-stream"
-		if file.Extension != nil && *file.Extension != "" {
+		if doc.Content.MimeType != nil && *doc.Content.MimeType != "" {
+			mimeType = *doc.Content.MimeType
+		} else if file.Extension != nil && *file.Extension != "" {
 			mimeType = getMimeType(*file.Extension)
-		} else if file.MimeType != nil && *file.MimeType != "application/octet-stream" {
-			// Only use stored MIME type if extension is not available and it's not the default
-			mimeType = *file.MimeType
 		}
 
 		// Set headers for file download
 		c.Header("Content-Type", mimeType)
 		// For HTML and PDF files, use inline to allow preview; for others, use attachment to force download
 		if strings.HasPrefix(mimeType, "text/html") || mimeType == "application/pdf" {
-			c.Header("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", file.Name))
+			c.Header("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", doc.Name))
 		} else {
-			c.Header("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", file.Name))
+			c.Header("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", doc.Name))
 		}
 		// Serve the file
 		c.File(filePath)
@@ -397,61 +468,49 @@ func (h *FileHandler) Update(c *gin.Context) {
 		return
 	}
 
-	// Get existing file
-	file, err := h.fileRepo.GetByID(c.Request.Context(), id)
+	// Get existing document
+	doc, err := h.documentRepo.GetByID(c.Request.Context(), id)
 	if err != nil {
-		if appErr, ok := err.(*errors.AppError); ok && appErr == errors.ErrNotFound {
-			c.JSON(http.StatusNotFound, errors.ErrorResponse{
-				Error:   errors.ErrNotFound.Code,
-				Message: "File not found",
-			})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, errors.ErrorResponse{
-			Error:   errors.ErrInternalServer.Code,
-			Message: "Failed to get file",
+		c.JSON(http.StatusNotFound, errors.ErrorResponse{
+			Error:   errors.ErrNotFound.Code,
+			Message: "File not found",
 		})
 		return
 	}
 
 	// Update fields
 	if req.Name != nil {
-		file.Name = *req.Name
+		doc.Name = *req.Name
 		// Update extension if name changed
 		ext := filepath.Ext(*req.Name)
 		if ext != "" {
-			ext = strings.ToLower(ext[1:])
-			file.Extension = &ext
+			extLower := strings.ToLower(ext[1:])
+			doc.Content.MimeType = &extLower
 		}
 	}
 	if req.FolderID != nil {
-		file.FolderID = req.FolderID
+		doc.FolderID = req.FolderID
 	}
 
 	userID, exists := c.Get("user_id")
 	if exists && userID != nil {
 		if userIDStr, ok := userID.(string); ok {
 			if uid, err := uuid.Parse(userIDStr); err == nil {
-				file.UpdatedBy = &uid
+				doc.UpdatedBy = &uid
 			}
 		}
 	}
 
-	if err := h.fileRepo.Update(c.Request.Context(), file); err != nil {
-		if appErr, ok := err.(*errors.AppError); ok {
-			c.JSON(appErr.Status, errors.ErrorResponse{
-				Error:   appErr.Code,
-				Message: appErr.Message,
-			})
-			return
-		}
+	if err := h.documentRepo.Update(c.Request.Context(), doc); err != nil {
 		c.JSON(http.StatusInternalServerError, errors.ErrorResponse{
 			Error:   errors.ErrInternalServer.Code,
-			Message: "Failed to update file",
+			Message: fmt.Sprintf("Failed to update file: %v", err),
 		})
 		return
 	}
 
+	// Convert to File model
+	file := documentToFile(doc)
 	c.JSON(http.StatusOK, file)
 }
 
@@ -466,19 +525,72 @@ func (h *FileHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.fileRepo.Delete(c.Request.Context(), id); err != nil {
-		if appErr, ok := err.(*errors.AppError); ok {
-			c.JSON(appErr.Status, errors.ErrorResponse{
-				Error:   appErr.Code,
-				Message: appErr.Message,
+	// Get document info before deleting to get file_path for Weaviate deletion and file removal
+	doc, err := h.documentRepo.GetByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, errors.ErrorResponse{
+			Error:   errors.ErrNotFound.Code,
+			Message: "File not found",
+		})
+		return
+	}
+
+	// Get file_path for deletion
+	var filePath string
+	if doc.FilePath != nil {
+		filePath = *doc.FilePath
+	} else if doc.Content.Path != nil {
+		filePath = *doc.Content.Path
+	}
+
+	// Delete physical file from disk first
+	if filePath != "" {
+		// Determine the actual file path
+		diskPath := filePath
+		if !filepath.IsAbs(diskPath) {
+			// Relative path - join with storagePath
+			diskPath = filepath.Join(h.storagePath, diskPath)
+		}
+		diskPath = filepath.Clean(diskPath)
+
+		// Check if file exists and delete it
+		if _, err := os.Stat(diskPath); err == nil {
+			if err := os.Remove(diskPath); err != nil {
+				// Log error but don't fail the deletion - file might have been manually deleted
+				fmt.Printf("Warning: Failed to delete physical file %s: %v\n", diskPath, err)
+			} else {
+				fmt.Printf("Successfully deleted physical file: %s\n", diskPath)
+			}
+		} else {
+			fmt.Printf("Physical file not found (may have been deleted already): %s\n", diskPath)
+		}
+	}
+
+	// Delete from Weaviate and database using document service
+	// This handles both Weaviate deletion and database deletion in one call
+	if h.documentService != nil {
+		fmt.Printf("Deleting document from Weaviate and database: %s (file_path: %s)\n", doc.ID, filePath)
+		if err := h.documentService.DeleteDocument(c.Request.Context(), doc.ID); err != nil {
+			// If deletion fails, return error
+			fmt.Printf("Error: Failed to delete document %s: %v\n", doc.ID, err)
+			c.JSON(http.StatusInternalServerError, errors.ErrorResponse{
+				Error:   errors.ErrInternalServer.Code,
+				Message: fmt.Sprintf("Failed to delete file: %v", err),
 			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, errors.ErrorResponse{
-			Error:   errors.ErrInternalServer.Code,
-			Message: "Failed to delete file",
-		})
-		return
+		fmt.Printf("Successfully deleted document %s from Weaviate and database\n", doc.ID)
+	} else {
+		// Fallback: delete from documents table directly if service not available
+		fmt.Printf("Document service not available, deleting from database directly: %s\n", doc.ID)
+		if err := h.documentRepo.Delete(c.Request.Context(), id); err != nil {
+			c.JSON(http.StatusInternalServerError, errors.ErrorResponse{
+				Error:   errors.ErrInternalServer.Code,
+				Message: fmt.Sprintf("Failed to delete file: %v", err),
+			})
+			return
+		}
+		fmt.Printf("Successfully deleted document/file %s from database\n", id)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "File deleted successfully"})
@@ -583,60 +695,66 @@ func (h *FileHandler) Upload(c *gin.Context) {
 		ext = strings.ToLower(ext[1:])
 	}
 
-	// Generate storage key: {base_path}/{org_id}/{folder_path}/{file_name}
-	// Example: uploads/550e8400-e29b-41d4-a716-446655440000/root/team/reports/document.pdf
+	// Generate storage key: {org_id}/{folder_path}/{file_name} (relative to storage path, not including storage path prefix)
 	var storageKey string
 	if folderID != nil {
 		folder, err := h.folderRepo.GetByID(c.Request.Context(), *folderID)
 		if err == nil {
-			// Use folder path relative to org root
-			storageKey = filepath.Join(h.storagePath, orgUUID.String(), folder.Path, fileHeader.Filename)
+			// Strip leading slash from folder path if present (folder.Path is like "/root/team/reports")
+			folderPath := strings.TrimPrefix(folder.Path, "/")
+			storageKey = filepath.Join(orgUUID.String(), folderPath, fileHeader.Filename)
 		} else {
 			// If folder not found, store in org root
-			storageKey = filepath.Join(h.storagePath, orgUUID.String(), fileHeader.Filename)
+			storageKey = filepath.Join(orgUUID.String(), fileHeader.Filename)
 		}
 	} else {
 		// No folder, store in org root
-		storageKey = filepath.Join(h.storagePath, orgUUID.String(), fileHeader.Filename)
+		storageKey = filepath.Join(orgUUID.String(), fileHeader.Filename)
 	}
 
-	// Normalize path separators
+	// Normalize path separators (use forward slashes for consistency)
 	storageKey = filepath.Clean(storageKey)
+	storageKey = strings.ReplaceAll(storageKey, "\\", "/")
 
 	// Determine MIME type from extension
 	mimeType := getMimeType(ext)
+	sizeBytes := fileHeader.Size
+	version := 1
+	isFolder := false
 
-	file := &models.File{
-		ID:         uuid.New(),
-		OrgID:      orgUUID,
-		FolderID:   folderID,
-		Name:       fileHeader.Filename,
-		Extension:  &ext,
-		MimeType:   &mimeType,
-		SizeBytes:  &fileHeader.Size,
-		StorageKey: storageKey,
-		Version:    1,
-		CreatedBy:  &uid,
+	// Create document (file) in documents table
+	doc := &repositories.Document{
+		ID:        uuid.New(),
+		OrgID:     orgUUID,
+		FolderID:  folderID,
+		Name:      fileHeader.Filename,
+		FilePath:  &storageKey,
+		Status:    repositories.DocumentStatusCompleted,
+		CreatedBy: &uid,
+		Content: repositories.DocumentContent{
+			MimeType:  &mimeType,
+			SizeBytes: &sizeBytes,
+			Version:   &version,
+			IsFolder:  &isFolder,
+			Path:      &storageKey,
+		},
+		Metadata: make(map[string]interface{}),
 	}
 
-	if err := h.fileRepo.Create(c.Request.Context(), file); err != nil {
-		if appErr, ok := err.(*errors.AppError); ok {
-			c.JSON(appErr.Status, errors.ErrorResponse{
-				Error:   appErr.Code,
-				Message: appErr.Message,
-			})
-			return
-		}
+	if err := h.documentRepo.Create(c.Request.Context(), doc); err != nil {
 		c.JSON(http.StatusInternalServerError, errors.ErrorResponse{
 			Error:   errors.ErrInternalServer.Code,
-			Message: "Failed to create file record",
+			Message: fmt.Sprintf("Failed to create file record: %v", err),
 		})
 		return
 	}
 
 	// Save actual file to disk at the storage key path
+	// storageKey is relative to storagePath, so we need to join them
+	fullStoragePath := filepath.Join(h.storagePath, storageKey)
+
 	// Create directory structure if it doesn't exist
-	storageDir := filepath.Dir(storageKey)
+	storageDir := filepath.Dir(fullStoragePath)
 	if err := os.MkdirAll(storageDir, 0755); err != nil {
 		// If directory creation fails, still return error but don't create DB record
 		c.JSON(http.StatusInternalServerError, errors.ErrorResponse{
@@ -647,7 +765,7 @@ func (h *FileHandler) Upload(c *gin.Context) {
 	}
 
 	// Open destination file
-	dst, err := os.Create(storageKey)
+	dst, err := os.Create(fullStoragePath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errors.ErrorResponse{
 			Error:   errors.ErrInternalServer.Code,
@@ -672,7 +790,7 @@ func (h *FileHandler) Upload(c *gin.Context) {
 	bytesWritten, err := io.Copy(dst, src)
 	if err != nil {
 		// Clean up: remove file if copy fails
-		os.Remove(storageKey)
+		os.Remove(fullStoragePath)
 		c.JSON(http.StatusInternalServerError, errors.ErrorResponse{
 			Error:   errors.ErrInternalServer.Code,
 			Message: fmt.Sprintf("Failed to save file: %v", err),
@@ -691,7 +809,9 @@ func (h *FileHandler) Upload(c *gin.Context) {
 
 	// Verify file was written correctly
 	if bytesWritten != fileHeader.Size {
-		os.Remove(storageKey)
+		os.Remove(fullStoragePath)
+		// Delete the document record we created
+		h.documentRepo.Delete(c.Request.Context(), doc.ID)
 		c.JSON(http.StatusInternalServerError, errors.ErrorResponse{
 			Error:   errors.ErrInternalServer.Code,
 			Message: fmt.Sprintf("File size mismatch: expected %d bytes, wrote %d bytes", fileHeader.Size, bytesWritten),
@@ -700,14 +820,18 @@ func (h *FileHandler) Upload(c *gin.Context) {
 	}
 
 	// Verify file exists and has correct size
-	if fileInfo, err := os.Stat(storageKey); err != nil {
+	if fileInfo, err := os.Stat(fullStoragePath); err != nil {
+		// Delete the document record we created
+		h.documentRepo.Delete(c.Request.Context(), doc.ID)
 		c.JSON(http.StatusInternalServerError, errors.ErrorResponse{
 			Error:   errors.ErrInternalServer.Code,
 			Message: fmt.Sprintf("File verification failed: %v", err),
 		})
 		return
 	} else if fileInfo.Size() != fileHeader.Size {
-		os.Remove(storageKey)
+		os.Remove(fullStoragePath)
+		// Delete the document record we created
+		h.documentRepo.Delete(c.Request.Context(), doc.ID)
 		c.JSON(http.StatusInternalServerError, errors.ErrorResponse{
 			Error:   errors.ErrInternalServer.Code,
 			Message: fmt.Sprintf("File size verification failed: expected %d bytes, got %d bytes", fileHeader.Size, fileInfo.Size()),
@@ -718,13 +842,15 @@ func (h *FileHandler) Upload(c *gin.Context) {
 	// For PDF files, verify the file starts with PDF header
 	if ext == "pdf" {
 		// Read first few bytes to verify it's a valid PDF
-		verifyFile, err := os.Open(storageKey)
+		verifyFile, err := os.Open(fullStoragePath)
 		if err == nil {
 			header := make([]byte, 4)
 			if n, err := verifyFile.Read(header); err == nil && n == 4 {
 				if string(header) != "%PDF" {
 					verifyFile.Close()
-					os.Remove(storageKey)
+					os.Remove(fullStoragePath)
+					// Delete the document record we created
+					h.documentRepo.Delete(c.Request.Context(), doc.ID)
 					c.JSON(http.StatusBadRequest, errors.ErrorResponse{
 						Error:   errors.ErrValidation.Code,
 						Message: "Invalid PDF file: file does not start with PDF header",
@@ -736,6 +862,14 @@ func (h *FileHandler) Upload(c *gin.Context) {
 		}
 	}
 
+	// Update document with actual file size
+	*doc.Content.SizeBytes = fileHeader.Size
+	if err := h.documentRepo.Update(c.Request.Context(), doc); err != nil {
+		fmt.Printf("Warning: Failed to update document with file size: %v\n", err)
+	}
+
+	// Convert to File model for API response
+	file := documentToFile(doc)
 	c.JSON(http.StatusCreated, models.FileUploadResponse{
 		File:    file,
 		Message: "File uploaded successfully",

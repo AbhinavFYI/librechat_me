@@ -5,14 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"time"
 
 	"saas-api/cmd/configs"
 	"saas-api/pkg/weaviate"
 
-	godotenvssm "github.com/FyersDev/godotenv-ssm"
+	"github.com/joho/godotenv"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -72,12 +71,12 @@ func parseCollectionID(raw interface{}) (int, error) {
 
 // Initialize weaviate client
 func init() {
-	err := godotenvssm.Load(
-		fmt.Sprintf("ssm:/insti/%s",
-			os.Getenv("APP_ENV"),
-		))
+	// err := godotenvssm.Load(
+	// 	fmt.Sprintf("ssm:/insti/%s",
+	// 		os.Getenv("APP_ENV"),
+	err := godotenv.Load("/Users/aep014/Desktop/custotm_librechat 2/saas-api/.env")
 	if err != nil {
-		log.Printf(err.Error())
+		// log.Printf(err.Error())
 		panic(err)
 	}
 	config := configs.LoadConfig()
