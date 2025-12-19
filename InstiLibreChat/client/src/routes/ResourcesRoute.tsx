@@ -49,12 +49,22 @@ const getFileIcon = (extension?: string) => {
 };
 
 // Format date for display
-const formatDate = (dateString: string) => {
+const formatDate = (dateString: string | undefined | null) => {
+  if (!dateString) {
+    return 'N/A';
+  }
+  
   try {
     const date = new Date(dateString);
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date string:', dateString);
+      return 'Invalid Date';
+    }
     return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-  } catch {
-    return dateString;
+  } catch (error) {
+    console.error('Error parsing date:', dateString, error);
+    return 'Invalid Date';
   }
 };
 
@@ -64,7 +74,7 @@ export default function ResourcesRoute() {
   const [breadcrumbs, setBreadcrumbs] = useState<Array<{ id: string | null; name: string }>>([{ id: null, name: 'Home' }]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedItem, setSelectedItem] = useState<{ type: 'folder' | 'file'; id: string } | null>(null);
+  const [selectedItem, setSelectedItem] = useState<{ type: 'folder' | 'file'; id: string | number } | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; right: number } | null>(null);
   const buttonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
   const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
@@ -439,14 +449,14 @@ export default function ResourcesRoute() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
+      {/* Header - Responsive */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
             {isSuperAdmin && organizations.length > 0 && (
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  Organization:
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <label className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                  Org:
                 </label>
                 <select
                   value={selectedOrgId}
@@ -458,7 +468,7 @@ export default function ResourcesRoute() {
                       navigateToFolder(null, 'Home');
                     }
                   }}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 min-w-[300px] max-w-[500px]"
+                  className="px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 flex-1 sm:flex-none sm:min-w-[200px] md:min-w-[300px] lg:max-w-[500px]"
                 >
                   {organizations.map((org) => (
                     <option key={org.id} value={org.id}>
@@ -470,24 +480,26 @@ export default function ResourcesRoute() {
             )}
           </div>
           {canManage && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               <button
                 onClick={() => {
                   setShowCreateFolderModal(true);
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-medium transition-colors flex-1 sm:flex-none"
               >
-                <Plus className="h-4 w-4" />
-                New folder
+                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">New folder</span>
+                <span className="sm:hidden">Folder</span>
               </button>
               <button
                 onClick={() => {
                   setShowUploadFileModal(true);
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
+                className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs sm:text-sm font-medium transition-colors flex-1 sm:flex-none"
               >
-                <Upload className="h-4 w-4" />
-                Upload document
+                <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Upload document</span>
+                <span className="sm:hidden">Upload</span>
               </button>
               {showSearch ? (
                 <div className="relative">
@@ -534,19 +546,19 @@ export default function ResourcesRoute() {
         </div>
       </div>
 
-      {/* Tabs and Breadcrumbs */}
+      {/* Tabs and Breadcrumbs - Responsive */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="px-6 py-3">
-          <div className="flex items-center justify-between">
+        <div className="px-3 sm:px-4 md:px-6 py-2 sm:py-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
             {/* Tabs */}
-            <div className="flex items-center gap-6 border-b border-gray-200 dark:border-gray-700 -mb-3">
+            <div className="flex items-center gap-4 sm:gap-6 border-b border-gray-200 dark:border-gray-700 -mb-2 sm:-mb-3 w-full sm:w-auto">
               <button
                 onClick={() => {
                   setActiveTab('documents');
                   navigateToFolder(null, 'Home');
                   setShowSearch(false); // Hide search when switching tabs
                 }}
-                className={`px-1 pb-3 text-sm font-medium transition-colors ${
+                className={`px-1 pb-2 sm:pb-3 text-xs sm:text-sm font-medium transition-colors ${
                   activeTab === 'documents'
                     ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -606,7 +618,7 @@ export default function ResourcesRoute() {
                       {index > 0 && <ChevronRight className="h-4 w-4 text-gray-400" />}
                       <button
                         onClick={() => navigateToFolder(crumb.id, crumb.name)}
-                        className={`px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                        className={`px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 ${
                           index === breadcrumbs.length - 1 ? 'font-semibold' : ''
                         }`}
                       >
@@ -636,15 +648,15 @@ export default function ResourcesRoute() {
             <p className="text-gray-600 dark:text-gray-400 mb-4">This folder is empty</p>
           </div>
         ) : viewMode === 'list' ? (
-          /* List/Table View */
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-visible mx-6 my-4 rounded-lg">
-            <table className="w-full">
+          /* List/Table View - Responsive */
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-x-auto mx-2 sm:mx-4 md:mx-6 my-4 rounded-lg">
+            <table className="w-full min-w-[640px]">
               <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created by</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Created by</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden sm:table-cell">Date</th>
+                  <th className="px-3 sm:px-4 md:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -661,24 +673,24 @@ export default function ResourcesRoute() {
                         }
                       }}
                     >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <Folder className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                          <div>
-                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{folder.name}</div>
+                      <td className="px-3 sm:px-4 md:px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <Folder className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{folder.name}</div>
                             {folderFileCount > 0 && (
-                              <div className="text-xs text-gray-500 dark:text-gray-400">{folderFileCount} document{folderFileCount !== 1 ? 's' : ''}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">{folderFileCount} doc{folderFileCount !== 1 ? 's' : ''}</div>
                             )}
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      <td className="px-3 sm:px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 hidden md:table-cell">
                         {folder.created_by_name || 'Unknown'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      <td className="px-3 sm:px-4 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 dark:text-gray-400 hidden sm:table-cell">
                         {formatDate(folder.created_at)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-3 sm:px-4 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end gap-2">
                           {canManage && (
                             <div className="relative">
@@ -774,19 +786,19 @@ export default function ResourcesRoute() {
                       className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
                       onDoubleClick={() => handlePreviewFile(file)}
                     >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <FileIcon className="h-5 w-5 text-gray-500 flex-shrink-0" />
-                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{file.name}</div>
+                      <td className="px-3 sm:px-4 md:px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                          <FileIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 flex-shrink-0" />
+                          <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{file.name}</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      <td className="px-3 sm:px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 hidden md:table-cell">
                         {file.created_by_name || 'Unknown'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      <td className="px-3 sm:px-4 md:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 dark:text-gray-400 hidden sm:table-cell">
                         {formatDate(file.created_at)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-3 sm:px-4 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={(e) => {
@@ -860,7 +872,7 @@ export default function ResourcesRoute() {
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           e.preventDefault();
-                                          localStorage.setItem('editing_file_id', file.id);
+                                          localStorage.setItem('editing_file_id', String(file.id));
                                           setShowEditFileModal(true);
                                           setSelectedItem(null);
                                           setDropdownPosition(null);
@@ -1035,7 +1047,7 @@ export default function ResourcesRoute() {
 
       {showEditFolderModal && (
         <EditFolderModal
-          folder={selectedItem?.type === 'folder' ? (findFolder(allFolders, selectedItem.id) || { id: '', name: '', path: '' }) : { id: '', name: '', path: '' }}
+          folder={selectedItem?.type === 'folder' ? (findFolder(allFolders, typeof selectedItem.id === 'string' ? selectedItem.id : null) || { id: '', name: '', path: '' }) : { id: '', name: '', path: '' }}
           onClose={() => {
             setShowEditFolderModal(false);
             setSelectedItem(null);
@@ -1068,12 +1080,12 @@ export default function ResourcesRoute() {
             if (selectedItem?.type === 'file') {
               // Find file in current folder
               const foundFile = filteredContent.files.find(f => f.id === selectedItem.id);
-              return foundFile || { id: selectedItem.id, name: '' };
+              return foundFile || { id: String(selectedItem.id), name: '' };
             }
             // Fallback - try to find by stored file ID
             const storedFileId = localStorage.getItem('editing_file_id');
             if (storedFileId) {
-              const foundFile = filteredContent.files.find(f => f.id === storedFileId);
+              const foundFile = filteredContent.files.find(f => String(f.id) === storedFileId);
               localStorage.removeItem('editing_file_id');
               return foundFile || { id: storedFileId, name: '' };
             }

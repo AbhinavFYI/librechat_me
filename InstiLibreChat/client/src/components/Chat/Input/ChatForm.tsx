@@ -198,7 +198,11 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const baseClasses = useMemo(
     () =>
       cn(
-        'px-1.5 py-3 m-0 w-full resize-none placeholder-[#9F9F9F] bg-white text-[12px] font-inter',
+        'px-1.5 py-3 m-0 w-full resize-none font-inter',
+        'placeholder-gray-400 dark:placeholder-gray-500',
+        'bg-white dark:bg-gray-800',
+        'text-gray-900 dark:text-gray-100',
+        'text-[12px]',
         isCollapsed ? 'max-h-[52px]' : 'max-h-[45vh] md:max-h-[55vh]',
         isMoreThanThreeRows ? 'pl-5' : 'px-5',
       ),
@@ -245,7 +249,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
             onClick={handleContainerClick}
             className={cn(
               'relative flex w-full flex-grow flex-col overflow-hidden rounded-[2px]',
-              'bg-white border border-[#2434E7]',
+              'bg-white dark:bg-gray-800 border border-[#2434E7] dark:border-blue-500',
               'transition-all duration-200',
               isTextAreaFocused ? 'shadow-lg' : 'shadow-md',
             )}
@@ -263,7 +267,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                 <div className="relative flex-1">
                   <TextareaAutosize
                     {...registerProps}
-                    placeholder="Ask FIA"
+                    placeholder="Message FIA"
                     ref={(e) => {
                       ref(e);
                       (textAreaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current =

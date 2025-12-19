@@ -7,8 +7,8 @@ export default function useGetSender() {
   const { data: endpointsConfig = {} as TEndpointsConfig } = useGetEndpointsQuery();
   return useCallback(
     (endpointOption: TEndpointOption) => {
-      const { modelDisplayLabel } = endpointsConfig?.[endpointOption.endpoint ?? ''] ?? {};
-      return getResponseSender({ ...endpointOption, modelDisplayLabel });
+      // Always return "FIA" instead of the actual model name (GPT-4, Claude, etc.)
+      return 'FIA';
     },
     [endpointsConfig],
   );

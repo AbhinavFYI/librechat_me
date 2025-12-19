@@ -138,45 +138,38 @@ export const getFileType = (
 };
 
 /**
- * Format a date string to a human readable format
+ * Format a date string to format: 2025-12-15 10:32:53.332
  * @example
- * formatDate('2020-01-01T00:00:00.000Z') // '1 Jan 2020'
+ * formatDate('2020-01-01T00:00:00.000Z') // '2020-01-01 00:00:00.000'
  */
-export function formatDate(dateString: string, isSmallScreen = false) {
+export function formatDate(dateString: string | undefined | null, isSmallScreen = false) {
   if (!dateString) {
     return '';
   }
 
   const date = new Date(dateString);
-
-  if (isSmallScreen) {
-    return date.toLocaleDateString('en-US', {
-      month: 'numeric',
-      day: 'numeric',
-      year: '2-digit',
-    });
+  
+  // Check if date is valid
+  if (isNaN(date.getTime())) {
+    console.warn('Invalid date string:', dateString);
+    return 'Invalid Date';
   }
 
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-
-  const day = date.getDate();
-  const month = months[date.getMonth()];
+  // Format: YYYY-MM-DD HH:mm:ss.SSS
   const year = date.getFullYear();
-
-  return `${day} ${month} ${year}`;
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const milliseconds = String(date.getMilliseconds()).padStart(3, '0');
+  
+  if (isSmallScreen) {
+    // For small screens, show shorter format: YYYY-MM-DD HH:mm
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+  }
+  
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
 }
 
 /**

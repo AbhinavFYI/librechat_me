@@ -125,11 +125,12 @@ export default function useMessageActions(props: TMessageActions) {
     if (message?.isCreatedByUser === true) {
       return UsernameDisplay ? (user?.name ?? '') || user?.username : localize('com_user_message');
     } else if (agent) {
-      return agent.name ?? 'Assistant';
+      return agent.name ?? 'FIA';
     } else if (assistant) {
-      return assistant.name ?? 'Assistant';
+      return assistant.name ?? 'FIA';
     } else {
-      return message?.sender;
+      // Always show "FIA" for AI responses instead of model name (GPT-4, Claude, etc.)
+      return 'FIA';
     }
   }, [message, agent, assistant, UsernameDisplay, user, localize]);
 

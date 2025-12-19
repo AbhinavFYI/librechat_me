@@ -43,7 +43,7 @@ const UploadButton = ({ disabled }: UploadButtonProps) => {
             )}
           >
             <div className="flex w-full items-center justify-center gap-2">
-              <Upload className="icon-md" />
+              <Upload className="icon-md text-gray-700 dark:text-white" />
             </div>
           </button>
         }
