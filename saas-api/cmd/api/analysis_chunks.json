@@ -1,7 +1,7 @@
 [
   {
     "chunk_id": "analysis.pdf_chunk_0000",
-    "content": "Chat Conversation Report\n```\nUSER Dec 10, 2025, 12.47 PM request: { Documents: [ { name:\"JSWCEMENT pdf\"; collection:30; }] template: \"T-A-G\" persona: \"Describe the trendline\" query: \"who is the cfo\"\n```",
+    "content": "Chat Conversation Report\n```\nUSER Dec 10, 2025, 12:47 PM request: { Documents: [ { name:\"JSWCEMENT pdf\"; collection:30; }] template: \"T-A-G\" persona: \"Describe the trendline\" query: \"who is the cfo\"\n```",
     "content_type": "text",
     "page_number": 1,
     "section_title": "Chat Conversation Report",
@@ -9,7 +9,7 @@
   },
   {
     "chunk_id": "analysis.pdf_chunk_0001",
-    "content": "ASSISTANT\nT Trend / Context\nWithin JSW Cement's current management structure (as per the Red Herring Prospectus), the finance function is led at Board level by a combined commercial and finance role rather than a standalone \"CFO\" title only:\nA Answer\nThe Chief Financial Officer (CFO) of JSW Cement Limited is:\n- Name: Narinder Singh Kahlon\n- Designation: Director Finance & Commercial and Chief Financial Officer\n- Status: Whole-time director (service) , with a term of three years from May 8, 2024, liable to retire by rotation, and on the Board since May 8, 2018.\nG Governance Role Trendline\n- The CFO role is integrated with finance + commercial responsibilities, reflecting a broader strategic remit (beyond pure controllership) over pricing, commercial decisions, and capital allocation:\n- His presence on the Board (as a director) signals that finance is central to strategic decision-making, including expansion projects (like Nagaur and other greenfieldbrownfield investments) and capital structure/IPO-related decisions:\nReport Date: December 10, 2025",
+    "content": "ASSISTANT\nT Trend / Context\nWithin JSW Cement's current management structure (as per the Red Herring Prospectus) , the finance function is led at Board level by a combined commercial and finance role rather than a standalone \"CFO\" title only:\nA Answer\nThe Chief Financial Officer (CFO) of JSW Cement Limited is:\n- Name: Narinder Singh Kahlon\n- Designation: Director Finance & Commercial and Chief Financial Officer\n- Status: Whole-time director (service) , with a term of three years from May 8, 2024, liable to retire by rotation, and on the Board since May 8, 2018.\nG Governance Role Trendline\n- The CFO role is integrated with finance + commercial responsibilities, reflecting a broader strategic remit (beyond pure controllership) over pricing, commercial decisions, and capital allocation:\n- His presence on the Board (as a director) signals that finance is central to strategic decision-making, including expansion projects (like Nagaur and other greenfieldbrownfield investments) and capital structure/IPO-related decisions:",
     "content_type": "text",
     "page_number": 1,
     "section_title": "ASSISTANT",
