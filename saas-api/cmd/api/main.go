@@ -37,7 +37,7 @@ func main() {
 	envLoaded := false
 	for _, path := range envPaths {
 		if err := godotenv.Load(path); err == nil {
-			log.Printf("✅ Loaded .env from: %s", path)
+			log.Printf("Loaded .env from: %s", path)
 			envLoaded = true
 			break
 		}
@@ -130,13 +130,13 @@ func main() {
 		var err error
 		redisClient, err = memorydb.NewRedisClient(ctx, redisConfigFull)
 		if err != nil {
-			log.Printf("❌ Failed to initialize Redis client: %v. Document service will not be available.", err)
+			log.Printf("Failed to initialize Redis client: %v. Document service will not be available.", err)
 			redisClient = nil
 		} else {
-			log.Printf("✅ Redis client initialized successfully")
+			log.Printf("Redis client initialized successfully")
 		}
 	} else {
-		log.Printf("⚠️  REDIS_URL not set. Document service will not be available.")
+		log.Printf("REDIS_URL not set. Document service will not be available.")
 	}
 
 	// Initialize Weaviate client
@@ -153,13 +153,13 @@ func main() {
 	func() {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Printf("❌ Failed to initialize Weaviate client: %v. Document service will not be available.", r)
+				log.Printf("Failed to initialize Weaviate client: %v. Document service will not be available.", r)
 				weaviateClient = nil
 			}
 		}()
 		weaviateClient = weaviate.NewWeaviateClient(weaviateConfigFull)
 		if weaviateClient != nil {
-			log.Printf("✅ Weaviate client initialized successfully")
+			log.Printf("Weaviate client initialized successfully")
 		}
 	}()
 
@@ -205,16 +205,15 @@ func main() {
 		}
 
 		documentHandler = handlers.NewDocumentHandler(svcs)
-		log.Println("✅ Document service initialized successfully")
+		log.Println("Document service initialized successfully")
 	} else {
 		if redisClient == nil {
-			log.Println("⚠️  Redis client is nil - Document service will not be available")
+			log.Println("Redis client is nil - Document service will not be available")
 		}
 		if weaviateClient == nil {
-			log.Println("⚠️  Weaviate client is nil - Document service will not be available")
+			log.Println("Weaviate client is nil - Document service will not be available")
 		}
-		log.Println("⚠️  Document service not initialized (Redis or Weaviate unavailable)")
-		log.Println("   To enable document service, ensure REDIS_URL and WEAVIATE_HOST are set in environment")
+		log.Println("Document service not initialized (Redis or Weaviate unavailable)")
 	}
 
 	// Initialize middleware
@@ -463,9 +462,9 @@ func setupRouter(
 					documents.GET("/jobs", documentHandler.GetAllJobs())
 					documents.DELETE("/:document_id", documentHandler.DeleteDocument())
 				}
-				log.Println("✅ Document routes registered: /api/v1/documents")
+				log.Println("Document routes registered: /api/v1/documents")
 			} else {
-				log.Println("⚠️  Document routes NOT registered - documentHandler is nil")
+				log.Println("Document routes NOT registered - documentHandler is nil")
 			}
 		}
 

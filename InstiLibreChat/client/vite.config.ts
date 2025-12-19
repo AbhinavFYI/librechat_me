@@ -18,6 +18,12 @@ export default defineConfig(({ command }) => ({
     host: process.env.HOST || 'localhost',
     port: process.env.PORT && Number(process.env.PORT) || 3090,
     strictPort: false,
+    hmr: {
+      // Configure HMR for remote access
+      clientPort: process.env.HMR_PORT ? Number(process.env.HMR_PORT) : undefined,
+      host: process.env.HMR_HOST || undefined,
+      protocol: process.env.HMR_PROTOCOL as 'ws' | 'wss' || undefined,
+    },
     proxy: {
       '/api': {
         target: backendURL,

@@ -25,12 +25,14 @@ function Login() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8080/api/v1/auth/send-otp', {
+      // Use relative URL so it works on any domain (localhost or production)
+      const response = await fetch('/api/v1/auth/send-otp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email }),
+        credentials: 'include', // Include cookies for auth
       });
 
       const data = await response.json();

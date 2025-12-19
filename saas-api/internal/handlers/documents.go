@@ -319,7 +319,7 @@ func (h *DocumentHandler) GetDocumentsWithFilter() gin.HandlerFunc {
 		// Call service
 		response, err := h.Services.Document.GetDocumentsWithFilter(c.Request.Context(), req)
 		if err != nil {
-			fmt.Printf("❌ GetDocumentsWithFilter error: %v\n", err)
+			fmt.Printf("GetDocumentsWithFilter error: %v\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": err.Error(),
 			})

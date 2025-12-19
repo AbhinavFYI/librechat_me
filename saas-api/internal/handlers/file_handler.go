@@ -668,20 +668,20 @@ func (h *FileHandler) Delete(c *gin.Context) {
 	// Delete from Weaviate and database using document service
 	// This handles both Weaviate deletion and database deletion in one call
 	if h.documentService != nil {
-		fmt.Printf("Deleting document from Weaviate and database: %s (file_path: %s)\n", doc.ID, filePath)
+		fmt.Printf("Deleting document from Weaviate and database: %d (file_path: %s)\n", doc.ID, filePath)
 		if err := h.documentService.DeleteDocument(c.Request.Context(), doc.ID); err != nil {
 			// If deletion fails, return error
-			fmt.Printf("Error: Failed to delete document %s: %v\n", doc.ID, err)
+			fmt.Printf("Error: Failed to delete document %d: %v\n", doc.ID, err)
 			c.JSON(http.StatusInternalServerError, errors.ErrorResponse{
 				Error:   errors.ErrInternalServer.Code,
 				Message: fmt.Sprintf("Failed to delete file: %v", err),
 			})
 			return
 		}
-		fmt.Printf("Successfully deleted document %s from Weaviate and database\n", doc.ID)
+		fmt.Printf("Successfully deleted document %d from Weaviate and database\n", doc.ID)
 	} else {
 		// Fallback: delete from documents table directly if service not available
-		fmt.Printf("Document service not available, deleting from database directly: %s\n", doc.ID)
+		fmt.Printf("Document service not available, deleting from database directly: %d\n", doc.ID)
 		if err := h.documentRepo.Delete(c.Request.Context(), id); err != nil {
 			c.JSON(http.StatusInternalServerError, errors.ErrorResponse{
 				Error:   errors.ErrInternalServer.Code,
@@ -689,7 +689,7 @@ func (h *FileHandler) Delete(c *gin.Context) {
 			})
 			return
 		}
-		fmt.Printf("Successfully deleted document/file %s from database\n", id)
+		fmt.Printf("Successfully deleted document/file %d from database\n", id)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "File deleted successfully"})

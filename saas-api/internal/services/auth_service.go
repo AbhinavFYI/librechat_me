@@ -289,13 +289,13 @@ func (s *AuthService) SendOTP(ctx context.Context, email string) (*models.SendOT
 	// Send OTP via email
 	log.Printf("SendOTP: Attempting to send OTP email to %s", email)
 	if err := utils.SendOTPEmail(email, otp); err != nil {
-		log.Printf("SendOTP: ❌ Failed to send OTP email to %s", email)
+		log.Printf("SendOTP: Failed to send OTP email to %s", email)
 		log.Printf("SendOTP: Error details: %v", err)
 		log.Printf("SendOTP: OTP generated was: %s (stored in database)", otp)
 		// Return a more descriptive error
 		return nil, errors.WrapError(err, "EMAIL_SEND_FAILED", fmt.Sprintf("Failed to send OTP email: %v", err), errors.ErrInternalServer.Status)
 	}
-	log.Printf("SendOTP: ✅ OTP email sent successfully to %s", email)
+	log.Printf("SendOTP: OTP email sent successfully to %s", email)
 
 	return &models.SendOTPResponse{
 		Message: "OTP sent to your email",

@@ -78,7 +78,7 @@ func LoadConfig() *Config {
 	viper.SetDefault("STORAGE_PATH", "uploads")
 	viper.SetDefault("APP_ENV", "development")
 	viper.SetDefault("WEAVIATE_HOST", "10.10.6.13")
-	viper.SetDefault("WEAVIATE_PORT", "7080")
+	viper.SetDefault("WEAVIATE_HTTP_PORT", "7080")
 	viper.SetDefault("WEAVIATE_SCHEME", "http")
 
 	return &Config{
@@ -93,20 +93,20 @@ func LoadConfig() *Config {
 
 		// Weaviate configurations
 		WeaviateHost:   viper.GetString("WEAVIATE_HOST"),
-		WeaviatePort:   viper.GetString("WEAVIATE_PORT"),
+		WeaviatePort:   viper.GetString("WEAVIATE_HTTP_PORT"),
 		WeaviateScheme: viper.GetString("WEAVIATE_SCHEME"),
 		DbUser:         viper.GetString("ALCHEMY_DB_USER"),
 		DbPassword:     viper.GetString("ALCHEMY_DB_PASSWORD"),
 		DbHost:         viper.GetString("ALCHEMY_DB_HOST"),
 		DbPort:         viper.GetString("ALCHEMY_DB_PORT"),
-		DbName:         "nucleus", //TODO: Change this to correct db name
+		DbName:         "mydatabase", //TODO: Change this to correct db name
 
 		// Write database configurations
 		DbWuser:     viper.GetString("ALCHEMY_DB_W_USER"),
 		DbWpassword: viper.GetString("ALCHEMY_DB_W_PASSWORD"),
 		DbWhost:     viper.GetString("ALCHEMY_DB_W_HOST"),
 		DbWport:     viper.GetString("ALCHEMY_DB_W_PORT"),
-		DbWname:     "nucleus", //TODO: Change this to correct db name
+		DbWname:     "mydatabase", //TODO: Change this to correct db name
 
 		// JWT configurations
 		JWT: JWTConfig{

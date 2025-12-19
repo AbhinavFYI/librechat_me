@@ -56,15 +56,15 @@ func (r *UserRepository) SetOTP(ctx context.Context, userID uuid.UUID, otpCode s
 	log.Printf("SetOTP: Updating OTP for userID=%s, otpCode=%s, expiresAt=%v", userID, otpCode, expiresAt)
 	result, err := r.db.Pool.Exec(ctx, query, otpCode, expiresAt, userID)
 	if err != nil {
-		log.Printf("SetOTP: ❌ Database error: %v", err)
+		log.Printf("SetOTP: Database error: %v", err)
 		log.Printf("SetOTP: Query: %s", query)
 		log.Printf("SetOTP: Parameters: otpCode=%s, expiresAt=%v, userID=%s", otpCode, expiresAt, userID)
 		return errors.WrapError(err, "INTERNAL_ERROR", fmt.Sprintf("Failed to set OTP: %v", err), errors.ErrInternalServer.Status)
 	}
 	rowsAffected := result.RowsAffected()
-	log.Printf("SetOTP: ✅ OTP updated successfully, rows affected: %d", rowsAffected)
+	log.Printf("SetOTP: OTP updated successfully, rows affected: %d", rowsAffected)
 	if rowsAffected == 0 {
-		log.Printf("SetOTP: ⚠️  Warning: No rows updated. User might not exist or is deleted.")
+		log.Printf("SetOTP: Warning: No rows updated. User might not exist or is deleted.")
 		return errors.NewError("USER_NOT_FOUND", "User not found or deleted", 404)
 	}
 	return nil

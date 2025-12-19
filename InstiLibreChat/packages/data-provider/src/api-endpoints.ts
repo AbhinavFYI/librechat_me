@@ -13,14 +13,11 @@ if (
   const baseEl = document.querySelector('base');
   BASE_URL = baseEl?.getAttribute('href') || '/';
   
-  // If accessing through proxy (localhost:9443), use proxy URL for API calls
-  // This ensures cookies set by the proxy are available for API requests
-  if (window.location.origin.includes('localhost:9443')) {
-    BASE_URL = 'http://localhost';
-  } else if (window.location.origin.includes('localhost:3090')) {
-    // If accessing directly (not through proxy), check if we should use proxy
-    // This allows the frontend to work both ways
-    BASE_URL = window.location.origin;
+  // Always use relative URLs by setting BASE_URL to empty string or '/'
+  // This ensures the frontend works on any domain (localhost or production)
+  // The proxy will handle routing to the correct backend services
+  if (!BASE_URL || BASE_URL === '/') {
+    BASE_URL = '';
   }
 }
 

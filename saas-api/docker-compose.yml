@@ -15,51 +15,8 @@ services:
       - redis_data:/data
     restart: unless-stopped
 
-  weaviate:
-    command:
-      - --host
-      - 0.0.0.0
-      - --port
-      - '7080'
-      - --scheme
-      - http
-    image: semitechnologies/weaviate:1.27.1
-    container_name: insti-weaviate
-    ports:
-      - "7080:7080"
-      - "50051:50051"
-    restart: unless-stopped
-    environment:
-      QUERY_DEFAULTS_LIMIT: 25
-      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
-      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
-      DEFAULT_VECTORIZER_MODULE: 'text2vec-transformers'
-      ENABLE_MODULES: 'text2vec-transformers,multi2vec-clip'
-      TRANSFORMERS_INFERENCE_API: 'http://t2v-transformers:8080'
-      CLIP_INFERENCE_API: 'http://multi2vec-clip:8080'
-      CLUSTER_HOSTNAME: 'node1'
-    volumes:
-      - weaviate_data:/var/lib/weaviate
-    depends_on:
-      - t2v-transformers
-      - multi2vec-clip
 
-  t2v-transformers:
-    image: semitechnologies/transformers-inference:sentence-transformers-multi-qa-MiniLM-L6-cos-v1
-    container_name: insti-t2v-transformers
-    environment:
-      ENABLE_CUDA: '0'
-      REQUEST_TIMEOUT: '700'
-    restart: unless-stopped
-
-  multi2vec-clip:
-    image: semitechnologies/multi2vec-clip:sentence-transformers-clip-ViT-B-32
-    container_name: insti-multi2vec-clip
-    environment:
-      ENABLE_CUDA: '0'
-    restart: unless-stopped
 
 volumes:
   redis_data:
-  weaviate_data:
 

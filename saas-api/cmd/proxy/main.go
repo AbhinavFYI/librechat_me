@@ -37,6 +37,8 @@ var libreFrontend string
 var cookieName = "libre_jwt"
 var mongoURI string
 var mainAPIURL string
+var useHTTPS bool    // Whether cookies should have Secure flag
+var serverHTTPS bool // Whether server itself runs HTTPS (needs certificates)
 
 // LibreChat User struct for MongoDB
 type LibreChatUser struct {
@@ -181,6 +183,65 @@ type LoginReq struct {
 	RefreshToken string `json:"refresh_token,omitempty"` // Optional: refresh token from main API
 }
 
+// isSecureRequest checks if the request is over HTTPS (including behind reverse proxy)
+func isSecureRequest(r *http.Request) bool {
+	// Direct HTTPS connection
+	if r.TLS != nil {
+		return true
+	}
+
+	// Behind reverse proxy - check multiple headers
+	// X-Forwarded-Proto is the standard header set by reverse proxies
+	forwardedProto := r.Header.Get("X-Forwarded-Proto")
+	if forwardedProto == "https" {
+		return true
+	}
+
+	// Some proxies use X-Forwarded-Ssl
+	if r.Header.Get("X-Forwarded-Ssl") == "on" {
+		return true
+	}
+
+	// Cloudflare uses CF-Visitor
+	if cfVisitor := r.Header.Get("CF-Visitor"); cfVisitor != "" {
+		if strings.Contains(cfVisitor, `"scheme":"https"`) {
+			return true
+		}
+	}
+
+	// Check if request URL scheme is https
+	if r.URL.Scheme == "https" {
+		return true
+	}
+
+	// Check Origin or Referer header as fallback
+	// If the request came from an HTTPS origin, it's an HTTPS request
+	origin := r.Header.Get("Origin")
+	referer := r.Header.Get("Referer")
+
+	if strings.HasPrefix(origin, "https://") {
+		return true
+	}
+	if strings.HasPrefix(referer, "https://") {
+		return true
+	}
+
+	// Log headers for debugging (only on login to avoid spam)
+	if strings.Contains(r.URL.Path, "/login") {
+		log.Printf("DEBUG isSecureRequest: TLS=%v, X-Forwarded-Proto=%s, X-Forwarded-Ssl=%s, CF-Visitor=%s, URL.Scheme=%s, Host=%s, Origin=%s, Referer=%s",
+			r.TLS != nil, forwardedProto, r.Header.Get("X-Forwarded-Ssl"),
+			r.Header.Get("CF-Visitor"), r.URL.Scheme, r.Host, origin, referer)
+	}
+
+	// Fallback: If USE_HTTPS is true and we're not on localhost, assume HTTPS
+	// This handles cases where reverse proxy doesn't set proper headers
+	if useHTTPS && !strings.Contains(r.Host, "localhost") && !strings.Contains(r.Host, "127.0.0.1") {
+		return true
+	}
+
+	return false
+}
+
 // setCORSHeaders sets CORS headers for cross-origin requests
 func setCORSHeaders(w http.ResponseWriter, r *http.Request) {
 	origin := r.Header.Get("Origin")
@@ -205,14 +266,19 @@ func generateRandomPassword(length int) string {
 }
 
 // fetchUserFromAPI fetches user data from the main API
-func fetchUserFromAPI(email string) (*APIUser, error) {
+func fetchUserFromAPI(email string, refreshToken string) (*APIUser, error) {
 	client := &http.Client{Timeout: 10 * time.Second}
 
 	// Fetch users list from API (with high limit to find the user)
-	// Note: This requires the API to be accessible without auth or we need a service account
+	// Use refresh token for authentication if provided
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/users?limit=1000", mainAPIURL), nil)
 	if err != nil {
 		return nil, err
+	}
+
+	// Add authentication header if refresh token is provided
+	if refreshToken != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", refreshToken))
 	}
 
 	resp, err := client.Do(req)
@@ -622,8 +688,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch user data from main API
-	user, err := fetchUserFromAPI(req.Email)
+	// Fetch user data from main API (use refresh token for auth if provided)
+	user, err := fetchUserFromAPI(req.Email, req.RefreshToken)
 	if err != nil {
 		log.Printf("Warning: Failed to fetch user from API: %v", err)
 		// Continue with login even if API fetch fails
@@ -670,11 +736,19 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 							Domain:   "",
 							Expires:  time.Now().Add(7 * 24 * time.Hour), // 7 days
 							MaxAge:   7 * 24 * 3600,
-							Secure:   false,
+							Secure:   useHTTPS,
 							HttpOnly: true,
 							SameSite: http.SameSiteLaxMode,
 						}
 						http.SetCookie(w, refreshTokenCookie)
+
+						// Warn if there's a protocol/cookie mismatch
+						isHTTPS := isSecureRequest(r)
+						if isHTTPS && !useHTTPS {
+							log.Printf("⚠️  WARNING: Request is HTTPS but cookie Secure=false - cookies may not be sent!")
+							log.Printf("⚠️  Set USE_HTTPS=true to fix this issue")
+						}
+						log.Printf("Set refreshToken cookie - Secure=%v, SameSite=Lax (Request protocol: HTTPS=%v)", useHTTPS, isHTTPS)
 
 						// Set token_provider cookie
 						tokenProviderCookie := &http.Cookie{
@@ -684,11 +758,12 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 							Domain:   "",
 							Expires:  time.Now().Add(7 * 24 * time.Hour),
 							MaxAge:   7 * 24 * 3600,
-							Secure:   false,
+							Secure:   useHTTPS,
 							HttpOnly: true,
 							SameSite: http.SameSiteLaxMode,
 						}
 						http.SetCookie(w, tokenProviderCookie)
+						log.Printf("Set token_provider cookie - Secure=%v, SameSite=Lax", useHTTPS)
 
 						// Store LibreChat access token in response header for frontend
 						w.Header().Set("X-LibreChat-Token", accessTokenString)
@@ -717,8 +792,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set secure, HttpOnly cookie. Must be served over HTTPS in browsers for Secure flag to work.
-	// For development, we'll use Secure: false
+	// Set secure, HttpOnly cookie. Secure flag is set based on USE_HTTPS env var.
 	cookie := &http.Cookie{
 		Name:     cookieName,
 		Value:    tokenString,
@@ -726,11 +800,20 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		Domain:   "", // leave empty for host-only cookie
 		Expires:  time.Now().Add(6 * time.Hour),
 		MaxAge:   6 * 3600,
-		Secure:   false,                // Set to true in production with HTTPS
+		Secure:   useHTTPS,             // Set based on USE_HTTPS environment variable
 		HttpOnly: true,                 // not accessible via JS
-		SameSite: http.SameSiteLaxMode, // Changed to Lax for iframe compatibility
+		SameSite: http.SameSiteLaxMode, // Lax for iframe compatibility
 	}
 	http.SetCookie(w, cookie)
+
+	// Warn if there's a protocol/cookie mismatch
+	isHTTPS := isSecureRequest(r)
+	if isHTTPS && !useHTTPS {
+		log.Printf("⚠️  WARNING: Request is HTTPS but cookie Secure=false - cookies may not be sent!")
+		log.Printf("⚠️  Set USE_HTTPS=true to fix this issue")
+	}
+	log.Printf("Set %s cookie - Secure=%v, SameSite=Lax (Request protocol: HTTPS=%v)", cookieName, useHTTPS, isHTTPS)
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
@@ -1043,16 +1126,16 @@ func main() {
 
 			// DON'T rewrite URLs - LibreChat is configured with base: '/proxy/'
 			// It already generates all URLs with /proxy/ prefix automatically
-			// Only rewrite WebSocket URLs to use proxy port (9443) instead of LibreChat port (3090)
+			// Only rewrite WebSocket URLs to use proxy port (7080) instead of LibreChat port (3090)
 
-			// Only rewrite WebSocket URLs to use proxy port (9443) instead of LibreChat port (3090)
+			// Only rewrite WebSocket URLs to use proxy port (7080) instead of LibreChat port (3090)
 			// Keep the /proxy/ prefix since LibreChat is configured with base: '/proxy/'
-			htmlContent = strings.ReplaceAll(htmlContent, `ws://localhost:3090/`, `ws://localhost:9443/`)
-			htmlContent = strings.ReplaceAll(htmlContent, `wss://localhost:3090/`, `wss://localhost:9443/`)
-			htmlContent = strings.ReplaceAll(htmlContent, `"ws://localhost:3090/`, `"ws://localhost:9443/`)
-			htmlContent = strings.ReplaceAll(htmlContent, `"wss://localhost:3090/`, `"wss://localhost:9443/`)
-			htmlContent = strings.ReplaceAll(htmlContent, `'ws://localhost:3090/`, `'ws://localhost:9443/`)
-			htmlContent = strings.ReplaceAll(htmlContent, `'wss://localhost:3090/`, `'wss://localhost:9443/`)
+			htmlContent = strings.ReplaceAll(htmlContent, `ws://localhost:3090/`, `ws://localhost:7080/`)
+			htmlContent = strings.ReplaceAll(htmlContent, `wss://localhost:3090/`, `wss://localhost:7080/`)
+			htmlContent = strings.ReplaceAll(htmlContent, `"ws://localhost:3090/`, `"ws://localhost:7080/`)
+			htmlContent = strings.ReplaceAll(htmlContent, `"wss://localhost:3090/`, `"wss://localhost:7080/`)
+			htmlContent = strings.ReplaceAll(htmlContent, `'ws://localhost:3090/`, `'ws://localhost:7080/`)
+			htmlContent = strings.ReplaceAll(htmlContent, `'wss://localhost:3090/`, `'wss://localhost:7080/`)
 
 			// Don't modify base tag - LibreChat should already have it set correctly to /proxy/
 			// Only fix if it's incorrectly set (shouldn't happen with base config)
@@ -1471,13 +1554,44 @@ func main() {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	})
 
-	port := "9443" // Default port
+	port := "7080" // Default port
 	if p := os.Getenv("PROXY_PORT"); p != "" {
 		port = p
 	}
 
 	// For development, use HTTP. For production, use HTTPS with certs
-	useHTTPS := os.Getenv("USE_HTTPS") == "true"
+	// Check USE_HTTPS environment variable
+	useHTTPSEnv := os.Getenv("USE_HTTPS")
+
+	if useHTTPSEnv == "false" {
+		// Explicitly set to false - use HTTP mode (development)
+		useHTTPS = false
+		log.Println("🔧 USE_HTTPS=false - Development mode: Cookies will have Secure=false")
+		log.Println("   This is only suitable for HTTP (localhost) access")
+	} else if useHTTPSEnv == "true" {
+		// Explicitly set to true - use HTTPS mode (production)
+		useHTTPS = true
+		log.Println("✅ USE_HTTPS=true - Production mode: Cookies will have Secure=true")
+	} else {
+		// Not set - default to true for safety (production-ready)
+		useHTTPS = true
+		log.Println("✅ USE_HTTPS not set, defaulting to 'true' for production safety")
+		log.Println("   Cookies will have Secure=true and work with HTTPS")
+		log.Println("   Set USE_HTTPS=false explicitly for local HTTP development")
+	}
+
+	// Server HTTPS: SERVER_HTTPS controls whether the proxy server itself runs HTTPS
+	// Set to "true" only if you want the proxy to handle TLS (needs cert.pem/key.pem)
+	// If behind a reverse proxy (nginx/Apache), leave this false
+	serverHTTPSEnv := os.Getenv("SERVER_HTTPS")
+	serverHTTPS = serverHTTPSEnv == "true"
+
+	if serverHTTPS {
+		log.Println("🔐 SERVER_HTTPS=true - Server will run with TLS (requires cert.pem and key.pem)")
+	} else {
+		log.Println("🌐 SERVER_HTTPS not set or false - Server will run on HTTP")
+		log.Println("   (Recommended when behind reverse proxy like nginx)")
+	}
 
 	srv := &http.Server{
 		Addr: ":" + port,
@@ -1487,7 +1601,7 @@ func main() {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	if useHTTPS {
+	if serverHTTPS {
 		certFile := "cert.pem"
 		keyFile := "key.pem"
 		srv.TLSConfig = &tls.Config{

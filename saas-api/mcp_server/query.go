@@ -74,7 +74,7 @@ func init() {
 	// err := godotenvssm.Load(
 	// 	fmt.Sprintf("ssm:/insti/%s",
 	// 		os.Getenv("APP_ENV"),
-	err := godotenv.Load("/Users/aep014/Desktop/custotm_librechat 2/saas-api/.env")
+	err := godotenv.Load("/home/ec2-user/librechat_me/saas-api/.env")
 	if err != nil {
 		// log.Printf(err.Error())
 		panic(err)

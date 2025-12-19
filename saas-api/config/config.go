@@ -51,12 +51,12 @@ func Load() *Config {
 			IdleTimeout:  getEnvAsInt("SERVER_IDLE_TIMEOUT", 60),
 		},
 		Database: DatabaseConfig{
-			Host:     getEnv("DB_HOST", "127.0.0.1"), // Use 127.0.0.1 instead of localhost to avoid IPv6 issues
-			Port:     getEnv("DB_PORT", "5432"),
-			User:     getEnv("DB_USER", "aep014"), // Default to system user if not set
-			Password: getEnv("DB_PASSWORD", ""),
-			DBName:   getEnv("DB_NAME", "saas_database"),
-			SSLMode:  getEnv("DB_SSLMODE", "disable"),
+			Host:     getEnv("ALCHEMY_DB_HOST", "127.0.0.1"), // Use 127.0.0.1 instead of localhost to avoid IPv6 issues
+			Port:     getEnv("ALCHEMY_DB_PORT", "5433"),
+			User:     getEnv("ALCHEMY_DB_USER", "myuser"), // Default to system user if not set
+			Password: getEnv("ALCHEMY_DB_PASSWORD", "mypassword"),
+			DBName:   getEnv("ALCHEMY_DB_NAME", "mydatabase"),
+			SSLMode:  getEnv("ALCHEMY_DB_SSLMODE", "disable"),
 		},
 		JWT: JWTConfig{
 			SecretKey:       getEnv("JWT_SECRET", "your-super-secret-jwt-key-change-in-production"),

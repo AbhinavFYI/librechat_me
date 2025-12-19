@@ -585,7 +585,7 @@ func (r *DocumentRepository) SoftDelete(ctx context.Context, id int64, deletedBy
 	}
 
 	if result.RowsAffected() == 0 {
-		return fmt.Errorf("document not found: %s", id)
+		return fmt.Errorf("document not found: %d", id)
 	}
 
 	return nil

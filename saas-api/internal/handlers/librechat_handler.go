@@ -40,7 +40,7 @@ func (h *LibreChatHandler) GetCredentials(c *gin.Context) {
 	// Get MongoDB URI from environment
 	mongoURI := os.Getenv("MONGO_URI")
 	if mongoURI == "" {
-		mongoURI = "mongodb://localhost:27017/LibreChat"
+		mongoURI = "mongodb://127.0.0.1:27017/LibreChat"
 	}
 
 	// Connect to MongoDB
@@ -191,7 +191,7 @@ func (h *LibreChatHandler) Login(c *gin.Context) {
 		},
 	}
 
-	loginURL := "http://localhost:3080/api/auth/login"
+	loginURL := "http://10.10.7.81:3080/api/auth/login"
 	if envURL := os.Getenv("LIBRE_BACKEND"); envURL != "" {
 		loginURL = envURL + "/api/auth/login"
 	}

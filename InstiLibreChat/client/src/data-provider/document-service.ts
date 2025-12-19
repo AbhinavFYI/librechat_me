@@ -3,8 +3,8 @@
  * Handles document upload to the external document service
  */
 
-// External document service URL
-const DOCUMENT_API_BASE = 'http://localhost:8080/api/v1';
+// External document service URL - use relative URL so it works on any domain
+const DOCUMENT_API_BASE = '/api/v1';
 
 export interface DocumentUploadResponse {
   code?: number;
@@ -86,6 +86,7 @@ export const uploadDocument = async (
       method: 'POST',
       headers: getAuthHeaders(),
       body: formData,
+      credentials: 'include', // Include cookies for auth
     });
 
     if (!response.ok) {
@@ -105,13 +106,14 @@ export const uploadDocument = async (
  */
 export const fetchDocuments = async (): Promise<DocumentListResponse> => {
   try {
-    // API endpoint: http://localhost:8080/api/v1/documents
+    // API endpoint: /api/v1/documents
     const response = await fetch(`${DOCUMENT_API_BASE}/documents`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
         'Content-Type': 'application/json',
       },
+      credentials: 'include', // Include cookies for auth
     });
 
     if (!response.ok) {

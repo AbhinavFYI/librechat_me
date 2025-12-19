@@ -52,12 +52,14 @@ function OTP() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8080/api/v1/auth/verify-otp', {
+      // Use relative URL so it works on any domain (localhost or production)
+      const response = await fetch('/api/v1/auth/verify-otp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, otp: otpValue }),
+        credentials: 'include', // Include cookies for auth
       });
 
       const data = await response.json();
@@ -106,7 +108,9 @@ function OTP() {
             proxyLoginPayload.refresh_token = data.refresh_token;
           }
 
-          const proxyLoginResponse = await fetch('http://localhost:9443/login', {
+          // Use relative URL so it goes to the same domain user is accessing
+          // This ensures cookies are set for the correct domain (research.fyers.in, not localhost)
+          const proxyLoginResponse = await fetch('/login', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -138,73 +142,22 @@ function OTP() {
             return;
           }
           
-          console.log('Proxy login successful - user synced to MongoDB');
+          console.log('Proxy login successful - user synced to MongoDB and cookies set');
           
-          // Step 2: Wait for MongoDB sync and cookie setting
-          await new Promise(resolve => setTimeout(resolve, 1500));
+          // Step 2: Wait for MongoDB sync and cookie setting to complete
+          // The proxy has already:
+          // 1. Synced user to MongoDB
+          // 2. Created LibreChat session
+          // 3. Set refreshToken, token_provider, and libre_jwt cookies
+          // We don't need to call /api/auth/refresh because the proxy handles everything
+          await new Promise(resolve => setTimeout(resolve, 2000));
           
-          // Step 3: Call LibreChat's /api/auth/refresh to establish session
-          // The proxy has already set refreshToken cookie, so this should work
-          try {
-            const apiBaseUrl = window.location.origin.includes('localhost:9443') 
-              ? 'http://localhost:9443' 
-              : window.location.origin;
-            
-            // Call refresh endpoint - this will use the refreshToken cookie
-            const refreshResponse = await fetch(`${apiBaseUrl}/api/auth/refresh`, {
-              method: 'POST',
-              credentials: 'include', // Important: include cookies (refreshToken)
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            });
-            
-            if (refreshResponse.ok) {
-              const refreshData = await refreshResponse.json();
-              console.log('LibreChat refresh successful - session established');
-              
-              // Store the token if provided
-              if (refreshData.token) {
-                localStorage.setItem('librechat_token', refreshData.token);
-              }
-              
-              // Step 4: Verify user by calling /api/user (this checks authentication)
-              const userCheckResponse = await fetch(`${apiBaseUrl}/api/user`, {
-                method: 'GET',
-                credentials: 'include', // Include cookies
-                headers: {
-                  'Content-Type': 'application/json',
-                  ...(refreshData.token ? { 'Authorization': `Bearer ${refreshData.token}` } : {}),
-                },
-              });
-              
-              if (userCheckResponse.ok) {
-                const userData = await userCheckResponse.json();
-                console.log('LibreChat user authenticated:', userData.email);
-                
-                // Step 5: Redirect to chat interface
-                window.location.href = '/c/new';
-                return;
-              } else {
-                const errorText = await userCheckResponse.text();
-                console.warn('LibreChat user check failed:', userCheckResponse.status, errorText);
-                // Still redirect - might work on next page load
-                window.location.href = '/c/new';
-                return;
-              }
-            } else {
-              const errorText = await refreshResponse.text();
-              console.warn('LibreChat refresh failed:', refreshResponse.status, errorText);
-              // Still redirect - cookies might work
-              window.location.href = '/c/new';
-              return;
-            }
-          } catch (authError) {
-            console.error('Error with LibreChat authentication:', authError);
-            // Still redirect - cookies might work
-            window.location.href = '/c/new';
-            return;
-          }
+          console.log('Redirecting to chat interface - authentication cookies are set');
+          
+          // Step 3: Redirect directly to chat interface
+          // The AuthContext will automatically pick up the cookies and authenticate
+          window.location.href = '/c/new';
+          return;
         } catch (proxyError) {
           console.error('Proxy server error:', proxyError);
           setIsLoading(false);
@@ -232,12 +185,14 @@ function OTP() {
     setOtp(['', '', '', '', '', '']);
     
     try {
-      const response = await fetch('http://localhost:8080/api/v1/auth/resend-otp', {
+      // Use relative URL so it works on any domain (localhost or production)
+      const response = await fetch('/api/v1/auth/resend-otp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email }),
+        credentials: 'include', // Include cookies for auth
       });
 
       const data = await response.json();

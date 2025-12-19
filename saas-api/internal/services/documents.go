@@ -386,7 +386,7 @@ func (s *DocumentService) DeleteDocument(ctx context.Context, documentID int64) 
 		return fmt.Errorf("failed to delete document from database: %w", err)
 	}
 
-	fmt.Printf("Document %s (ID: %s) deleted successfully\n", doc.Name, documentID)
+	fmt.Printf("Document %s (ID: %d) deleted successfully\n", doc.Name, documentID)
 	return nil
 }
 
