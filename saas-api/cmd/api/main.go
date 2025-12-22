@@ -460,6 +460,7 @@ func setupRouter(
 					documents.GET("/search", documentHandler.SearchDocuments())
 					documents.GET("/jobs/:job_id", documentHandler.GetJobStatus())
 					documents.GET("/jobs", documentHandler.GetAllJobs())
+					documents.GET("/:document_id/download", documentHandler.DownloadDocument())
 					documents.DELETE("/:document_id", documentHandler.DeleteDocument())
 				}
 				log.Println("Document routes registered: /api/v1/documents")

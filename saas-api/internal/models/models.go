@@ -65,6 +65,8 @@ type CreateOrganizationRequest struct {
 	PrimaryContactPhone *string                `json:"primary_contact_phone"`
 	BillingEmail        *string                `json:"billing_email"`
 	SubscriptionPlan    *string                `json:"subscription_plan"`
+	MaxUsers            *int                   `json:"max_users"`
+	MaxStorageGB        *int                   `json:"max_storage_gb"`
 	Settings            map[string]interface{} `json:"settings"`
 }
 

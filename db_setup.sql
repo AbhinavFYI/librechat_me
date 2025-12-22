@@ -56,7 +56,7 @@ CREATE TABLE organizations (
   subscription_ends_at TIMESTAMP,
   
   -- Plan Limits (enforced by application)
-  max_users INTEGER DEFAULT 5,
+  max_users INTEGER DEFAULT 100,
   max_storage_gb INTEGER DEFAULT 10,
   current_users INTEGER DEFAULT 0,
   current_storage_gb DECIMAL(10,2) DEFAULT 0.00,

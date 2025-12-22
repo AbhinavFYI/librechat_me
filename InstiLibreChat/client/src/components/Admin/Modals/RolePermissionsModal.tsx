@@ -71,7 +71,7 @@ export default function RolePermissionsModal({ role, onClose, onSuccess }: RoleP
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Select Permissions
             </label>
-            <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 max-h-96 overflow-y-auto">
+            <div className="border border-gray-300 dark:border-gray-400 rounded-lg p-4 max-h-96 overflow-y-auto">
               <div className="grid grid-cols-2 gap-2">
                 {availablePermissions.map((perm) => (
                   <label key={perm.id} className="flex items-center">

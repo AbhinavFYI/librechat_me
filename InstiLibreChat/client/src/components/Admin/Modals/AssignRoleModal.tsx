@@ -150,7 +150,7 @@ export default function AssignRoleModal({
             <Button type="button" onClick={onClose} variant="outline" className="flex-1">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
+            <Button type="submit" disabled={loading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-blue-400">
               {loading ? 'Assigning...' : 'Assign Role'}
             </Button>
           </div>

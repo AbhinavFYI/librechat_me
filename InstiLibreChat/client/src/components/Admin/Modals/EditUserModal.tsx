@@ -78,6 +78,7 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
                 type="text"
                 value={formData.first_name}
                 onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
             <div>
@@ -88,6 +89,7 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
                 type="text"
                 value={formData.last_name}
                 onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
           </div>
@@ -100,6 +102,7 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -146,6 +149,7 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
               value={formData.timezone}
               onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
               placeholder="e.g., America/New_York"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -158,17 +162,18 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
               value={formData.locale}
               onChange={(e) => setFormData({ ...formData, locale: e.target.value })}
               placeholder="e.g., en-US"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
           <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-6">
-            <Button type="button" onClick={onClose} variant="outline" className="flex-1">
+            <Button type="button" onClick={onClose} variant="outline" className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
+            <Button type="submit" disabled={loading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-blue-400 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
               {loading ? 'Updating...' : 'Update User'}
             </Button>
-          </div>
+            </div>
         </form>
       </DialogContent>
     </Dialog>

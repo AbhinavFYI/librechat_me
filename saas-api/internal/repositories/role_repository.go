@@ -26,16 +26,16 @@ func (r *RoleRepository) Create(ctx context.Context, role *models.Role) error {
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING created_at, updated_at
 	`
-	
+
 	err := r.db.Pool.QueryRow(ctx, query,
 		role.ID, role.OrgID, role.Name, role.Type, role.Description,
 		role.IsDefault, role.CreatedBy,
 	).Scan(&role.CreatedAt, &role.UpdatedAt)
-	
+
 	if err != nil {
 		return errors.WrapError(err, "INTERNAL_ERROR", "Failed to create role", errors.ErrInternalServer.Status)
 	}
-	
+
 	return nil
 }
 
@@ -46,19 +46,19 @@ func (r *RoleRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Rol
 		FROM roles
 		WHERE id = $1
 	`
-	
+
 	err := r.db.Pool.QueryRow(ctx, query, id).Scan(
 		&role.ID, &role.OrgID, &role.Name, &role.Type, &role.Description,
 		&role.IsDefault, &role.CreatedAt, &role.UpdatedAt, &role.CreatedBy,
 	)
-	
+
 	if err == pgx.ErrNoRows {
 		return nil, errors.ErrNotFound
 	}
 	if err != nil {
 		return nil, errors.WrapError(err, "INTERNAL_ERROR", "Failed to get role", errors.ErrInternalServer.Status)
 	}
-	
+
 	return role, nil
 }
 
@@ -89,20 +89,20 @@ func (r *RoleRepository) GetByName(ctx context.Context, name string, orgID *uuid
 
 func (r *RoleRepository) List(ctx context.Context, orgID *uuid.UUID) ([]*models.Role, error) {
 	var roles []*models.Role
-	
+
 	query := `
 		SELECT id, org_id, name, type, description, is_default, created_at, updated_at, created_by
 		FROM roles
 		WHERE ($1::uuid IS NULL OR org_id = $1)
 		ORDER BY created_at
 	`
-	
+
 	rows, err := r.db.Pool.Query(ctx, query, orgID)
 	if err != nil {
 		return nil, errors.WrapError(err, "INTERNAL_ERROR", "Failed to list roles", errors.ErrInternalServer.Status)
 	}
 	defer rows.Close()
-	
+
 	for rows.Next() {
 		role := &models.Role{}
 		err := rows.Scan(
@@ -114,7 +114,7 @@ func (r *RoleRepository) List(ctx context.Context, orgID *uuid.UUID) ([]*models.
 		}
 		roles = append(roles, role)
 	}
-	
+
 	return roles, nil
 }
 
@@ -128,33 +128,33 @@ func (r *RoleRepository) Update(ctx context.Context, role *models.Role) error {
 		WHERE id = $4
 		RETURNING updated_at
 	`
-	
+
 	err := r.db.Pool.QueryRow(ctx, query,
 		role.Name, role.Description, role.IsDefault, role.ID,
 	).Scan(&role.UpdatedAt)
-	
+
 	if err == pgx.ErrNoRows {
 		return errors.ErrNotFound
 	}
 	if err != nil {
 		return errors.WrapError(err, "INTERNAL_ERROR", "Failed to update role", errors.ErrInternalServer.Status)
 	}
-	
+
 	return nil
 }
 
 func (r *RoleRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	query := `DELETE FROM roles WHERE id = $1`
-	
+
 	result, err := r.db.Pool.Exec(ctx, query, id)
 	if err != nil {
 		return errors.WrapError(err, "INTERNAL_ERROR", "Failed to delete role", errors.ErrInternalServer.Status)
 	}
-	
+
 	if result.RowsAffected() == 0 {
 		return errors.ErrNotFound
 	}
-	
+
 	return nil
 }
 
@@ -166,13 +166,13 @@ func (r *RoleRepository) GetPermissions(ctx context.Context, roleID uuid.UUID) (
 		WHERE rp.role_id = $1
 		ORDER BY p.resource, p.action
 	`
-	
+
 	rows, err := r.db.Pool.Query(ctx, query, roleID)
 	if err != nil {
 		return []*models.Permission{}, errors.WrapError(err, "INTERNAL_ERROR", "Failed to get role permissions", errors.ErrInternalServer.Status)
 	}
 	defer rows.Close()
-	
+
 	permissions := make([]*models.Permission, 0) // Initialize as empty slice, not nil
 	for rows.Next() {
 		perm := &models.Permission{}
@@ -185,7 +185,7 @@ func (r *RoleRepository) GetPermissions(ctx context.Context, roleID uuid.UUID) (
 		}
 		permissions = append(permissions, perm)
 	}
-	
+
 	return permissions, nil
 }
 
@@ -193,19 +193,19 @@ func (r *RoleRepository) AssignPermissions(ctx context.Context, roleID uuid.UUID
 	if len(permissionIDs) == 0 {
 		return nil
 	}
-	
+
 	tx, err := r.db.Pool.Begin(ctx)
 	if err != nil {
 		return errors.WrapError(err, "INTERNAL_ERROR", "Failed to begin transaction", errors.ErrInternalServer.Status)
 	}
 	defer tx.Rollback(ctx)
-	
+
 	// Delete existing permissions
 	_, err = tx.Exec(ctx, `DELETE FROM role_permissions WHERE role_id = $1`, roleID)
 	if err != nil {
 		return errors.WrapError(err, "INTERNAL_ERROR", "Failed to delete existing permissions", errors.ErrInternalServer.Status)
 	}
-	
+
 	// Insert new permissions
 	query := `INSERT INTO role_permissions (role_id, permission_id, granted_by) VALUES ($1, $2, $3)`
 	for _, permID := range permissionIDs {
@@ -214,7 +214,7 @@ func (r *RoleRepository) AssignPermissions(ctx context.Context, roleID uuid.UUID
 			return errors.WrapError(err, "INTERNAL_ERROR", "Failed to assign permission", errors.ErrInternalServer.Status)
 		}
 	}
-	
+
 	return tx.Commit(ctx)
 }
 
@@ -225,26 +225,26 @@ func (r *RoleRepository) AssignRoleToUser(ctx context.Context, userID, roleID, a
 		ON CONFLICT (user_id, role_id) DO UPDATE
 		SET assigned_by = $3, assigned_at = NOW(), expires_at = $4
 	`
-	
+
 	_, err := r.db.Pool.Exec(ctx, query, userID, roleID, assignedBy, expiresAt)
 	if err != nil {
 		return errors.WrapError(err, "INTERNAL_ERROR", "Failed to assign role to user", errors.ErrInternalServer.Status)
 	}
-	
+
 	return nil
 }
 
 func (r *RoleRepository) RemoveRoleFromUser(ctx context.Context, userID, roleID uuid.UUID) error {
 	query := `DELETE FROM user_roles WHERE user_id = $1 AND role_id = $2`
-	
+
 	result, err := r.db.Pool.Exec(ctx, query, userID, roleID)
 	if err != nil {
 		return errors.WrapError(err, "INTERNAL_ERROR", "Failed to remove role from user", errors.ErrInternalServer.Status)
 	}
-	
+
 	if result.RowsAffected() == 0 {
 		return errors.ErrNotFound
 	}
-	
+
 	return nil
 }

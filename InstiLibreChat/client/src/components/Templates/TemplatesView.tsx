@@ -756,7 +756,7 @@ function CreateTemplateModal({
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
-              className="w-full"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -767,7 +767,7 @@ function CreateTemplateModal({
             <select
               value={formData.customTemplate ? 'custom' : formData.framework}
               onChange={(e) => handleFrameworkChange(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               <option value="">-- Select Framework --</option>
               {Object.keys(frameworks).map((key) => (
@@ -802,7 +802,7 @@ function CreateTemplateModal({
                     minRows={3}
                     maxRows={8}
                     aria-label={String(label)}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
                   />
                 </div>
               ))}
@@ -824,19 +824,19 @@ function CreateTemplateModal({
                   placeholder="Enter your custom template here..."
                   required
                   aria-label="Custom template content"
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
                 />
               </div>
             </div>
           )}
 
           <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-6">
-            <Button type="button" onClick={onClose} variant="outline" className="flex-1">
+            <Button type="button" onClick={onClose} variant="outline" className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? 'Creating...' : 'Save Template'}
-            </Button>
+            <Button type="submit" disabled={loading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-blue-400">
+            {loading ? 'Creating...' : 'Save Template'}
+          </Button>
           </div>
         </form>
       </DialogContent>
@@ -1000,7 +1000,8 @@ function EditTemplateModal({
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
-              className="w-full"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              
             />
           </div>
 
@@ -1011,7 +1012,7 @@ function EditTemplateModal({
             <select
               value={formData.customTemplate ? 'custom' : formData.framework}
               onChange={(e) => handleFrameworkChange(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               <option value="">-- Select Framework --</option>
               {Object.keys(frameworks).map((key) => (
@@ -1046,7 +1047,7 @@ function EditTemplateModal({
                     minRows={3}
                     maxRows={8}
                     aria-label={String(label)}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
                   />
                 </div>
               ))}
@@ -1068,17 +1069,17 @@ function EditTemplateModal({
                   placeholder="Enter your custom template here..."
                   required
                   aria-label="Custom template content"
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
                 />
               </div>
             </div>
           )}
 
           <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-6">
-            <Button type="button" onClick={onClose} variant="outline" className="flex-1">
+            <Button type="button" onClick={onClose} variant="outline" className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
+            <Button type="submit" disabled={loading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-blue-400">
               {loading ? 'Updating...' : 'Update Template'}
             </Button>
           </div>
@@ -1334,7 +1335,7 @@ function CreatePersonaModal({
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
-              className="w-full"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -1346,7 +1347,7 @@ function CreatePersonaModal({
             <select
               value={formData.selectedPredefinedId}
               onChange={(e) => handlePredefinedSelect(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               <option value="">-- Select Predefined Persona (Optional) --</option>
               {PREDEFINED_PERSONAS.map((persona, idx) => (
@@ -1373,7 +1374,7 @@ function CreatePersonaModal({
               maxRows={10}
               required={!formData.selectedPredefinedId}
               aria-label="Persona description"
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
               placeholder={formData.selectedPredefinedId ? "Edit variables like {{focus_area}} with your values" : "Enter persona description..."}
             />
             {formData.selectedPredefinedId && (
@@ -1405,7 +1406,7 @@ function CreatePersonaModal({
                 <select
                   value={formData.selectedTemplateId}
                   onChange={(e) => setFormData({ ...formData, selectedTemplateId: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ml-6"
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ml-6"
                 >
                   <option value="">-- Select Template --</option>
                   {templates.map((template) => (
@@ -1437,7 +1438,7 @@ function CreatePersonaModal({
                   minRows={6}
                   maxRows={12}
                   aria-label="Custom persona template"
-                  className="ml-6 w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
+                  className="ml-6 w-full px-4 py-3 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
                   placeholder="Enter your custom template here..."
                 />
               )}
@@ -1445,13 +1446,13 @@ function CreatePersonaModal({
           </div>
 
           <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-6">
-            <Button type="button" onClick={onClose} variant="outline" className="flex-1">
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? 'Creating...' : 'Save Persona'}
-            </Button>
-          </div>
+            <Button type="button" onClick={onClose} variant="outline" className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                {loading ? 'Creating...' : 'Save Persona'}
+              </Button>
+            </div>
         </form>
       </DialogContent>
     </Dialog>
@@ -1586,7 +1587,7 @@ function EditPersonaModal({
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
-              className="w-full"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -1598,7 +1599,7 @@ function EditPersonaModal({
             <select
               value={formData.selectedPredefinedId}
               onChange={(e) => handlePredefinedSelect(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               <option value="">-- Select Predefined Persona (Optional) --</option>
               {PREDEFINED_PERSONAS.map((persona, idx) => (
@@ -1625,7 +1626,7 @@ function EditPersonaModal({
               maxRows={10}
               required={!formData.selectedPredefinedId}
               aria-label="Persona description"
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
               placeholder={formData.selectedPredefinedId ? "Edit variables like {{focus_area}} with your values" : "Enter persona description..."}
             />
             {formData.selectedPredefinedId && (
@@ -1657,7 +1658,7 @@ function EditPersonaModal({
                 <select
                   value={formData.selectedTemplateId}
                   onChange={(e) => setFormData({ ...formData, selectedTemplateId: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ml-6"
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ml-6"
                 >
                   <option value="">-- Select Template --</option>
                   {templates.map((template) => (
@@ -1689,7 +1690,7 @@ function EditPersonaModal({
                   minRows={6}
                   maxRows={12}
                   aria-label="Custom persona template"
-                  className="ml-6 w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
+                  className="ml-6 w-full px-4 py-3 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
                   placeholder="Enter your custom template here..."
                 />
               )}
@@ -1697,10 +1698,10 @@ function EditPersonaModal({
           </div>
 
           <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-6">
-            <Button type="button" onClick={onClose} variant="outline" className="flex-1">
+            <Button type="button" onClick={onClose} variant="outline" className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
+            <Button type="submit" disabled={loading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-blue-400">
               {loading ? 'Updating...' : 'Update Persona'}
             </Button>
           </div>

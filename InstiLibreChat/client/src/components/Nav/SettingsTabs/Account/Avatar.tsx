@@ -320,7 +320,7 @@ function Avatar() {
             </>
           ) : (
             <div
-              className="flex h-72 w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-transparent transition-colors hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500"
+              className="flex h-72 w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-transparent transition-colors hover:border-gray-400 dark:border-gray-400 dark:hover:border-gray-500"
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               role="button"

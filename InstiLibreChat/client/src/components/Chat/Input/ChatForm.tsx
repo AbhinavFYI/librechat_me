@@ -202,7 +202,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
         'placeholder-gray-400 dark:placeholder-gray-500',
         'bg-white dark:bg-gray-800',
         'text-gray-900 dark:text-gray-100',
-        'text-[12px]',
+        'text-base',
         isCollapsed ? 'max-h-[52px]' : 'max-h-[45vh] md:max-h-[55vh]',
         isMoreThanThreeRows ? 'pl-5' : 'px-5',
       ),

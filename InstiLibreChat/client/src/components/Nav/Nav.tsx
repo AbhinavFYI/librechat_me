@@ -24,7 +24,7 @@ const AccountSettings = lazy(() => import('./AccountSettings'));
 const AgentMarketplaceButton = lazy(() => import('./AgentMarketplaceButton'));
 const NavSettingsButton = lazy(() => import('./NavSettingsButton'));
 
-const NAV_WIDTH_DESKTOP = '260px';
+const NAV_WIDTH_DESKTOP = '300px';
 const NAV_WIDTH_MOBILE = '320px';
 
 const NavMask = memo(
@@ -198,7 +198,7 @@ const Nav = memo(
               data-testid="nav"
               className={cn(
                 'nav active max-w-[320px] flex-shrink-0 overflow-x-hidden bg-surface-primary-alt',
-                'md:max-w-[260px]',
+                'md:max-w-[300px]',
               )}
               initial={{ width: 0 }}
               animate={{ width: navWidth }}
@@ -206,7 +206,7 @@ const Nav = memo(
               transition={{ duration: 0.2 }}
               key="nav"
             >
-              <div className="h-full w-[320px] md:w-[260px]">
+              <div className="h-full w-[320px] md:w-[300px]">
                 <div className="flex h-full flex-col">
                   <nav
                     id="chat-history-nav"

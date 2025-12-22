@@ -73,11 +73,15 @@ function Login() {
     return (
     <div className="flex min-h-screen">
       {/* Left Section - Blue Gradient */}
-      <div className="flex-1 bg-gradient-to-br from-[#4158D0] to-[#5B6FD8] p-12 flex flex-col">
+      <div className="flex-1 bg-gradient-to-br from-[#2434E7] to-[#3B4FE8] p-12 flex flex-col">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-20">
-          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-            <span className="text-[#4158D0] text-2xl font-bold">F</span>
+          <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center p-1">
+            <img
+              src="assets/Logo.svg"
+              alt="FIA Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
           <span className="text-white text-xl font-medium">FIA - FYERS Intelligent Assistant</span>
         </div>
@@ -181,7 +185,7 @@ function Login() {
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2434E7]"
                 required
                 disabled={isLoading}
               />
@@ -193,7 +197,7 @@ function Login() {
               className={`w-full py-3 rounded-lg font-medium transition ${
                 isLoading || !email
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-[#60A5FA] text-white hover:bg-[#3B82F6]'
+                  : 'bg-[#2434E7] text-white hover:bg-[#1a28b8]'
               }`}
           >
               {isLoading ? 'Sending...' : 'Send OTP'}

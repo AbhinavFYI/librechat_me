@@ -97,6 +97,7 @@ export default function CreateRoleModal({
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -155,12 +156,12 @@ export default function CreateRoleModal({
           </div>
 
           <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-6">
-            <Button type="button" onClick={onClose} variant="outline" className="flex-1">
+            <Button type="button" onClick={onClose} variant="outline" className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? 'Creating...' : 'Create Role'}
-            </Button>
+            <Button type="submit" disabled={loading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-blue-400">
+            {loading ? 'Creating...' : 'Create Role'}
+          </Button>
           </div>
         </form>
       </DialogContent>

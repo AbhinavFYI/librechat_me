@@ -28,6 +28,7 @@ export default function AdminDashboard({ userInfo }: AdminDashboardProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedOrgFilter, setSelectedOrgFilter] = useState('');
+  const [selectedRoleOrgFilter, setSelectedRoleOrgFilter] = useState('');
   const [permissionManager, setPermissionManager] = useState<PermissionManager | null>(null);
   const navigate = useNavigate();
 
@@ -95,11 +96,11 @@ export default function AdminDashboard({ userInfo }: AdminDashboardProps) {
   };
 
   // Fetch roles
-  const fetchRoles = async () => {
+  const fetchRoles = async (orgFilterId: string | null = null) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await saasApi.getRoles();
+      const data = await saasApi.getRoles(orgFilterId || undefined);
       const rolesList = Array.isArray(data) ? data : (data as any).data || [];
       const filteredRoles = isSuperAdmin
         ? rolesList
@@ -134,9 +135,9 @@ export default function AdminDashboard({ userInfo }: AdminDashboardProps) {
   useEffect(() => {
     if (activeTab === 'Organizations') fetchOrganizations();
     else if (activeTab === 'Users') fetchUsers(selectedOrgFilter || null);
-    else if (activeTab === 'Roles') fetchRoles();
+    else if (activeTab === 'Roles') fetchRoles(selectedRoleOrgFilter || null);
     else if (activeTab === 'Permissions') fetchPermissions();
-  }, [activeTab, isSuperAdmin, userOrgId, selectedOrgFilter]);
+  }, [activeTab, isSuperAdmin, userOrgId, selectedOrgFilter, selectedRoleOrgFilter]);
 
   const tabs = ['Organizations', 'Users', 'Roles', 'Permissions'];
 
@@ -200,8 +201,11 @@ export default function AdminDashboard({ userInfo }: AdminDashboardProps) {
                 roles={roles}
                 isSuperAdmin={isSuperAdmin}
                 userOrgId={userOrgId}
+                organizations={organizations}
                 permissionManager={permissionManager}
-                onRefresh={fetchRoles}
+                selectedOrgFilter={selectedRoleOrgFilter}
+                onOrgFilterChange={setSelectedRoleOrgFilter}
+                onRefresh={(orgFilterId) => fetchRoles(orgFilterId || null)}
               />
             )}
             {activeTab === 'Permissions' && <PermissionsView permissions={permissions} />}

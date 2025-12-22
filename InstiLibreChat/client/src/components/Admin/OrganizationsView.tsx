@@ -85,7 +85,7 @@ export default function OrganizationsView({
                 <tr key={org.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                     <div className="flex items-center gap-3">
-                      {org.logo_url && org.logo_url.startsWith('data:') && (
+                      {org.logo_url?.startsWith('data:') && (
                         <img
                           src={org.logo_url}
                           alt={`${org.name} logo`}

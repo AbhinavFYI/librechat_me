@@ -121,7 +121,7 @@ function OTP() {
           
           if (!proxyLoginResponse.ok) {
             const errorText = await proxyLoginResponse.text();
-            let errorMessage = 'Failed to sync with LibreChat. Please try again.';
+            let errorMessage = 'Failed to sync with FIA. Please try again.';
             try {
               const errorData = JSON.parse(errorText);
               errorMessage = errorData.message || errorData.error || errorMessage;
@@ -162,7 +162,7 @@ function OTP() {
           console.error('Proxy server error:', proxyError);
           setIsLoading(false);
           showToast({
-            message: 'Failed to connect to LibreChat. Please try again.',
+            message: 'Failed to connect to FIA. Please try again.',
             status: 'error',
           });
           return;
@@ -230,11 +230,15 @@ function OTP() {
   return (
     <div className="flex h-screen">
       {/* Left Section - Same Blue Gradient as Login */}
-      <div className="flex-1 bg-gradient-to-br from-[#4158D0] to-[#5B6FD8] p-12 flex flex-col">
+      <div className="flex-1 bg-gradient-to-br from-[#2434E7] to-[#3B4FE8] p-12 flex flex-col">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-20">
-          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-            <span className="text-[#4158D0] text-2xl font-bold">F</span>
+          <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center p-1">
+            <img
+              src="assets/Logo.svg"
+              alt="FIA Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
           <span className="text-white text-xl font-medium">FIA - FYERS Intelligent Assistant</span>
         </div>
@@ -352,14 +356,14 @@ function OTP() {
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="w-14 h-14 border-2 border-gray-300 rounded-lg text-center text-lg font-semibold focus:border-blue-500 focus:outline-none"
+                  className="w-14 h-14 border-2 border-gray-300 rounded-lg text-center text-lg font-semibold focus:border-[#2434E7] focus:outline-none"
                 />
               ))}
             </div>
           </div>
 
           <button 
-            className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition mb-4 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="w-full bg-[#2434E7] text-white font-semibold py-3 rounded-lg hover:bg-[#1a28b8] transition mb-4 disabled:bg-gray-400 disabled:cursor-not-allowed"
             onClick={handleLogin}
             disabled={isLoading || otp.join('').length !== 6}
           >

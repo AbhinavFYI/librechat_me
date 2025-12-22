@@ -353,15 +353,65 @@ func (r *UserRepository) List(ctx context.Context, orgID *uuid.UUID, page, limit
 }
 
 func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	query := `UPDATE users SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL`
+	// Hard delete: Remove all related data first, then delete the user
+	// This is a cascading hard delete to ensure complete removal
 
-	result, err := r.db.Pool.Exec(ctx, query, id)
+	// Start a transaction
+	tx, err := r.db.Pool.Begin(ctx)
+	if err != nil {
+		return errors.WrapError(err, "INTERNAL_ERROR", "Failed to start transaction", errors.ErrInternalServer.Status)
+	}
+	defer tx.Rollback(ctx)
+
+	// 1. Delete user roles
+	_, err = tx.Exec(ctx, `DELETE FROM user_roles WHERE user_id = $1`, id)
+	if err != nil {
+		return errors.WrapError(err, "INTERNAL_ERROR", "Failed to delete user roles", errors.ErrInternalServer.Status)
+	}
+
+	// 2. Delete refresh tokens
+	_, err = tx.Exec(ctx, `DELETE FROM refresh_tokens WHERE user_id = $1`, id)
+	if err != nil {
+		return errors.WrapError(err, "INTERNAL_ERROR", "Failed to delete refresh tokens", errors.ErrInternalServer.Status)
+	}
+
+	// 3. Delete audit logs (optional - you may want to keep these for compliance)
+	_, err = tx.Exec(ctx, `DELETE FROM audit_logs WHERE user_id = $1`, id)
+	if err != nil {
+		return errors.WrapError(err, "INTERNAL_ERROR", "Failed to delete audit logs", errors.ErrInternalServer.Status)
+	}
+
+	// 4. Delete templates created by this user
+	_, err = tx.Exec(ctx, `DELETE FROM templates WHERE created_by = $1`, id)
+	if err != nil {
+		return errors.WrapError(err, "INTERNAL_ERROR", "Failed to delete templates", errors.ErrInternalServer.Status)
+	}
+
+	// 5. Delete personas created by this user
+	_, err = tx.Exec(ctx, `DELETE FROM personas WHERE created_by = $1`, id)
+	if err != nil {
+		return errors.WrapError(err, "INTERNAL_ERROR", "Failed to delete personas", errors.ErrInternalServer.Status)
+	}
+
+	// 6. Delete folders created by this user
+	_, err = tx.Exec(ctx, `DELETE FROM folders WHERE created_by = $1`, id)
+	if err != nil {
+		return errors.WrapError(err, "INTERNAL_ERROR", "Failed to delete folders", errors.ErrInternalServer.Status)
+	}
+
+	// 7. Finally, hard delete the user
+	result, err := tx.Exec(ctx, `DELETE FROM users WHERE id = $1`, id)
 	if err != nil {
 		return errors.WrapError(err, "INTERNAL_ERROR", "Failed to delete user", errors.ErrInternalServer.Status)
 	}
 
 	if result.RowsAffected() == 0 {
 		return errors.ErrNotFound
+	}
+
+	// Commit the transaction
+	if err := tx.Commit(ctx); err != nil {
+		return errors.WrapError(err, "INTERNAL_ERROR", "Failed to commit transaction", errors.ErrInternalServer.Status)
 	}
 
 	return nil

@@ -31,7 +31,7 @@ export default function AddedConvo({
           <EndpointIcon
             conversation={addedConvo}
             endpointsConfig={endpointsConfig}
-            containerClassName="shadow-stroke overflow-hidden rounded-full"
+            containerClassName="overflow-hidden rounded-full"
             context="menu-item"
             size={20}
           />

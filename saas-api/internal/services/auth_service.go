@@ -40,30 +40,49 @@ func NewAuthService(
 
 // canLoginViaOTP checks if a user can login via OTP
 // Returns true if user is:
-// - Super admin, OR
-// - Has org_role = "admin", OR
+// - Super admin (if status is active), OR
+// - Has org_role = "admin" (if status is active), OR
 // - Is verified (email_verified = true) AND active (status = "active")
+// Users with status "suspended" or "pending" cannot login (except super admins with active status)
 // OrgRole (admin/user/viewer) is separate from Roles (permissions)
 func (s *AuthService) canLoginViaOTP(ctx context.Context, user *models.User) (bool, error) {
-	// Super admins can always login via OTP
+	// Check user status first - suspended and pending users cannot login
+	if user.Status == "suspended" {
+		log.Printf("canLoginViaOTP: User %s is suspended and cannot login", user.Email)
+		return false, errors.NewError("ACCOUNT_SUSPENDED", "Your account has been suspended. Please contact your administrator.", 403)
+	}
+
+	if user.Status == "pending" {
+		log.Printf("canLoginViaOTP: User %s is pending and cannot login", user.Email)
+		return false, errors.NewError("ACCOUNT_PENDING", "Your account is pending approval. Please contact your administrator.", 403)
+	}
+
+	// Only active users can proceed
+	if user.Status != "active" {
+		log.Printf("canLoginViaOTP: User %s has invalid status: %s", user.Email, user.Status)
+		return false, errors.NewError("ACCOUNT_INACTIVE", "Your account is not active. Please contact your administrator.", 403)
+	}
+
+	// Super admins can login via OTP (if status is active)
 	if user.IsSuperAdmin {
+		log.Printf("canLoginViaOTP: User %s is super admin with active status", user.Email)
 		return true, nil
 	}
 
 	// Check if user has org_role = "admin" (login eligibility is based on OrgRole, not Role)
 	if user.OrgRole != nil && *user.OrgRole == "admin" {
-		log.Printf("canLoginViaOTP: User %s has org_role = admin", user.Email)
+		log.Printf("canLoginViaOTP: User %s has org_role = admin with active status", user.Email)
 		return true, nil
 	}
 
 	// Check if user is verified and active
-	if user.EmailVerified && user.Status == "active" {
+	if user.EmailVerified {
 		log.Printf("canLoginViaOTP: User %s is verified and active", user.Email)
 		return true, nil
 	}
 
-	log.Printf("canLoginViaOTP: User %s is not authorized to login via OTP (not super admin, org admin, or verified+active)", user.Email)
-	return false, nil
+	log.Printf("canLoginViaOTP: User %s is not authorized to login via OTP (not verified)", user.Email)
+	return false, errors.NewError("ACCOUNT_NOT_VERIFIED", "Your account is not verified. Please verify your email.", 403)
 }
 
 func (s *AuthService) Login(ctx context.Context, req *models.LoginRequest, ipAddress, userAgent string) (*models.LoginResponse, error) {
@@ -90,11 +109,21 @@ func (s *AuthService) Login(ctx context.Context, req *models.LoginRequest, ipAdd
 		return nil, errors.ErrUnauthorized
 	}
 
-	// Check if user can login: status must be "active" OR (email_verified is true AND status is "pending")
-	// This allows verified users created by admins to login even if status is still pending
-	canLogin := user.Status == "active" || (user.EmailVerified && user.Status == "pending")
-	if !canLogin {
-		return nil, errors.NewError("ACCOUNT_INACTIVE", "Account is not active or verified", 403)
+	// Check user status - suspended and pending users cannot login
+	if user.Status == "suspended" {
+		log.Printf("Login failed - User %s is suspended", req.Email)
+		return nil, errors.NewError("ACCOUNT_SUSPENDED", "Your account has been suspended. Please contact your administrator.", 403)
+	}
+
+	if user.Status == "pending" {
+		log.Printf("Login failed - User %s is pending approval", req.Email)
+		return nil, errors.NewError("ACCOUNT_PENDING", "Your account is pending approval. Please contact your administrator.", 403)
+	}
+
+	// Only active users can login
+	if user.Status != "active" {
+		log.Printf("Login failed - User %s has invalid status: %s", req.Email, user.Status)
+		return nil, errors.NewError("ACCOUNT_INACTIVE", "Your account is not active. Please contact your administrator.", 403)
 	}
 
 	// Update login info
@@ -197,10 +226,21 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string, ipA
 		return nil, errors.NewError("USER_NOT_FOUND", "User associated with token not found", 401)
 	}
 
-	// Check if user is active
+	// Check user status - suspended and pending users cannot refresh tokens
+	if user.Status == "suspended" {
+		log.Printf("RefreshToken: User %s is suspended", user.Email)
+		return nil, errors.NewError("ACCOUNT_SUSPENDED", "Your account has been suspended. Please contact your administrator.", 403)
+	}
+
+	if user.Status == "pending" {
+		log.Printf("RefreshToken: User %s is pending approval", user.Email)
+		return nil, errors.NewError("ACCOUNT_PENDING", "Your account is pending approval. Please contact your administrator.", 403)
+	}
+
+	// Only active users can refresh tokens
 	if user.Status != "active" {
 		log.Printf("RefreshToken: User status is not active: %s (status: %s)", user.Email, user.Status)
-		return nil, errors.NewError("ACCOUNT_INACTIVE", fmt.Sprintf("Account is not active (status: %s)", user.Status), 403)
+		return nil, errors.NewError("ACCOUNT_INACTIVE", "Your account is not active. Please contact your administrator.", 403)
 	}
 
 	// Update last used

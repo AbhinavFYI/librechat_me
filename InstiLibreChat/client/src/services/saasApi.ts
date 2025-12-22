@@ -216,8 +216,12 @@ export const saasApi = {
   },
 
   // Roles
-  async getRoles() {
-    const response = await fetch(`${API_BASE_URL}/roles`, {
+  async getRoles(orgFilterId?: string) {
+    let url = `${API_BASE_URL}/roles`;
+    if (orgFilterId) {
+      url += `?org_id=${orgFilterId}`;
+    }
+    const response = await fetch(url, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -287,29 +291,37 @@ export const saasApi = {
   },
 
   async createTemplate(data: any) {
-    const response = await fetch(`${API_BASE_URL}/templates`, {
-      method: 'POST',
+    const url = `${API_BASE_URL}/templates`;
+    const method = 'POST';
+    const body = JSON.stringify(data);
+    const response = await fetch(url, {
+      method,
       headers: getAuthHeaders(),
-      body: JSON.stringify(data),
+      body,
     });
-    return handleResponse(response);
+    return handleResponse(response, { url, method, body });
   },
 
   async updateTemplate(id: string, data: any) {
-    const response = await fetch(`${API_BASE_URL}/templates/${id}`, {
-      method: 'PUT',
+    const url = `${API_BASE_URL}/templates/${id}`;
+    const method = 'PUT';
+    const body = JSON.stringify(data);
+    const response = await fetch(url, {
+      method,
       headers: getAuthHeaders(),
-      body: JSON.stringify(data),
+      body,
     });
-    return handleResponse(response);
+    return handleResponse(response, { url, method, body });
   },
 
   async deleteTemplate(id: string) {
-    const response = await fetch(`${API_BASE_URL}/templates/${id}`, {
-      method: 'DELETE',
+    const url = `${API_BASE_URL}/templates/${id}`;
+    const method = 'DELETE';
+    const response = await fetch(url, {
+      method,
       headers: getAuthHeaders(),
     });
-    return handleResponse(response);
+    return handleResponse(response, { url, method });
   },
 
   // Personas
@@ -323,29 +335,37 @@ export const saasApi = {
   },
 
   async createPersona(data: any) {
-    const response = await fetch(`${API_BASE_URL}/personas`, {
-      method: 'POST',
+    const url = `${API_BASE_URL}/personas`;
+    const method = 'POST';
+    const body = JSON.stringify(data);
+    const response = await fetch(url, {
+      method,
       headers: getAuthHeaders(),
-      body: JSON.stringify(data),
+      body,
     });
-    return handleResponse(response);
+    return handleResponse(response, { url, method, body });
   },
 
   async updatePersona(id: string, data: any) {
-    const response = await fetch(`${API_BASE_URL}/personas/${id}`, {
-      method: 'PUT',
+    const url = `${API_BASE_URL}/personas/${id}`;
+    const method = 'PUT';
+    const body = JSON.stringify(data);
+    const response = await fetch(url, {
+      method,
       headers: getAuthHeaders(),
-      body: JSON.stringify(data),
+      body,
     });
-    return handleResponse(response);
+    return handleResponse(response, { url, method, body });
   },
 
   async deletePersona(id: string) {
-    const response = await fetch(`${API_BASE_URL}/personas/${id}`, {
-      method: 'DELETE',
+    const url = `${API_BASE_URL}/personas/${id}`;
+    const method = 'DELETE';
+    const response = await fetch(url, {
+      method,
       headers: getAuthHeaders(),
     });
-    return handleResponse(response);
+    return handleResponse(response, { url, method });
   },
 
   // Folders

@@ -24,6 +24,24 @@ func NewOrganizationRepository(db *database.DB) *OrganizationRepository {
 }
 
 func (r *OrganizationRepository) Create(ctx context.Context, org *models.Organization) error {
+	// Check if slug exists in ACTIVE organizations only (deleted orgs free up their slugs)
+	var existingOrgID uuid.UUID
+	checkQuery := `SELECT id FROM organizations WHERE slug = $1 AND deleted_at IS NULL`
+	err := r.db.Pool.QueryRow(ctx, checkQuery, org.Slug).Scan(&existingOrgID)
+
+	if err == nil {
+		// Slug exists in an active organization
+		return errors.NewError(
+			"CONFLICT",
+			fmt.Sprintf("An organization with slug '%s' already exists. Please choose a different slug.", org.Slug),
+			errors.ErrConflict.Status,
+		)
+	} else if err.Error() != "no rows in result set" {
+		// Some other database error
+		return errors.WrapError(err, "INTERNAL_ERROR", "Failed to check slug availability", errors.ErrInternalServer.Status)
+	}
+	// Slug is available (either never used or was used by a deleted org), proceed with creation
+
 	query := `
 		INSERT INTO organizations (
 			id, name, legal_name, slug, logo_url, website,
@@ -40,7 +58,7 @@ func (r *OrganizationRepository) Create(ctx context.Context, org *models.Organiz
 
 	settingsJSON, _ := json.Marshal(org.Settings)
 
-	err := r.db.Pool.QueryRow(ctx, query,
+	err = r.db.Pool.QueryRow(ctx, query,
 		org.ID, org.Name, org.LegalName, org.Slug, org.LogoURL, org.Website,
 		org.AddressLine1, org.AddressLine2, org.City, org.StateProvince, org.PostalCode, org.Country,
 		org.PrimaryContactName, org.PrimaryContactEmail, org.PrimaryContactPhone, org.BillingEmail,
@@ -51,7 +69,7 @@ func (r *OrganizationRepository) Create(ctx context.Context, org *models.Organiz
 	if err != nil {
 		errStr := err.Error()
 		if strings.Contains(errStr, "duplicate key value violates unique constraint") && strings.Contains(errStr, "organizations_slug_key") {
-			return errors.WrapError(err, "CONFLICT", "Slug already exists", errors.ErrConflict.Status)
+			return errors.NewError("CONFLICT", fmt.Sprintf("An organization with slug '%s' already exists. Please choose a different slug.", org.Slug), errors.ErrConflict.Status)
 		}
 		if strings.Contains(errStr, "violates not-null constraint") {
 			return errors.WrapError(err, "VALIDATION_ERROR", fmt.Sprintf("Required field missing: %v", err), http.StatusBadRequest)

@@ -131,6 +131,7 @@ export default function CreateOrganizationModal({ onClose, onSuccess }: CreateOr
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -142,6 +143,7 @@ export default function CreateOrganizationModal({ onClose, onSuccess }: CreateOr
               type="text"
               value={formData.legal_name}
               onChange={(e) => setFormData({ ...formData, legal_name: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -214,6 +216,7 @@ export default function CreateOrganizationModal({ onClose, onSuccess }: CreateOr
                 type="email"
                 value={formData.primary_contact_email}
                 onChange={(e) => setFormData({ ...formData, primary_contact_email: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
             <div>
@@ -224,6 +227,7 @@ export default function CreateOrganizationModal({ onClose, onSuccess }: CreateOr
                 type="text"
                 value={formData.primary_contact_name}
                 onChange={(e) => setFormData({ ...formData, primary_contact_name: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
           </div>
@@ -236,6 +240,7 @@ export default function CreateOrganizationModal({ onClose, onSuccess }: CreateOr
               type="tel"
               value={formData.primary_contact_phone}
               onChange={(e) => setFormData({ ...formData, primary_contact_phone: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -247,6 +252,7 @@ export default function CreateOrganizationModal({ onClose, onSuccess }: CreateOr
               type="email"
               value={formData.billing_email}
               onChange={(e) => setFormData({ ...formData, billing_email: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -258,6 +264,7 @@ export default function CreateOrganizationModal({ onClose, onSuccess }: CreateOr
               type="text"
               value={formData.address_line1}
               onChange={(e) => setFormData({ ...formData, address_line1: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -270,6 +277,7 @@ export default function CreateOrganizationModal({ onClose, onSuccess }: CreateOr
                 type="text"
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
             <div>
@@ -280,6 +288,7 @@ export default function CreateOrganizationModal({ onClose, onSuccess }: CreateOr
                 type="text"
                 value={formData.state_province}
                 onChange={(e) => setFormData({ ...formData, state_province: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
             <div>
@@ -290,6 +299,7 @@ export default function CreateOrganizationModal({ onClose, onSuccess }: CreateOr
                 type="text"
                 value={formData.postal_code}
                 onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
           </div>
@@ -302,19 +312,22 @@ export default function CreateOrganizationModal({ onClose, onSuccess }: CreateOr
               type="text"
               value={formData.country}
               onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
           <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-6">
-            <Button type="button" onClick={onClose} variant="outline" className="flex-1">
+            <Button type="button" onClick={onClose} variant="outline" className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? 'Creating...' : 'Create Organization'}
-            </Button>
+            <Button type="submit" disabled={loading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-blue-400">
+            {loading ? 'Creating...' : 'Create Organization'}
+          </Button>
+
           </div>
         </form>
       </DialogContent>
     </Dialog>
   );
 }
+

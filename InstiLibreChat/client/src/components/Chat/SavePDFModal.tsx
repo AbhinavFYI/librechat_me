@@ -769,7 +769,7 @@ export default function SavePDFModal({ conversationId, pdfContent, onClose }: Sa
               <select
                 value={selectedOrgId}
                 onChange={(e) => setSelectedOrgId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 {organizations.map((org) => (
                   <option key={org.id} value={org.id}>
@@ -792,7 +792,7 @@ export default function SavePDFModal({ conversationId, pdfContent, onClose }: Sa
               value={pdfName}
               onChange={(e) => setPdfName(e.target.value)}
               placeholder="Enter report name (e.g., Q4 Analysis Report)"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               disabled={saving}
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">

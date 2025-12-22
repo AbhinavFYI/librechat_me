@@ -95,6 +95,18 @@ func (h *OrganizationHandler) Create(c *gin.Context) {
 		log.Printf("Warning: Could not find available slug after %d attempts for base slug '%s'", maxAttempts, baseSlug)
 	}
 
+	// Set default values
+	maxUsers := 100
+	maxStorageGB := 1
+
+	// Override with request values if provided
+	if req.MaxUsers != nil {
+		maxUsers = *req.MaxUsers
+	}
+	if req.MaxStorageGB != nil {
+		maxStorageGB = *req.MaxStorageGB
+	}
+
 	org := &models.Organization{
 		ID:                  uuid.New(),
 		Name:                req.Name,
@@ -113,8 +125,8 @@ func (h *OrganizationHandler) Create(c *gin.Context) {
 		BillingEmail:        req.BillingEmail,
 		SubscriptionPlan:    "free",
 		SubscriptionStatus:  "active",
-		MaxUsers:            5,
-		MaxStorageGB:        10,
+		MaxUsers:            maxUsers,
+		MaxStorageGB:        maxStorageGB,
 		Timezone:            "UTC",
 		DateFormat:          "YYYY-MM-DD",
 		Locale:              "en-US",

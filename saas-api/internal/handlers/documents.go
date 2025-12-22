@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"path"
 	"path/filepath"
+	"saas-api/internal/services"
 	"strconv"
 	"strings"
-
-	"saas-api/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -52,24 +52,6 @@ func (h *DocumentHandler) UploadDocument() gin.HandlerFunc {
 			return
 		}
 
-		filename := filepath.Clean(file.Filename)
-		filename = strings.ReplaceAll(filename, " ", "_")
-		filePath := path.Join(h.Services.Document.ResourcesBasePath, filename)
-		filePath = strings.ReplaceAll(filePath, "'", "")
-		err = c.SaveUploadedFile(file, filePath)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "failed to save file",
-			})
-			return
-		}
-
-		// Parse optional folder_id
-		var folderID *string
-		if fid := c.PostForm("folder_id"); fid != "" {
-			folderID = &fid
-		}
-
 		// Get org_id from context or form data (nullable for superadmins)
 		var orgID *uuid.UUID
 		isSuperAdmin, _ := c.Get("is_super_admin")
@@ -104,6 +86,93 @@ func (h *DocumentHandler) UploadDocument() gin.HandlerFunc {
 			return
 		}
 
+		// Parse optional folder_id first (needed for path construction)
+		var folderID *string
+		var folderPath string
+		if fid := c.PostForm("folder_id"); fid != "" {
+			folderID = &fid
+			// Get folder path from database
+			if folderUUID, err := uuid.Parse(fid); err == nil {
+				if folder, err := h.Services.GetRepositories().Folder.GetByID(c.Request.Context(), folderUUID); err == nil {
+					// Use folder path (e.g., "/LLAMA/Whatsapp" -> "LLAMA/Whatsapp")
+					folderPath = strings.TrimPrefix(folder.Path, "/")
+				}
+			}
+		}
+
+		// Construct file path with org_id and folder path
+		filename := filepath.Clean(file.Filename)
+		filename = strings.ReplaceAll(filename, " ", "_")
+		filename = strings.ReplaceAll(filename, "'", "")
+
+		// Construct file path (relative to ResourcesBasePath for database storage)
+		// Full disk path for saving, relative path for database
+		var diskPath string   // Full path for saving file to disk
+		var dbFilePath string // Relative path for database storage
+
+		if orgID != nil {
+			// Include org_id and folder path for organization files
+			// Structure: uploads/{org_id}/{folder_path}/filename
+			var pathComponents []string
+			pathComponents = append(pathComponents, h.Services.Document.ResourcesBasePath, orgID.String())
+			if folderPath != "" {
+				pathComponents = append(pathComponents, folderPath)
+			}
+			pathComponents = append(pathComponents, filename)
+
+			// Create directory structure if it doesn't exist
+			fileDir := path.Join(pathComponents[:len(pathComponents)-1]...)
+			if err := os.MkdirAll(fileDir, 0755); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error": "failed to create directory structure",
+				})
+				return
+			}
+			diskPath = path.Join(pathComponents...)
+
+			// Store relative path in database: {org_id}/{folder_path}/filename
+			var dbPathComponents []string
+			dbPathComponents = append(dbPathComponents, orgID.String())
+			if folderPath != "" {
+				dbPathComponents = append(dbPathComponents, folderPath)
+			}
+			dbPathComponents = append(dbPathComponents, filename)
+			dbFilePath = path.Join(dbPathComponents...)
+		} else {
+			// Superadmin files: uploads/{folder_path}/filename or uploads/filename
+			var pathComponents []string
+			pathComponents = append(pathComponents, h.Services.Document.ResourcesBasePath)
+			if folderPath != "" {
+				pathComponents = append(pathComponents, folderPath)
+			}
+			pathComponents = append(pathComponents, filename)
+
+			// Create directory structure if it doesn't exist
+			fileDir := path.Join(pathComponents[:len(pathComponents)-1]...)
+			if err := os.MkdirAll(fileDir, 0755); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error": "failed to create directory structure",
+				})
+				return
+			}
+			diskPath = path.Join(pathComponents...)
+
+			// Store relative path in database: {folder_path}/filename or just filename
+			if folderPath != "" {
+				dbFilePath = path.Join(folderPath, filename)
+			} else {
+				dbFilePath = filename
+			}
+		}
+
+		err = c.SaveUploadedFile(file, diskPath)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "failed to save file",
+			})
+			return
+		}
+
 		// Parse optional metadata (JSON string)
 		var metadata map[string]interface{}
 		if metadataStr := c.PostForm("metadata"); metadataStr != "" {
@@ -118,7 +187,7 @@ func (h *DocumentHandler) UploadDocument() gin.HandlerFunc {
 		req := &services.UploadDocumentRequest{
 			UserID:   userIDStr,
 			OrgID:    orgID,
-			FilePath: filePath,
+			FilePath: dbFilePath, // Use relative path for database storage
 			FolderID: folderID,
 			Metadata: metadata,
 		}
@@ -132,14 +201,49 @@ func (h *DocumentHandler) UploadDocument() gin.HandlerFunc {
 			return
 		}
 
-		// Legacy file table entry creation removed - we only use documents table now
+		// Get the created document to return as file object (for frontend compatibility)
+		docInfo, err := h.Services.Document.GetJobStatus(c.Request.Context(), fmt.Sprintf("%d", response.DocumentID))
+		if err != nil {
+			// If we can't get the document, just return the basic response
+			c.JSON(http.StatusOK, gin.H{
+				"data":    response,
+				"code":    http.StatusOK,
+				"s":       "ok",
+				"message": "Document uploaded successfully",
+			})
+			return
+		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"data":    response,
+		// Convert to file-compatible format for frontend
+		var folderIDPtr *uuid.UUID
+		if docInfo.FolderID != nil {
+			if parsed, err := uuid.Parse(*docInfo.FolderID); err == nil {
+				folderIDPtr = &parsed
+			}
+		}
+
+		var orgIDValue uuid.UUID
+		if orgID != nil {
+			orgIDValue = *orgID
+		}
+
+		fileResponse := gin.H{
+			"file": gin.H{
+				"id":          response.DocumentID,
+				"name":        response.Filename,
+				"folder_id":   folderIDPtr,
+				"org_id":      orgIDValue,
+				"storage_key": docInfo.FilePath,
+				"status":      response.Status,
+				"created_at":  docInfo.CreatedAt,
+				"updated_at":  docInfo.CreatedAt,
+			},
+			"message": "File uploaded successfully",
 			"code":    http.StatusOK,
 			"s":       "ok",
-			"message": "Document uploaded successfully",
-		})
+		}
+
+		c.JSON(http.StatusOK, fileResponse)
 	}
 }
 
@@ -451,4 +555,45 @@ func errorToString(err error) *string {
 	}
 	errStr := err.Error()
 	return &errStr
+}
+
+// DownloadDocument handles the GET /api/v1/documents/:document_id/download endpoint
+func (h *DocumentHandler) DownloadDocument() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Get document ID from URL parameter
+		documentIDStr := c.Param("document_id")
+		_, err := strconv.ParseInt(documentIDStr, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Invalid document ID",
+			})
+			return
+		}
+
+		// Get document from database
+		doc, err := h.Services.Document.GetJobStatus(c.Request.Context(), documentIDStr)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Document not found",
+			})
+			return
+		}
+
+		// Check if file path exists
+		if doc.FilePath == "" {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Document file not found",
+			})
+			return
+		}
+
+		// Construct full file path
+		filePath := doc.FilePath
+		if !filepath.IsAbs(filePath) {
+			filePath = filepath.Join(h.Services.Document.ResourcesBasePath, filePath)
+		}
+
+		// Serve the file
+		c.FileAttachment(filePath, doc.Name)
+	}
 }

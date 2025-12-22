@@ -119,8 +119,27 @@ func (h *RoleHandler) List(c *gin.Context) {
 	orgID, _ := c.Get("org_id")
 	isSuperAdmin, _ := c.Get("is_super_admin")
 
+	// Check for org_id query parameter (for filtering)
+	orgFilterParam := c.Query("org_id")
+
 	var orgIDPtr *uuid.UUID
-	if orgID != nil && orgID != "" {
+	
+	// If super admin and org_id query parameter is provided, use it for filtering
+	if isSuperAdmin != nil && isSuperAdmin.(bool) && orgFilterParam != "" {
+		if orgFilterParam != "all" {
+			uid, err := uuid.Parse(orgFilterParam)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, errors.ErrorResponse{
+					Error:   errors.ErrValidation.Code,
+					Message: "Invalid org_id parameter",
+				})
+				return
+			}
+			orgIDPtr = &uid
+		}
+		// If orgFilterParam is "all" or empty, orgIDPtr remains nil (show all roles)
+	} else if orgID != nil && orgID != "" {
+		// Non-super admin or super admin without filter - use their org context
 		uid, _ := uuid.Parse(orgID.(string))
 		orgIDPtr = &uid
 	} else if isSuperAdmin == nil || !isSuperAdmin.(bool) {

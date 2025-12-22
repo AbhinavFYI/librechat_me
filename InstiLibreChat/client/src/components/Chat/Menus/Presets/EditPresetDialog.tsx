@@ -210,7 +210,7 @@ const EditPresetDialog = ({
           <div className="flex justify-end gap-2 border-t border-border-medium pt-2 md:pt-4">
             <button
               onClick={exportPreset}
-              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 md:px-4"
+              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:border-gray-400 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 md:px-4"
             >
               {localize('com_endpoint_export')}
             </button>

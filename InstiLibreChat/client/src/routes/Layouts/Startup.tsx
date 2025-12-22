@@ -40,7 +40,7 @@ export default function StartupLayout({ isAuthenticated }: { isAuthenticated?: b
   }, [isAuthenticated, navigate, data]);
 
   useEffect(() => {
-    document.title = startupConfig?.appTitle || 'LibreChat';
+    document.title = startupConfig?.appTitle || 'FIA-Fyers Intelligence Assistant';
   }, [startupConfig?.appTitle]);
 
   useEffect(() => {

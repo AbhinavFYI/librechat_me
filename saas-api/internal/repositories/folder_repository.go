@@ -4,10 +4,10 @@ import (
 	"context"
 	"log"
 	"path/filepath"
-	"strings"
 	"saas-api/internal/database"
 	"saas-api/internal/models"
 	"saas-api/pkg/errors"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -249,20 +249,20 @@ func (r *FolderRepository) Update(ctx context.Context, folder *models.Folder) er
 }
 
 func (r *FolderRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	// Check if folder has children or files
-	var childCount, fileCount int
+	// Check if folder has children or documents
+	var childCount, documentCount int
 	checkQuery := `
 		SELECT 
 			(SELECT COUNT(*) FROM folders WHERE parent_id = $1) as child_count,
-			(SELECT COUNT(*) FROM files WHERE folder_id = $1) as file_count
+			(SELECT COUNT(*) FROM documents WHERE folder_id = $1 AND deleted_at IS NULL) as document_count
 	`
-	err := r.db.Pool.QueryRow(ctx, checkQuery, id).Scan(&childCount, &fileCount)
+	err := r.db.Pool.QueryRow(ctx, checkQuery, id).Scan(&childCount, &documentCount)
 	if err != nil {
 		return errors.WrapError(err, "INTERNAL_ERROR", "Failed to check folder", errors.ErrInternalServer.Status)
 	}
 
-	if childCount > 0 || fileCount > 0 {
-		return errors.NewError("CONFLICT", "Cannot delete folder with children or files", 409)
+	if childCount > 0 || documentCount > 0 {
+		return errors.NewError("CONFLICT", "Cannot delete folder with children or documents", 409)
 	}
 
 	query := `DELETE FROM folders WHERE id = $1`
@@ -354,4 +354,3 @@ func (r *FolderRepository) RemovePermission(ctx context.Context, folderID uuid.U
 
 	return nil
 }
-

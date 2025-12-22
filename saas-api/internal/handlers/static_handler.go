@@ -213,14 +213,24 @@ func (h *StaticHandler) ServeFile(c *gin.Context) {
 	}
 
 	// Validate access based on org_id in path
-	// Extract org_id from path (first segment)
+	// Extract org_id from path - handle both relative and absolute paths
+	// For relative paths: "org_id/folder/file.pdf" -> org_id is first segment
+	// For absolute paths: "/home/.../uploads/org_id/folder/file.pdf" -> org_id is after "uploads"
 	pathParts := strings.Split(requestPath, "/")
 	var pathOrgUUID *uuid.UUID
 
-	if len(pathParts) > 0 {
-		firstSegment := pathParts[0]
-		if parsedUUID, err := uuid.Parse(firstSegment); err == nil {
+	// Try to find org_id in path segments
+	for i, segment := range pathParts {
+		if parsedUUID, err := uuid.Parse(segment); err == nil {
 			pathOrgUUID = &parsedUUID
+			break
+		}
+		// Also check if this is after "uploads" directory
+		if i > 0 && (pathParts[i-1] == "uploads" || pathParts[i-1] == h.storagePath) {
+			if parsedUUID, err := uuid.Parse(segment); err == nil {
+				pathOrgUUID = &parsedUUID
+				break
+			}
 		}
 	}
 

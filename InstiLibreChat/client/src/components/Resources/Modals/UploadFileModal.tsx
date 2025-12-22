@@ -158,7 +158,7 @@ export default function UploadFileModal({ folderId, orgId, folders = [], onClose
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Select File
             </label>
-            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
+            <div className="border-2 border-dashed border-gray-300 dark:border-gray-400 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -218,7 +218,7 @@ export default function UploadFileModal({ folderId, orgId, folders = [], onClose
             <select
               value={selectedFolderId}
               onChange={(e) => setSelectedFolderId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               <option value="">Root (No folder)</option>
               {flatFolders.map((folder) => (
@@ -238,9 +238,9 @@ export default function UploadFileModal({ folderId, orgId, folders = [], onClose
             <Button type="button" onClick={onClose} variant="outline">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !selectedFile}>
+            <Button type="submit" disabled={loading || !selectedFile} className="bg-blue-600 hover:bg-blue-700 text-white disabled:bg-blue-400">
               {loading ? 'Uploading...' : 'Upload File'}
-            </Button>
+            </Button>  
           </div>
         </form>
       </DialogContent>

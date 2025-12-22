@@ -53,7 +53,7 @@ export default function DocumentUpload({ onUploadSuccess, className }: DocumentU
       try {
         const response = await uploadDocument(file);
 
-        if (response.code === 202 || response.s === 'ok') {
+        if (response.code === 200 || response.code === 202 || response.s === 'ok') {
           showToast({
             message: `Document "${file.name}" uploaded successfully and is being processed`,
             status: 'success',

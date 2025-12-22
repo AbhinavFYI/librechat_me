@@ -47,6 +47,7 @@ type Document struct {
 	Status       DocumentStatus         `json:"status"`
 	Content      DocumentContent        `json:"content"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	ErrorMessage *string                `json:"error_message,omitempty"`
 	CreatedBy    *uuid.UUID             `json:"created_by,omitempty"`
 	CreatedAt    time.Time              `json:"created_at"`
 	UploadedAt   *time.Time             `json:"uploaded_at,omitempty"`
@@ -118,16 +119,17 @@ func (r *DocumentRepository) CreateSchema(ctx context.Context) error {
 				"processing_data": {}
 			}'::jsonb NOT NULL,
 			metadata JSONB DEFAULT '{}' NOT NULL,
+			error_message TEXT,
 			
 			-- Audit
 			created_by UUID REFERENCES users(id) ON DELETE SET NULL,
-			created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-			uploaded_at TIMESTAMPTZ,
-			processed_at TIMESTAMPTZ,
+			created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+			uploaded_at TIMESTAMP,
+			processed_at TIMESTAMP,
 			updated_by UUID REFERENCES users(id) ON DELETE SET NULL,
-			updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+			updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
 			deleted_by UUID REFERENCES users(id) ON DELETE SET NULL,
-			deleted_at TIMESTAMPTZ
+			deleted_at TIMESTAMP
 		);
 
 		-- Create indexes for common queries
@@ -169,11 +171,15 @@ func (r *DocumentRepository) Create(ctx context.Context, doc *Document) error {
 	if doc.UpdatedAt.IsZero() {
 		doc.UpdatedAt = now
 	}
+	// Set UploadedAt to now if it's nil or zero (for file uploads)
+	if doc.UploadedAt == nil || doc.UploadedAt.IsZero() {
+		doc.UploadedAt = &now
+	}
 
 	query := `
-		INSERT INTO documents (org_id, folder_id, parent_id, name, file_path, json_file_path, status, content, metadata, created_by, created_at, uploaded_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-		RETURNING id, created_at, updated_at
+		INSERT INTO documents (org_id, folder_id, parent_id, name, file_path, json_file_path, status, content, metadata, error_message, created_by, created_at, uploaded_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+		RETURNING id, created_at, uploaded_at, updated_at
 	`
 
 	err = r.dbWriter.QueryRow(ctx, query,
@@ -186,11 +192,12 @@ func (r *DocumentRepository) Create(ctx context.Context, doc *Document) error {
 		doc.Status,
 		contentJSON,
 		metadataJSON,
+		doc.ErrorMessage,
 		doc.CreatedBy,
 		doc.CreatedAt,
 		doc.UploadedAt,
 		doc.UpdatedAt,
-	).Scan(&doc.ID, &doc.CreatedAt, &doc.UpdatedAt)
+	).Scan(&doc.ID, &doc.CreatedAt, &doc.UploadedAt, &doc.UpdatedAt)
 
 	if err != nil {
 		return fmt.Errorf("failed to create document: %w", err)
@@ -203,7 +210,7 @@ func (r *DocumentRepository) Create(ctx context.Context, doc *Document) error {
 func (r *DocumentRepository) GetByID(ctx context.Context, id int64) (*Document, error) {
 	query := `
 		SELECT d.id, d.org_id, d.folder_id, d.parent_id, d.name, d.file_path, d.json_file_path, 
-		       d.status, d.content, d.metadata, d.created_by, d.created_at, d.uploaded_at, d.processed_at,
+		       d.status, d.content, d.metadata, d.error_message, d.created_by, d.created_at, d.uploaded_at, d.processed_at,
 		       d.updated_by, d.updated_at, d.deleted_by, d.deleted_at,
 		       u1.full_name as created_by_name, u2.full_name as updated_by_name,
 		       COALESCE(f.name, '') as folder_name
@@ -229,6 +236,7 @@ func (r *DocumentRepository) GetByID(ctx context.Context, id int64) (*Document, 
 		&doc.Status,
 		&contentJSON,
 		&metadataJSON,
+		&doc.ErrorMessage,
 		&doc.CreatedBy,
 		&doc.CreatedAt,
 		&doc.UploadedAt,
@@ -262,15 +270,11 @@ func (r *DocumentRepository) GetByID(ctx context.Context, id int64) (*Document, 
 
 // UpdateStatus updates the status of a document
 func (r *DocumentRepository) UpdateStatus(ctx context.Context, id uuid.UUID, status DocumentStatus, errorMessage *string) error {
-	// Update status in content JSONB
+	// Update status and error_message in dedicated columns
 	query := `
 		UPDATE documents
 		SET status = $1, 
-		    content = jsonb_set(
-		    	COALESCE(content, '{}'::jsonb),
-		    	'{error_message}',
-		    	COALESCE(to_jsonb($2::text), 'null'::jsonb)
-		    ),
+		    error_message = $2,
 		    updated_at = NOW()
 		WHERE id = $3 AND deleted_at IS NULL
 	`
@@ -338,21 +342,24 @@ func (r *DocumentRepository) MarkFailed(ctx context.Context, id uuid.UUID, error
 }
 
 // ListAll retrieves ALL documents for an organization with pagination (files only, not folders)
+// Excludes documents in the Reports folder
 func (r *DocumentRepository) ListAll(ctx context.Context, orgID uuid.UUID, page, limit int) ([]*Document, int64, error) {
 	offset := (page - 1) * limit
 
-	// Count query - all documents for this org, exclude folders and deleted
+	// Count query - all documents for this org, exclude folders, deleted, and Reports folder
 	countQuery := `
 		SELECT COUNT(*) 
-		FROM documents 
-		WHERE deleted_at IS NULL
-		AND (content->>'is_folder' IS NULL OR (content->>'is_folder')::boolean = false)
+		FROM documents d
+		LEFT JOIN folders f ON d.folder_id = f.id
+		WHERE d.deleted_at IS NULL
+		AND (d.content->>'is_folder' IS NULL OR (d.content->>'is_folder')::boolean = false)
+		AND (f.name IS NULL OR (LOWER(f.name) != 'reports' AND f.path NOT LIKE '%/Reports%' AND f.path NOT LIKE '%/reports%'))
 	`
 	args := []interface{}{}
 
 	// Only filter by org_id if it's not a zero UUID
 	if orgID != uuid.Nil {
-		countQuery += " AND org_id = $1"
+		countQuery += " AND d.org_id = $1"
 		args = append(args, orgID)
 	}
 
@@ -362,7 +369,7 @@ func (r *DocumentRepository) ListAll(ctx context.Context, orgID uuid.UUID, page,
 		return nil, 0, fmt.Errorf("failed to count documents: %w", err)
 	}
 
-	// List query - all documents for this org
+	// List query - all documents for this org, excluding Reports folder
 	query := `
 		SELECT d.id, d.org_id, d.folder_id, d.parent_id, d.name, d.file_path, d.json_file_path,
 		       d.status, d.content, d.metadata, d.created_by, d.created_at, d.uploaded_at, d.processed_at,
@@ -375,6 +382,7 @@ func (r *DocumentRepository) ListAll(ctx context.Context, orgID uuid.UUID, page,
 		LEFT JOIN folders f ON d.folder_id = f.id
 		WHERE d.deleted_at IS NULL
 		AND (d.content->>'is_folder' IS NULL OR (d.content->>'is_folder')::boolean = false)
+		AND (f.name IS NULL OR (LOWER(f.name) != 'reports' AND f.path NOT LIKE '%/Reports%' AND f.path NOT LIKE '%/reports%'))
 	`
 	queryArgs := []interface{}{}
 	argIndex := 1
@@ -431,32 +439,41 @@ func (r *DocumentRepository) ListAll(ctx context.Context, orgID uuid.UUID, page,
 }
 
 // ListByFolder retrieves documents by folder ID and org_id with pagination (files only, not folders)
+// Excludes documents in the Reports folder unless specifically querying the Reports folder
 func (r *DocumentRepository) ListByFolder(ctx context.Context, folderID *uuid.UUID, orgID uuid.UUID, page, limit int) ([]*Document, int64, error) {
 	offset := (page - 1) * limit
 
-	// Count query - filter by folder_id and org_id (handle zero UUID for "all orgs"), exclude folders and deleted
+	// Count query - filter by folder_id and org_id (handle zero UUID for "all orgs"), exclude folders, deleted, and Reports folder
 	countQuery := `
 		SELECT COUNT(*) 
-		FROM documents 
-		WHERE deleted_at IS NULL
-		AND (content->>'is_folder' IS NULL OR (content->>'is_folder')::boolean = false)
+		FROM documents d
+		LEFT JOIN folders f ON d.folder_id = f.id
+		WHERE d.deleted_at IS NULL
+		AND (d.content->>'is_folder' IS NULL OR (d.content->>'is_folder')::boolean = false)
 	`
 	args := []interface{}{}
 	argIndex := 1
 
 	// Only filter by org_id if it's not a zero UUID (zero UUID means "all orgs" for superadmins)
 	if orgID != uuid.Nil {
-		countQuery += fmt.Sprintf(" AND org_id = $%d", argIndex)
+		countQuery += fmt.Sprintf(" AND d.org_id = $%d", argIndex)
 		args = append(args, orgID)
 		argIndex++
 	}
 
 	if folderID != nil {
-		countQuery += fmt.Sprintf(" AND folder_id = $%d", argIndex)
+		countQuery += fmt.Sprintf(" AND d.folder_id = $%d", argIndex)
 		args = append(args, *folderID)
 		argIndex++
 	} else {
-		countQuery += " AND folder_id IS NULL"
+		// Root level - exclude Reports folder
+		countQuery += " AND d.folder_id IS NULL"
+	}
+
+	// Exclude Reports folder documents unless we're specifically querying the Reports folder
+	if folderID == nil {
+		// When querying root or all documents, exclude Reports folder
+		countQuery += " AND (f.name IS NULL OR (LOWER(f.name) != 'reports' AND f.path NOT LIKE '%/Reports%' AND f.path NOT LIKE '%/reports%'))"
 	}
 
 	var totalCount int64
@@ -494,7 +511,14 @@ func (r *DocumentRepository) ListByFolder(ctx context.Context, folderID *uuid.UU
 		queryArgs = append(queryArgs, *folderID)
 		queryArgIndex++
 	} else {
+		// Root level - exclude Reports folder
 		query += " AND d.folder_id IS NULL"
+	}
+
+	// Exclude Reports folder documents unless we're specifically querying the Reports folder
+	if folderID == nil {
+		// When querying root or all documents, exclude Reports folder
+		query += " AND (f.name IS NULL OR (LOWER(f.name) != 'reports' AND f.path NOT LIKE '%/Reports%' AND f.path NOT LIKE '%/reports%'))"
 	}
 
 	query += fmt.Sprintf(" ORDER BY d.created_at DESC LIMIT $%d OFFSET $%d", queryArgIndex, queryArgIndex+1)
@@ -523,6 +547,7 @@ func (r *DocumentRepository) ListByFolder(ctx context.Context, folderID *uuid.UU
 			&doc.Status,
 			&contentJSON,
 			&metadataJSON,
+			&doc.CreatedBy,
 			&doc.CreatedAt,
 			&doc.UploadedAt,
 			&doc.ProcessedAt,

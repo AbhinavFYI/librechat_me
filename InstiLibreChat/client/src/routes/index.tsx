@@ -35,6 +35,11 @@ const StaticFileRoute = () => {
 };
 
 const AuthLayout = () => (
+  <Outlet />
+);
+
+// Wrap all routes with AuthContextProvider and ApiErrorWatcher
+const RootLayout = () => (
   <AuthContextProvider>
     <Outlet />
     <ApiErrorWatcher />
@@ -46,58 +51,62 @@ const baseHref = baseEl?.getAttribute('href') || '/';
 
 export const router = createBrowserRouter(
   [
-    // Static file route - must be first to prevent React Router from trying to handle backend routes
     {
-      path: 'static/*',
-      element: <StaticFileRoute />,
-    },
-    {
-      path: 'share/:shareId',
-      element: <ShareRoute />,
-      errorElement: <RouteErrorBoundary />,
-    },
-    {
-      path: 'oauth',
+      element: <RootLayout />,
       errorElement: <RouteErrorBoundary />,
       children: [
+        // Static file route - must be first to prevent React Router from trying to handle backend routes
         {
-          path: 'success',
-          element: <OAuthSuccess />,
+          path: 'static/*',
+          element: <StaticFileRoute />,
         },
         {
-          path: 'error',
-          element: <OAuthError />,
-        },
-      ],
-    },
-    {
-      path: '/',
-      element: <StartupLayout />,
-      errorElement: <RouteErrorBoundary />,
-      children: [
-        {
-          path: 'register',
-          element: <Registration />,
+          path: 'share/:shareId',
+          element: <ShareRoute />,
+          errorElement: <RouteErrorBoundary />,
         },
         {
-          path: 'forgot-password',
-          element: <RequestPasswordReset />,
+          path: 'oauth',
+          errorElement: <RouteErrorBoundary />,
+          children: [
+            {
+              path: 'success',
+              element: <OAuthSuccess />,
+            },
+            {
+              path: 'error',
+              element: <OAuthError />,
+            },
+          ],
         },
         {
-          path: 'reset-password',
-          element: <ResetPassword />,
+          path: '/',
+          element: <StartupLayout />,
+          errorElement: <RouteErrorBoundary />,
+          children: [
+            {
+              path: 'register',
+              element: <Registration />,
+            },
+            {
+              path: 'forgot-password',
+              element: <RequestPasswordReset />,
+            },
+            {
+              path: 'reset-password',
+              element: <ResetPassword />,
+            },
+          ],
         },
-      ],
-    },
-    {
-      path: 'verify',
-      element: <VerifyEmail />,
-      errorElement: <RouteErrorBoundary />,
-    },
-    {
-      element: <AuthLayout />,
-      errorElement: <RouteErrorBoundary />,
-      children: [
+        {
+          path: 'verify',
+          element: <VerifyEmail />,
+          errorElement: <RouteErrorBoundary />,
+        },
+        {
+          element: <AuthLayout />,
+          errorElement: <RouteErrorBoundary />,
+          children: [
         {
           path: '/',
           element: <LoginLayout />,
@@ -169,11 +178,13 @@ export const router = createBrowserRouter(
         },
       ],
     },
-    // File view route - completely outside AuthLayout for direct file viewing
-    {
-      path: 'files/:fileId',
-      element: <FileViewRoute />,
-      errorElement: <RouteErrorBoundary />,
+        // File view route - now wrapped by AuthContextProvider but outside AuthLayout for direct file viewing
+        {
+          path: 'files/:fileId',
+          element: <FileViewRoute />,
+          errorElement: <RouteErrorBoundary />,
+        },
+      ],
     },
   ],
   { basename: baseHref },

@@ -468,7 +468,7 @@ export default function ResourcesRoute() {
                       navigateToFolder(null, 'Home');
                     }
                   }}
-                  className="px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 flex-1 sm:flex-none sm:min-w-[200px] md:min-w-[300px] lg:max-w-[500px]"
+                  className="px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 flex-1 sm:flex-none sm:min-w-[200px] md:min-w-[300px] lg:max-w-[500px]"
                 >
                   {organizations.map((org) => (
                     <option key={org.id} value={org.id}>
@@ -495,7 +495,7 @@ export default function ResourcesRoute() {
                 onClick={() => {
                   setShowUploadFileModal(true);
                 }}
-                className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs sm:text-sm font-medium transition-colors flex-1 sm:flex-none"
+                className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs sm:text-sm font-medium transition-colors flex-1 sm:flex-none"
               >
                 <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">Upload document</span>
@@ -509,7 +509,7 @@ export default function ResourcesRoute() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search files and folders..."
-                    className="pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-64"
+                    className="pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-64"
                     autoFocus
                     onKeyDown={(e) => {
                       if (e.key === 'Escape') {

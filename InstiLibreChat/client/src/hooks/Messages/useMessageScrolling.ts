@@ -19,6 +19,7 @@ export default function useMessageScrolling(messagesTree?: TMessage[] | null) {
   const { setAbortScroll, isSubmitting, abortScroll } = useMessagesSubmission();
 
   const timeoutIdRef = useRef<NodeJS.Timeout>();
+  const hasScrolledOnLoad = useRef<string | null>(null);
 
   const debouncedSetShowScrollButton = useCallback((value: boolean) => {
     clearTimeout(timeoutIdRef.current);
@@ -100,6 +101,35 @@ export default function useMessageScrolling(messagesTree?: TMessage[] | null) {
       scrollToBottom();
     }
   }, [autoScroll, conversationId, scrollToBottom]);
+
+  // Auto-scroll to latest message when conversation is first opened
+  useEffect(() => {
+    if (!messagesTree || messagesTree.length === 0) {
+      return;
+    }
+
+    if (!messagesEndRef.current || !scrollableRef.current) {
+      return;
+    }
+
+    if (conversationId === Constants.NEW_CONVO) {
+      return;
+    }
+
+    // Only scroll once per conversation load
+    if (hasScrolledOnLoad.current === conversationId) {
+      return;
+    }
+
+    // Scroll to bottom when conversation is first loaded
+    if (scrollToBottom && autoScroll) {
+      // Use a small delay to ensure DOM is fully rendered
+      setTimeout(() => {
+        scrollToBottom();
+        hasScrolledOnLoad.current = conversationId;
+      }, 100);
+    }
+  }, [messagesTree, conversationId, scrollToBottom, autoScroll]);
 
   return {
     conversation,

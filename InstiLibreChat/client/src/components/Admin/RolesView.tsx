@@ -10,15 +10,21 @@ interface RolesViewProps {
   roles: any[];
   isSuperAdmin: boolean;
   userOrgId: string | null;
+  organizations: any[];
   permissionManager: PermissionManager | null;
-  onRefresh: () => void;
+  selectedOrgFilter: string;
+  onOrgFilterChange: (orgId: string) => void;
+  onRefresh: (orgFilterId?: string) => void;
 }
 
 export default function RolesView({
   roles,
   isSuperAdmin,
   userOrgId,
+  organizations,
   permissionManager,
+  selectedOrgFilter,
+  onOrgFilterChange,
   onRefresh,
 }: RolesViewProps) {
   const [showCreateRoleModal, setShowCreateRoleModal] = useState(false);
@@ -33,24 +39,50 @@ export default function RolesView({
 
     try {
       await saasApi.deleteRole(role.id);
-      onRefresh();
+      onRefresh(selectedOrgFilter || undefined);
     } catch (error: any) {
       alert(error.message || 'Failed to delete role');
     }
+  };
+
+  const handleOrgFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newOrgFilter = e.target.value;
+    onOrgFilterChange(newOrgFilter);
   };
 
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Roles</h2>
-        {permissionManager && permissionManager.canCreate('roles') && (
-          <Button
-            onClick={() => setShowCreateRoleModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            + Create Role
-          </Button>
-        )}
+        <div className="flex items-center gap-4">
+          {isSuperAdmin && organizations && organizations.length > 0 && (
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Filter by Organization:
+              </label>
+              <select
+                value={selectedOrgFilter}
+                onChange={handleOrgFilterChange}
+                className="px-3 py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              >
+                <option value="">All Organizations</option>
+                {organizations.map((org) => (
+                  <option key={org.id} value={org.id}>
+                    {org.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          {permissionManager && permissionManager.canCreate('roles') && (
+            <Button
+              onClick={() => setShowCreateRoleModal(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              + Create Role
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -159,7 +191,7 @@ export default function RolesView({
           onClose={() => setShowCreateRoleModal(false)}
           onSuccess={() => {
             setShowCreateRoleModal(false);
-            onRefresh();
+            onRefresh(selectedOrgFilter || undefined);
           }}
         />
       )}
@@ -174,7 +206,7 @@ export default function RolesView({
           onSuccess={() => {
             setShowEditRoleModal(false);
             setSelectedRole(null);
-            onRefresh();
+            onRefresh(selectedOrgFilter || undefined);
           }}
         />
       )}
@@ -189,7 +221,7 @@ export default function RolesView({
           onSuccess={() => {
             setShowRolePermissionsModal(false);
             setSelectedRole(null);
-            onRefresh();
+            onRefresh(selectedOrgFilter || undefined);
           }}
         />
       )}

@@ -140,12 +140,12 @@ export default function EditOrganizationModal({
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full"
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 "
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Status
+                Statu
               </label>
               <select
                 value={formData.status}
@@ -168,6 +168,7 @@ export default function EditOrganizationModal({
               type="text"
               value={formData.legal_name}
               onChange={(e) => setFormData({ ...formData, legal_name: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -212,6 +213,7 @@ export default function EditOrganizationModal({
               type="url"
               value={formData.website}
               onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -224,6 +226,7 @@ export default function EditOrganizationModal({
                 type="email"
                 value={formData.primary_contact_email}
                 onChange={(e) => setFormData({ ...formData, primary_contact_email: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
             <div>
@@ -234,6 +237,7 @@ export default function EditOrganizationModal({
                 type="text"
                 value={formData.primary_contact_name}
                 onChange={(e) => setFormData({ ...formData, primary_contact_name: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
           </div>
@@ -246,6 +250,7 @@ export default function EditOrganizationModal({
               type="tel"
               value={formData.primary_contact_phone}
               onChange={(e) => setFormData({ ...formData, primary_contact_phone: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -257,6 +262,7 @@ export default function EditOrganizationModal({
               type="email"
               value={formData.billing_email}
               onChange={(e) => setFormData({ ...formData, billing_email: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -268,6 +274,7 @@ export default function EditOrganizationModal({
               type="text"
               value={formData.address_line1}
               onChange={(e) => setFormData({ ...formData, address_line1: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -280,6 +287,7 @@ export default function EditOrganizationModal({
                 type="text"
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
             <div>
@@ -290,6 +298,7 @@ export default function EditOrganizationModal({
                 type="text"
                 value={formData.state_province}
                 onChange={(e) => setFormData({ ...formData, state_province: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
             <div>
@@ -300,6 +309,7 @@ export default function EditOrganizationModal({
                 type="text"
                 value={formData.postal_code}
                 onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
           </div>
@@ -312,6 +322,7 @@ export default function EditOrganizationModal({
               type="text"
               value={formData.country}
               onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -330,11 +341,11 @@ export default function EditOrganizationModal({
             </select>
           </div>
 
-          <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-6">
-            <Button type="button" onClick={onClose} variant="outline" className="flex-1">
+            <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-6">
+            <Button type="button" onClick={onClose} variant="outline" className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
+            <Button type="submit" disabled={loading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-blue-400">
               {loading ? 'Updating...' : 'Update Organization'}
             </Button>
           </div>

@@ -155,16 +155,23 @@ export default function DocumentSelector({
     onOpenChange(false);
   }, [onOpenChange]);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) {
+      return 'N/A';
+    }
     try {
       const date = new Date(dateString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'N/A';
+      }
       return date.toLocaleDateString('en-GB', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
       });
     } catch {
-      return dateString;
+      return 'N/A';
     }
   };
 
