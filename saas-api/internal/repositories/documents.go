@@ -121,13 +121,13 @@ func (r *DocumentRepository) CreateSchema(ctx context.Context) error {
 			
 			-- Audit
 			created_by UUID REFERENCES users(id) ON DELETE SET NULL,
-			created_at TIMESTAMP DEFAULT NOW() NOT NULL,
-			uploaded_at TIMESTAMP,
-			processed_at TIMESTAMP,
+			created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+			uploaded_at TIMESTAMPTZ,
+			processed_at TIMESTAMPTZ,
 			updated_by UUID REFERENCES users(id) ON DELETE SET NULL,
-			updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
+			updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
 			deleted_by UUID REFERENCES users(id) ON DELETE SET NULL,
-			deleted_at TIMESTAMP
+			deleted_at TIMESTAMPTZ
 		);
 
 		-- Create indexes for common queries
