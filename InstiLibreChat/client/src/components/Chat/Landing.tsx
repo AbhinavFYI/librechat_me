@@ -149,7 +149,14 @@ export default function Landing({ centerFormOnLanding }: { centerFormOnLanding: 
     >
       <div className="flex flex-col items-center gap-3 p-2 mb-6">
         {/* Main Heading with animation */}
-        <div className="[&_*]:!text-[32px] [&_*]:!leading-[40px]">
+        <div 
+          id="landing-heading-32px"
+          className="[&_*]:!text-[32px] [&_*]:!leading-[40px]"
+          style={{ 
+            fontSize: '32px',
+            lineHeight: '40px'
+          }}
+        >
           <SplitText
             text="Analyse the markets with FIA"
             className="!text-[32px] font-semibold !leading-[40px] text-[#2A2A2A] dark:text-white"

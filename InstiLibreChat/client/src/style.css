@@ -4341,3 +4341,23 @@ h4.fyers, .h4-fyers {
    ============================================ */
 
 /* Removed overriding styles - TopNavBar uses inline Tailwind classes */
+
+/* ============================================
+   LANDING PAGE HEADING - FORCE FIXED FONT SIZE
+   ============================================ */
+
+/* Force 32px font size for landing page heading - Target specific ID */
+#landing-heading-32px,
+#landing-heading-32px *,
+#landing-heading-32px p,
+#landing-heading-32px span,
+#landing-heading-32px .split-parent,
+#landing-heading-32px .split-parent *,
+#landing-heading-32px .split-parent span,
+#landing-heading-32px p.split-parent,
+#landing-heading-32px p.split-parent span,
+#landing-heading-32px span.inline-block {
+  font-size: 32px !important;
+  line-height: 40px !important;
+  font-weight: 600 !important;
+}

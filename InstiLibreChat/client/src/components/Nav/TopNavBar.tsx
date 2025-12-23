@@ -343,31 +343,27 @@ export default function TopNavBar() {
   return (
     <nav className="bg-white dark:bg-gray-850 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0 z-50">
       <div className="flex items-center justify-between">
-        {/* Left: Branding/Financial Data */}
+        {/* Left: FYERS Logo & Financial Data */}
         <div className="flex items-center gap-4">
-          {/* Organization Logo */}
-          {userInfo?.org_logo_url && userInfo.org_logo_url.startsWith('data:') && !userInfo?.is_super_admin && (
-            <div className="flex items-center">
-              <img
-                src={userInfo.org_logo_url}
-                alt={userInfo.org_name || 'Organization logo'}
-                className="h-10 w-10 object-contain"
-                style={{ borderRadius: 0 }}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
-            </div>
-          )}
+          {/* FYERS Logo */}
+          <div className="flex items-center">
+            <img
+              src="/assets/Logo.svg"
+              alt="FYERS"
+              className="h-8 w-auto object-contain"
+              style={{ borderRadius: 0 }}
+            />
+          </div>
+          
           {/* NIFTY Display - Fixed width container to prevent layout shifts */}
-          <div className="flex items-center gap-2 min-w-[280px]" style={{ fontVariantNumeric: 'tabular-nums' }}>
-            <span className="text-gray-900 dark:text-gray-100 font-semibold whitespace-nowrap">NIFTY</span>
-            <span className="text-gray-900 dark:text-gray-100 font-medium tabular-nums min-w-[90px] text-right">
+          <div className="flex items-center gap-2 min-w-[280px] font-Inter" style={{ fontVariantNumeric: 'tabular-nums', fontFamily: 'Inter, sans-serif' }}>
+            <span className="text-[#2A2A2A] dark:text-gray-100 text-[14px] font-medium leading-[20px] whitespace-nowrap">NIFTY</span>
+            <span className="text-[#2A2A2A] dark:text-gray-100 text-[14px] font-medium leading-[20px] tabular-nums min-w-[90px] text-right">
               {formatNiftyValue()}
             </span>
             {niftyData && (
               <span 
-                className={`font-medium tabular-nums whitespace-nowrap ${
+                className={`text-[14px] font-normal leading-[20px] tabular-nums whitespace-nowrap ${
                   formatNiftyChange().isPositive 
                     ? 'text-green-600 dark:text-green-400' 
                     : 'text-red-600 dark:text-red-400'
