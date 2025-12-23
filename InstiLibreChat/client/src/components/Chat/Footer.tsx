@@ -47,59 +47,68 @@ export default function Footer({ className }: { className?: string }) {
     }
   }, [config?.analyticsGtmId]);
 
-  const mainContentRender = mainContentParts.map((text, index) => (
-    <React.Fragment key={`main-content-part-${index}`}>
-      <ReactMarkdown
-        components={{
-          a: ({ node: _n, href, children, ...otherProps }) => {
-            return (
-              <a
-                className="text-text-secondary underline"
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                {...otherProps}
-              >
-                {children}
-              </a>
-            );
-          },
+  const mainContentRender = (
+    <div className="flex flex-col items-center justify-center text-center">
+      {mainContentParts.map((text, index) => (
+        <ReactMarkdown
+          key={`main-content-part-${index}`}
+          components={{
+            a: ({ node: _n, href, children, ...otherProps }) => {
+              return (
+                <a
+                  className="text-text-secondary underline"
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  {...otherProps}
+                >
+                  {children}
+                </a>
+              );
+            },
 
-          p: ({ node: _n, ...props }) => <span {...props} />,
-        }}
-      >
-        {text.trim()}
-      </ReactMarkdown>
-    </React.Fragment>
-  ));
-
-  const footerElements = [...mainContentRender, privacyPolicyRender, termsOfServiceRender].filter(
-    Boolean,
+            p: ({ node: _n, ...props }) => <span {...props} />,
+          }}
+        >
+          {text.trim()}
+        </ReactMarkdown>
+      ))}
+    </div>
   );
+
+  const footerElements = [privacyPolicyRender, termsOfServiceRender].filter(Boolean);
 
   return (
     <div className="relative w-full">
       <div
         className={
           className ??
-          'absolute bottom-0 left-0 right-0 hidden items-center justify-center gap-2 px-2 py-2 text-center text-xs text-text-primary sm:flex md:px-[60px]'
+          'absolute bottom-0 left-0 right-0 hidden flex-col items-center justify-center gap-2 px-2 py-2 text-center text-xs text-text-primary sm:flex md:px-[60px]'
         }
         role="contentinfo"
       >
-        {footerElements.map((contentRender, index) => {
-          const isLastElement = index === footerElements.length - 1;
-          return (
-            <React.Fragment key={`footer-element-${index}`}>
-              {contentRender}
-              {!isLastElement && (
-                <div
-                  key={`separator-${index}`}
-                  className="h-2 border-r-[1px] border-border-medium"
-                />
-              )}
-            </React.Fragment>
-          );
-        })}
+        {/* Main content with line breaks */}
+        {mainContentRender}
+        
+        {/* Privacy & Terms links */}
+        {footerElements.length > 0 && (
+          <div className="flex items-center gap-2 mt-1">
+            {footerElements.map((contentRender, index) => {
+              const isLastElement = index === footerElements.length - 1;
+              return (
+                <React.Fragment key={`footer-element-${index}`}>
+                  {contentRender}
+                  {!isLastElement && (
+                    <div
+                      key={`separator-${index}`}
+                      className="h-2 border-r-[1px] border-border-medium"
+                    />
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

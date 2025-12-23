@@ -31,14 +31,22 @@ export const fullMimeTypesList = [
   'text/x-c',
   'text/x-c++',
   'application/csv',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  // Word documents
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.template', // .dotx
+  'application/vnd.ms-word.document.macroEnabled.12', // .docm
+  'application/vnd.ms-word.template.macroEnabled.12', // .dotm
   'text/html',
+  'application/xhtml+xml',
   'text/x-java',
   'application/json',
+  'text/json',
   'text/markdown',
+  'text/x-markdown',
   'application/pdf',
   'text/x-php',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  // PowerPoint
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
   'text/x-python',
   'text/x-script.python',
   'text/x-ruby',
@@ -47,6 +55,10 @@ export const fullMimeTypesList = [
   'text/css',
   'text/vtt',
   'image/jpeg',
+  'image/jpg',
+  'image/tiff',
+  'image/bmp',
+  'image/webp',
   'text/javascript',
   'image/gif',
   'image/png',
@@ -198,12 +210,38 @@ export const codeTypeMapping: { [key: string]: string } = {
   yaml: 'application/x-yaml',
   log: 'text/plain',
   tsv: 'text/tab-separated-values',
+  // Word documents
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  dotx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
+  docm: 'application/vnd.ms-word.document.macroEnabled.12',
+  dotm: 'application/vnd.ms-word.template.macroEnabled.12',
+  // PowerPoint
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  // HTML
+  html: 'text/html',
+  htm: 'text/html',
+  xhtml: 'application/xhtml+xml',
+  // JSON
+  json: 'application/json',
+  // CSV
+  csv: 'text/csv',
+  // Text
+  txt: 'text/plain',
+  // Excel (already covered by excelFileTypes, but adding for completeness)
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  xlsm: 'application/vnd.ms-excel.sheet.macroEnabled.12',
 };
 
 /** Maps image extensions to MIME types for formats browsers may not recognize */
 export const imageTypeMapping: { [key: string]: string } = {
   heic: 'image/heic',
   heif: 'image/heif',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  tiff: 'image/tiff',
+  bmp: 'image/bmp',
+  webp: 'image/webp',
 };
 
 /**

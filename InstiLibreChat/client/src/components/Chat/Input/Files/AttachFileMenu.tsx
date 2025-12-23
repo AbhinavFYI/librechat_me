@@ -93,11 +93,11 @@ const AttachFileMenu = ({
     if (fileType === 'image') {
       inputRef.current.accept = 'image/*';
     } else if (fileType === 'document') {
-      inputRef.current.accept = '.pdf,application/pdf';
+      inputRef.current.accept = '.docx,.dotx,.docm,.dotm,.pptx,.pdf,.md,.html,.htm,.xhtml,.jpg,.jpeg,.png,.tiff,.bmp,.webp,.csv,.xlsx,.xlsm,.txt,.json';
     } else if (fileType === 'multimodal') {
-      inputRef.current.accept = 'image/*,.pdf,application/pdf';
+      inputRef.current.accept = 'image/*,.docx,.dotx,.docm,.dotm,.pptx,.pdf,.md,.html,.htm,.xhtml,.csv,.xlsx,.xlsm,.txt,.json';
     } else if (fileType === 'google_multimodal') {
-      inputRef.current.accept = 'image/*,.pdf,application/pdf,video/*,audio/*';
+      inputRef.current.accept = 'image/*,.docx,.dotx,.docm,.dotm,.pptx,.pdf,.md,.html,.htm,.xhtml,.csv,.xlsx,.xlsm,.txt,.json,video/*,audio/*';
     } else {
       inputRef.current.accept = '';
     }

@@ -109,6 +109,12 @@ export default defineConfig(({ command }) => ({
     sourcemap: process.env.NODE_ENV === 'development',
     outDir: './dist',
     minify: 'terser',
+    // Optimize memory usage during build
+    terserOptions: {
+      compress: {
+        drop_console: process.env.NODE_ENV === 'production',
+      },
+    },
     rollupOptions: {
       preserveEntrySignatures: 'strict',
       output: {

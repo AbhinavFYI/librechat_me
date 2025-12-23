@@ -599,7 +599,7 @@ COMMENT ON COLUMN folders.parent_id IS 'Parent folder ID (NULL for root folders)
 
 -- Create document_status enum if it doesn't exist
 DO $$ BEGIN
-  CREATE TYPE document_status AS ENUM ('pending', 'processing', 'embedding', 'completed', 'failed');
+  CREATE TYPE document_status AS ENUM ('queued', 'processing', 'embedding', 'completed', 'failed');
 EXCEPTION
   WHEN duplicate_object THEN null;
 END $$;
@@ -620,10 +620,9 @@ CREATE TABLE documents (
   -- File storage pointers
   file_path VARCHAR(1024),
   json_file_path VARCHAR(1024),
-  
   -- Status
-  status document_status DEFAULT 'completed',
-  
+  status document_status DEFAULT 'queued',
+  error_message TEXT, 
   -- JSONB metadata for flexible storage
   content JSONB DEFAULT '{
     "description": null,
@@ -633,7 +632,6 @@ CREATE TABLE documents (
     "version": 1,
     "checksum": null,
     "is_folder": false,
-    "error_message": null,
     "processing_data": {}
   }'::jsonb NOT NULL,
   metadata JSONB DEFAULT '{}' NOT NULL,
@@ -663,7 +661,8 @@ CREATE INDEX idx_documents_metadata ON documents USING gin(metadata);
 COMMENT ON TABLE documents IS 'Unified table for files and documents with vector embeddings support';
 COMMENT ON COLUMN documents.file_path IS 'Physical file path relative to storage root (e.g., {org_id}/{folder_path}/{filename})';
 COMMENT ON COLUMN documents.json_file_path IS 'Path to processed JSON chunks for vector embeddings';
-COMMENT ON COLUMN documents.status IS 'Processing status: pending, processing, embedding, completed, failed';
+COMMENT ON COLUMN documents.status IS 'Processing status: queued, processing, embedding, completed, failed';
+COMMENT ON COLUMN documents.error_message IS 'Error message if document processing failed';
 COMMENT ON COLUMN documents.content IS 'JSONB containing file metadata (mime_type, size_bytes, version, checksum, etc.)';
 COMMENT ON COLUMN documents.metadata IS 'JSONB for extensible metadata without schema changes';
 

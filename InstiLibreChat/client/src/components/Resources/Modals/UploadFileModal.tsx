@@ -71,19 +71,45 @@ export default function UploadFileModal({ folderId, orgId, folders = [], onClose
 
     // Validate file type (accept common document formats)
     const allowedTypes = [
+      // Word documents
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.template', // .dotx
+      'application/vnd.ms-word.document.macroEnabled.12', // .docm
+      'application/vnd.ms-word.template.macroEnabled.12', // .dotm
+      // PowerPoint
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
+      // PDF
       'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'text/plain',
+      // Markdown
+      'text/markdown',
+      'text/x-markdown',
+      // HTML
+      'text/html',
+      'application/xhtml+xml',
+      // Images
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/tiff',
+      'image/bmp',
+      'image/webp',
+      // CSV
       'text/csv',
+      'application/csv',
+      // Excel
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      'application/vnd.ms-excel.sheet.macroEnabled.12', // .xlsm
+      // Text
+      'text/plain',
+      // JSON
+      'application/json',
+      'text/json',
     ];
 
     if (!allowedTypes.includes(selectedFile.type)) {
-      setError('Please select a valid document file (PDF, DOC, DOCX, XLS, XLSX, TXT, CSV)');
+      setError('Please select a valid document file (DOCX, DOTX, DOCM, DOTM, PPTX, PDF, MD, HTML, JPG, PNG, TIFF, BMP, WEBP, CSV, XLSX, XLSM, TXT, JSON)');
       showToast({
-        message: 'Please select a valid document file (PDF, DOC, DOCX, XLS, XLSX, TXT, CSV)',
+        message: 'Please select a valid document file (DOCX, DOTX, DOCM, DOTM, PPTX, PDF, MD, HTML, JPG, PNG, TIFF, BMP, WEBP, CSV, XLSX, XLSM, TXT, JSON)',
         status: 'error',
       });
       return;
@@ -165,7 +191,7 @@ export default function UploadFileModal({ folderId, orgId, folders = [], onClose
                 onChange={handleFileSelect}
                 className="hidden"
                 id="file-upload"
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv"
+                accept=".docx,.dotx,.docm,.dotm,.pptx,.pdf,.md,.html,.htm,.xhtml,.jpg,.jpeg,.png,.tiff,.bmp,.webp,.csv,.xlsx,.xlsm,.txt,.json"
               />
               <label
                 htmlFor="file-upload"
@@ -208,7 +234,7 @@ export default function UploadFileModal({ folderId, orgId, folders = [], onClose
           </div>
 
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-            Supports PDF, DOC, DOCX, XLS, XLSX, TXT, CSV (Max 50MB)
+            Supports DOCX, DOTX, DOCM, DOTM, PPTX, PDF, MD, HTML, Images (JPG, PNG, TIFF, BMP, WEBP), CSV, XLSX, XLSM, TXT, JSON (Max 50MB)
           </div>
 
           <div>

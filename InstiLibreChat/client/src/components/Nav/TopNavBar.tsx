@@ -392,7 +392,7 @@ export default function TopNavBar() {
               onClick={() => handleMenuChange(menu)}
               className={`px-4 py-2 rounded-lg font-medium transition ${
                 activeMenu === menu
-                  ? 'bg-blue-600 text-white dark:bg-blue-500'
+                  ? 'bg-[#F2F4FF] text-[#2434E7] dark:bg-[#2A2A2A] dark:text-[#A0A8FF]'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
               }`}
             >

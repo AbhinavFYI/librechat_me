@@ -977,20 +977,42 @@ func (h *FileHandler) Upload(c *gin.Context) {
 
 func getMimeType(ext string) string {
 	mimeTypes := map[string]string{
-		"pdf":  "application/pdf",
-		"doc":  "application/msword",
+		// Word documents
 		"docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-		"xls":  "application/vnd.ms-excel",
-		"xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-		"txt":  "text/plain",
-		"csv":  "text/csv",
-		"html": "text/html; charset=utf-8",
-		"htm":  "text/html; charset=utf-8",
+		"dotx": "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
+		"docm": "application/vnd.ms-word.document.macroEnabled.12",
+		"dotm": "application/vnd.ms-word.template.macroEnabled.12",
+		"doc":  "application/msword",
+		// PowerPoint
+		"pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+		// PDF
+		"pdf": "application/pdf",
+		// Markdown
+		"md": "text/markdown",
+		// HTML
+		"html":  "text/html; charset=utf-8",
+		"htm":   "text/html; charset=utf-8",
+		"xhtml": "application/xhtml+xml",
+		// Images
 		"jpg":  "image/jpeg",
 		"jpeg": "image/jpeg",
 		"png":  "image/png",
+		"tiff": "image/tiff",
+		"bmp":  "image/bmp",
+		"webp": "image/webp",
 		"gif":  "image/gif",
-		"zip":  "application/zip",
+		// CSV
+		"csv": "text/csv",
+		// Excel
+		"xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+		"xlsm": "application/vnd.ms-excel.sheet.macroEnabled.12",
+		"xls":  "application/vnd.ms-excel",
+		// Text
+		"txt": "text/plain",
+		// JSON
+		"json": "application/json",
+		// Other
+		"zip": "application/zip",
 	}
 
 	if mime, ok := mimeTypes[ext]; ok {

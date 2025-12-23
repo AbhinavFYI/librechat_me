@@ -38,6 +38,15 @@ function OTP() {
       const prevInput = document.getElementById(`otp-${index - 1}`);
       if (prevInput) prevInput.focus();
     }
+    
+    // Handle Enter key to submit OTP
+    if (e.key === 'Enter') {
+      const otpValue = otp.join('');
+      if (otpValue.length === 6 && !isLoading) {
+        e.preventDefault();
+        handleLogin();
+      }
+    }
   };
 
   const handleLogin = async () => {

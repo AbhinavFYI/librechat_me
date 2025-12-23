@@ -64,14 +64,27 @@ export default function Header() {
             )}
           </div>
         </div>
+
+        {/* Center: FIA Logo and Text */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center gap-1">
+          <div className="w-6 h-6 relative rounded-sm flex items-center justify-center">
+            <img
+              src="/assets/FIA.svg"
+              alt="FIA"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <div className="text-base font-semibold leading-5 text-text-primary dark:text-gray-100">
+            FIA - FYERS Intelligent Assistant
+          </div>
+        </div>
+
         {!isSmallScreen && (
           <div className="flex items-center gap-2">
             <TemporaryChat />
           </div>
         )}
       </div>
-      {/* Empty div for spacing */}
-      <div />
     </div>
   );
 }

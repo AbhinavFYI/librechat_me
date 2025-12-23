@@ -96,13 +96,13 @@ h6 {
   border-radius: 0 !important;
 }
 
-/* Buttons - all variants */
+/* Buttons - all variants - Allow nav buttons to use their own styles */
 .btn,
 .btn-fyers,
-button[class*="btn"],
-[class*="button"],
-[class*="Button"] {
-  border-radius: 0 !important;
+button[class*="btn"]:not(nav button),
+[class*="button"]:not(nav button),
+[class*="Button"]:not(nav button) {
+  border-radius: var(--fyers-corner-moderatelyrounded, 2px) !important;
 }
 
 /* Inputs and forms */
@@ -246,10 +246,7 @@ nav,
 .nav-fyers,
 [class*="nav"],
 [class*="Nav"],
-.nav-link,
-.nav-link-fyers {
-  border-radius: 0 !important;
-}
+/* Removed nav-link override */
 
 /* Sidebar */
 .sidebar,
@@ -1749,18 +1746,17 @@ pre[class*='language-'] {
 [role='button'],
 button {
   cursor: pointer;
-  border-radius: 0 !important;
 }
 
-/* Ensure all buttons are square */
-button,
-[role='button'],
+/* Allow nav buttons to control their own styles */
+button:not(nav button),
+[role='button']:not(nav [role='button']),
 .btn,
 .custom-btn,
 input[type='button'],
 input[type='submit'],
 input[type='reset'] {
-  border-radius: 0 !important;
+  border-radius: var(--fyers-corner-moderatelyrounded, 2px) !important;
 }
 
 .btn {
@@ -3912,28 +3908,7 @@ h4.fyers, .h4-fyers {
   flex-wrap: wrap;
 }
 
-.nav-link-fyers {
-  padding: var(--spacing-md) var(--spacing-lg);
-  color: var(--text-secondary-fyers);
-  text-decoration: none;
-  border-radius: 0;
-  transition: all var(--transition-base);
-  font-size: var(--text-base-fyers);
-  position: relative;
-}
-
-.nav-link-fyers:hover {
-  color: var(--primary-blue);
-  background: transparent;
-}
-
-.nav-link-fyers.active {
-  color: var(--primary-blue);
-  background: transparent;
-  font-weight: var(--font-medium);
-  border-bottom: 2px solid var(--primary-blue);
-  padding-bottom: calc(var(--spacing-md) - 2px);
-}
+/* Removed nav-link-fyers styles to avoid overriding TopNavBar */
 
 /* Tabs style */
 .tabs-fyers {
@@ -4365,97 +4340,4 @@ h4.fyers, .h4-fyers {
    TOP NAVIGATION BAR STYLES (FYERS Design)
    ============================================ */
 
-/* FYERS Logo Square */
-.fyers-logo {
-  width: 40px;
-  height: 40px;
-  background-color: #2434E7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0 !important;
-}
-
-.fyers-logo span {
-  color: white;
-  font-weight: 700;
-  font-size: 1.25rem;
-}
-
-/* Top Nav Bar Navigation Links */
-.top-nav-link {
-  padding: 0.5rem 0;
-  font-weight: 500;
-  color: #374151;
-  transition: color 0.2s ease;
-  position: relative;
-  border-radius: 0 !important;
-  background: transparent !important;
-}
-
-.top-nav-link:hover {
-  color: #2434E7;
-}
-
-.top-nav-link.active {
-  color: #2434E7;
-}
-
-.top-nav-link.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background-color: #2434E7;
-  border-radius: 0;
-}
-
-/* Ensure all nav buttons are square */
-nav button,
-nav [role='button'] {
-  border-radius: 0 !important;
-}
-
-/* NIFTY Display Styling */
-.nifty-display {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.nifty-value {
-  font-weight: 500;
-  color: #111827;
-}
-
-.nifty-change {
-  font-weight: 500;
-  color: #10b981;
-}
-
-/* Search and Profile Icons */
-.nav-icon-button {
-  padding: 0.5rem;
-  color: #6b7280;
-  transition: color 0.2s ease;
-  border-radius: 0 !important;
-  background: transparent !important;
-}
-
-.nav-icon-button:hover {
-  color: #111827;
-}
-
-/* Profile Avatar */
-.profile-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  overflow: hidden;
-  background-color: #d1d5db;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+/* Removed overriding styles - TopNavBar uses inline Tailwind classes */

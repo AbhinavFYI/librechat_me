@@ -81,8 +81,16 @@ _logging_initialized = False
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 SUPPORTED_FORMATS = {
-    "pdf", "docx", "xlsx", "csv", "pptx", "html", "txt",
-    "png", "jpg", "jpeg", "tiff", "bmp", "gif"
+    "docx", "dotx", "docm", "dotm",  # Word documents
+    "pptx",  # PowerPoint
+    "pdf",  # PDF
+    "md",  # Markdown
+    "html", "htm", "xhtml",  # HTML
+    "jpg", "jpeg", "png", "tiff", "bmp", "webp", "gif",  # Images
+    "csv",  # CSV
+    "xlsx", "xlsm",  # Excel
+    "txt",  # Text
+    "json",  # JSON
 }
 
 # ==================== LOGGING SETUP ====================

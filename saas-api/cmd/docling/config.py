@@ -32,4 +32,15 @@ BATCH_SIZE = 10
 
 # File Upload Configuration
 MAX_UPLOAD_SIZE = int(os.getenv("MAX_UPLOAD_SIZE", "100000000"))  # 100MB
-ALLOWED_EXTENSIONS = [".pdf", ".docx", ".md"]
+ALLOWED_EXTENSIONS = [
+    ".docx", ".dotx", ".docm", ".dotm",  # Word documents
+    ".pptx",  # PowerPoint
+    ".pdf",  # PDF
+    ".md",  # Markdown
+    ".html", ".htm", ".xhtml",  # HTML
+    ".jpg", ".jpeg", ".png", ".tiff", ".bmp", ".webp",  # Images
+    ".csv",  # CSV
+    ".xlsx", ".xlsm",  # Excel
+    ".txt",  # Text
+    ".json",  # JSON
+]
