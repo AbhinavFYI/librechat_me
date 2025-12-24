@@ -13,6 +13,7 @@ export const FIAIcon: React.FC<IconMapProps> = ({
   avatar,
   endpointType,
 }) => {
+  console.log('FIAIcon size:', size, 'context:', context);
   return (
     <img
       src="/assets/FIA.svg"
@@ -20,6 +21,7 @@ export const FIAIcon: React.FC<IconMapProps> = ({
       width={size}
       height={size}
       className={cn('object-contain', className)}
+      style={{ width: size, height: size }}
     />
   );
 };

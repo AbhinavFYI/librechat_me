@@ -25,7 +25,6 @@ import FileFormChat from './Files/FileFormChat';
 import { cn, removeFocusRings } from '~/utils';
 import TextareaHeader from './TextareaHeader';
 import PromptsCommand from './PromptsCommand';
-import AudioRecorder from './AudioRecorder';
 import CollapseChat from './CollapseChat';
 import StreamAudio from './StreamAudio';
 import StopButton from './StopButton';
@@ -336,15 +335,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                 }
               />
               <div className="mx-auto flex" />
-              {SpeechToText && (
-                <AudioRecorder
-                  methods={methods}
-                  ask={submitMessage}
-                  textAreaRef={textAreaRef}
-                  disabled={disableInputs || isNotAppendable}
-                  isSubmitting={isSubmitting}
-                />
-              )}
               <div>
                 {(isSubmitting || isSubmittingAdded) && (showStopButton || showStopAdded) ? (
                   <StopButton stop={handleStopGenerating} setShowStopButton={setShowStopButton} />

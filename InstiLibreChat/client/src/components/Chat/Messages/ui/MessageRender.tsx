@@ -156,16 +156,18 @@ const MessageRender = memo(
           <div className="absolute right-0 top-0 m-2 h-3 w-3 rounded-full bg-text-primary" />
         )}
 
-        <div className="relative flex flex-shrink-0 flex-col items-center">
-          <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full">
-            <MessageIcon 
-              iconData={iconData} 
-              assistant={assistant} 
-              agent={agent}
-              isSubmitting={effectiveIsSubmitting}
-            />
+        {!msg.isCreatedByUser && (
+          <div className="relative flex flex-shrink-0 flex-col items-center">
+            <div className="flex items-center justify-center overflow-hidden rounded-full" style={{ width: '32px', height: '32px' }}>
+              <MessageIcon 
+                iconData={iconData} 
+                assistant={assistant} 
+                agent={agent}
+                isSubmitting={effectiveIsSubmitting}
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         <div
           className={cn(
@@ -177,7 +179,9 @@ const MessageRender = memo(
             textAlign: msg.isCreatedByUser ? 'right' : 'left'
           }}
         >
-          <h2 className={cn('select-none font-semibold', fontSize)}>{messageLabel}</h2>
+          {!msg.isCreatedByUser && (
+            <h2 className={cn('select-none font-semibold', fontSize)}>{messageLabel}</h2>
+          )}
 
           <div className="flex flex-col gap-1" style={{ width: '100%' }}>
             <div className="flex max-w-full flex-grow flex-col gap-0">

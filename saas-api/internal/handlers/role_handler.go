@@ -123,7 +123,7 @@ func (h *RoleHandler) List(c *gin.Context) {
 	orgFilterParam := c.Query("org_id")
 
 	var orgIDPtr *uuid.UUID
-	
+
 	// If super admin and org_id query parameter is provided, use it for filtering
 	if isSuperAdmin != nil && isSuperAdmin.(bool) && orgFilterParam != "" {
 		if orgFilterParam != "all" {

@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import { Settings2 } from 'lucide-react';
 import { TooltipAnchor } from '@librechat/client';
 import { useLocalize } from '~/hooks';
 import { useChatContext } from '~/Providers';
@@ -47,8 +46,13 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
               isDisabled && 'opacity-50 cursor-not-allowed hover:bg-transparent',
             )}
           >
-            <div className="flex w-full items-center justify-center gap-2">
-              <Settings2 className="icon-md text-gray-700 dark:text-white" />
+            <div className="flex w-full items-center justify-center gap-2 ">
+              <img 
+                src="/assets/Customise.svg" 
+                alt="Select Documents" 
+                className="icon-md dark:invert"
+                style={{ width: '20px', height: '20px' }}
+              />
             </div>
           </button>
         }

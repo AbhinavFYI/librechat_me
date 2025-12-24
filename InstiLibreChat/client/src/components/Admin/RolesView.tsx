@@ -41,7 +41,13 @@ export default function RolesView({
       await saasApi.deleteRole(role.id);
       onRefresh(selectedOrgFilter || undefined);
     } catch (error: any) {
-      alert(error.message || 'Failed to delete role');
+      // If role not found, it might have been deleted already - just refresh
+      if (error.message?.includes('not found') || error.message?.includes('NOT_FOUND')) {
+        alert(`Role "${role.name}" was already deleted. Refreshing list...`);
+        onRefresh(selectedOrgFilter || undefined);
+      } else {
+        alert(error.message || 'Failed to delete role');
+      }
     }
   };
 

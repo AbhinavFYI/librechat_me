@@ -776,21 +776,23 @@ export default function ScreenerRoute() {
           <div className="flex border-b border-gray-200 dark:border-gray-700">
             <button
               onClick={() => setActiveTab('create')}
-              className={`px-4 py-2 font-medium text-lg ${
+              className={`px-0 py-3 font-normal text-[14px] leading-[20px] ${
                 activeTab === 'create'
-                  ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  ? 'border-b-2 border-[#2434E7] text-[#2A2A2A] dark:text-gray-100'
+                  : 'text-[#6D6D6D] dark:text-gray-400 hover:text-[#2A2A2A] dark:hover:text-gray-200'
               }`}
+              style={{ fontFamily: 'Inter, sans-serif' }}
             >
               Create
             </button>
             <button
               onClick={() => setActiveTab('saved')}
-              className={`px-4 py-2 font-medium text-lg ${
+              className={`px-0 py-3 font-normal text-[14px] leading-[20px] ml-6 ${
                 activeTab === 'saved'
-                  ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  ? 'border-b-2 border-[#2434E7] text-[#2A2A2A] dark:text-gray-100'
+                  : 'text-[#6D6D6D] dark:text-gray-400 hover:text-[#2A2A2A] dark:hover:text-gray-200'
               }`}
+              style={{ fontFamily: 'Inter, sans-serif' }}
             >
               Saved screeners ({savedScreeners.length})
             </button>

@@ -224,11 +224,12 @@ export default function TemplatesView() {
                 setSelectedItem(null);
                 setDropdownPosition(null);
               }}
-              className={`px-4 py-2 text-lg font-medium transition-colors ${
+              className={`px-0 py-3 text-[14px] leading-[20px] font-normal transition-colors ${
                 activeTab === 'personas'
-                  ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                  ? 'text-[#2A2A2A] dark:text-gray-100 border-b-2 border-[#2434E7]'
+                  : 'text-[#6D6D6D] dark:text-gray-400 hover:text-[#2A2A2A] dark:hover:text-gray-100'
               }`}
+              style={{ fontFamily: 'Inter, sans-serif' }}
             >
               Personas
             </button>
@@ -238,11 +239,12 @@ export default function TemplatesView() {
                 setSelectedItem(null);
                 setDropdownPosition(null);
               }}
-              className={`px-4 py-2 text-lg font-medium transition-colors ${
+              className={`px-0 py-3 text-[14px] leading-[20px] font-normal transition-colors ${
                 activeTab === 'templates'
-                  ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                  ? 'text-[#2A2A2A] dark:text-gray-100 border-b-2 border-[#2434E7]'
+                  : 'text-[#6D6D6D] dark:text-gray-400 hover:text-[#2A2A2A] dark:hover:text-gray-100'
               }`}
+              style={{ fontFamily: 'Inter, sans-serif' }}
             >
               Templates
             </button>
@@ -1429,18 +1431,20 @@ function CreatePersonaModal({
                 <span className="text-gray-700 dark:text-gray-300">Select from created templates</span>
               </label>
               {formData.useTemplate && (
-                <select
-                  value={formData.selectedTemplateId}
-                  onChange={(e) => setFormData({ ...formData, selectedTemplateId: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ml-6"
-                >
-                  <option value="">-- Select Template --</option>
-                  {templates.map((template) => (
-                    <option key={template.id} value={template.id}>
-                      {template.name} ({template.framework})
-                    </option>
-                  ))}
-                </select>
+                <div className="ml-6">
+                  <select
+                    value={formData.selectedTemplateId}
+                    onChange={(e) => setFormData({ ...formData, selectedTemplateId: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  >
+                    <option value="">-- Select Template --</option>
+                    {templates.map((template) => (
+                      <option key={template.id} value={template.id}>
+                        {template.name} ({template.framework})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               )}
 
               {/* Option 2: Write your own template */}
@@ -1458,15 +1462,17 @@ function CreatePersonaModal({
                 <span className="text-gray-700 dark:text-gray-300">Write your own template</span>
               </label>
               {!formData.useTemplate && (
-                <TextareaAutosize
-                  value={formData.customTemplate}
-                  onChange={(e) => setFormData({ ...formData, customTemplate: e.target.value })}
-                  minRows={6}
-                  maxRows={12}
-                  aria-label="Custom persona template"
-                  className="ml-6 w-full px-4 py-3 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
-                  placeholder="Enter your custom template here..."
-                />
+                <div className="ml-6">
+                  <TextareaAutosize
+                    value={formData.customTemplate}
+                    onChange={(e) => setFormData({ ...formData, customTemplate: e.target.value })}
+                    minRows={6}
+                    maxRows={12}
+                    aria-label="Custom persona template"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
+                    placeholder="Enter your custom template here..."
+                  />
+                </div>
               )}
             </div>
           </div>
@@ -1681,18 +1687,20 @@ function EditPersonaModal({
                 <span className="text-gray-700 dark:text-gray-300">Select from created templates</span>
               </label>
               {formData.useTemplate && (
-                <select
-                  value={formData.selectedTemplateId}
-                  onChange={(e) => setFormData({ ...formData, selectedTemplateId: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ml-6"
-                >
-                  <option value="">-- Select Template --</option>
-                  {templates.map((template) => (
-                    <option key={template.id} value={template.id}>
-                      {template.name} ({template.framework})
-                    </option>
-                  ))}
-                </select>
+                <div className="ml-6">
+                  <select
+                    value={formData.selectedTemplateId}
+                    onChange={(e) => setFormData({ ...formData, selectedTemplateId: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  >
+                    <option value="">-- Select Template --</option>
+                    {templates.map((template) => (
+                      <option key={template.id} value={template.id}>
+                        {template.name} ({template.framework})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               )}
 
               {/* Option 2: Write your own template */}
@@ -1710,15 +1718,17 @@ function EditPersonaModal({
                 <span className="text-gray-700 dark:text-gray-300">Write your own template</span>
               </label>
               {!formData.useTemplate && (
-                <TextareaAutosize
-                  value={formData.customTemplate}
-                  onChange={(e) => setFormData({ ...formData, customTemplate: e.target.value })}
-                  minRows={6}
-                  maxRows={12}
-                  aria-label="Custom persona template"
-                  className="ml-6 w-full px-4 py-3 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
-                  placeholder="Enter your custom template here..."
-                />
+                <div className="ml-6">
+                  <TextareaAutosize
+                    value={formData.customTemplate}
+                    onChange={(e) => setFormData({ ...formData, customTemplate: e.target.value })}
+                    minRows={6}
+                    maxRows={12}
+                    aria-label="Custom persona template"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
+                    placeholder="Enter your custom template here..."
+                  />
+                </div>
               )}
             </div>
           </div>

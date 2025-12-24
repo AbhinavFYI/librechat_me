@@ -293,24 +293,25 @@
   scrollbar-gutter: stable;
 }
 
-/* Styles for Chrome scrollbar */
+/* Hide all scrollbars globally */
 .chrome-scrollbar::-webkit-scrollbar {
-  width: 12px;  /* Increase the width of the scrollbar */
+  display: none;
+  width: 0;
 }
 
 .chrome-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.2);  /* Color of the scroll thumb */
-  border-radius: 6px;  /* Rounded corners on the scroll thumb */
-  border: 2px solid transparent;  /* Creates padding around scroll thumb */
-  background-clip: padding-box;  /* Prevents background color from leaking outside the border */
+  background-color: transparent;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 .chrome-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(0, 0, 0, 0.3);  /* Darker color when hovering */
+  background-color: transparent;
 }
 
 .chrome-scrollbar::-webkit-scrollbar-track {
-  background-color: transparent;  /* Color of the tracking area */
+  background-color: transparent;
 }
 
 /* Base wrapper for both preview and editor */
@@ -349,13 +350,17 @@
   animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
 }
 
+/* Hide scrollbars for preview panels */
 div[role="tabpanel"][data-state="active"][data-orientation="horizontal"][aria-labelledby^="radix-"][id^="radix-"][id$="-content-preview"] {
   scrollbar-gutter: stable !important;
   background-color: rgba(205, 205, 205, 0.66) !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
 
 div[role="tabpanel"][data-state="active"][data-orientation="horizontal"][aria-labelledby^="radix-"][id^="radix-"][id$="-content-preview"]::-webkit-scrollbar {
-  width: 12px !important;
+  display: none !important;
+  width: 0 !important;
 }
 
 div[role="tabpanel"][data-state="active"][data-orientation="horizontal"][aria-labelledby^="radix-"][id^="radix-"][id$="-content-preview"]::-webkit-scrollbar-thumb {

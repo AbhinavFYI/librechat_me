@@ -21,7 +21,7 @@ export default function CreateOrganizationModal({ onClose, onSuccess }: CreateOr
     state_province: '',
     postal_code: '',
     country: '',
-    subscription_plan: 'basic',
+    subscription_plan: 'free',
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -200,9 +200,11 @@ export default function CreateOrganizationModal({ onClose, onSuccess }: CreateOr
                 onChange={(e) => setFormData({ ...formData, subscription_plan: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
-                <option value="basic">Basic</option>
+                <option value="free">Free</option>
+                <option value="starter">Starter</option>
                 <option value="pro">Pro</option>
                 <option value="enterprise">Enterprise</option>
+                <option value="trial">Trial</option>
               </select>
             </div>
           </div>

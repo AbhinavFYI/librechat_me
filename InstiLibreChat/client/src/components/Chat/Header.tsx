@@ -1,14 +1,10 @@
-import { useMediaQuery } from '@librechat/client';
 import { useOutletContext } from 'react-router-dom';
 import type { ContextType } from '~/common';
 import { HeaderNewChat, OpenSidebar } from './Menus';
-import { TemporaryChat } from './TemporaryChat';
 import { AnimatePresence, motion } from 'framer-motion';
 
 export default function Header() {
   const { navVisible, setNavVisible } = useOutletContext<ContextType>();
-
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
 
   return (
     <div className="sticky top-0 z-10 flex h-14 w-full items-center justify-between bg-white p-2 font-semibold text-text-primary dark:!bg-[#111111]">
@@ -29,14 +25,6 @@ export default function Header() {
               </motion.div>
             )}
           </AnimatePresence>
-
-          <div className={navVisible ? 'flex items-center gap-2' : 'ml-2 flex items-center gap-2'}>
-            {isSmallScreen && (
-              <>
-                <TemporaryChat />
-              </>
-            )}
-          </div>
         </div>
 
         {/* Center: FIA Logo and Text */}
@@ -55,12 +43,6 @@ export default function Header() {
             FIA - FYERS Intelligent Assistant
           </div>
         </div>
-
-        {!isSmallScreen && (
-          <div className="flex items-center gap-2">
-            <TemporaryChat />
-          </div>
-        )}
       </div>
     </div>
   );

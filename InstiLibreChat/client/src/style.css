@@ -1902,18 +1902,31 @@ input[type='reset'] {
   width: 0.5rem;
 }
 
+/* Hide all scrollbars globally */
+::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: transparent;
   border-radius: 9999px;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background-color: hsla(0, 0%, 100%, 0.1);
+  background-color: transparent;
 }
 
 ::-webkit-scrollbar-track {
   background-color: transparent;
   border-radius: 9999px;
+}
+
+/* Hide scrollbars for Firefox and other browsers */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
 .scrollbar-transparent::-webkit-scrollbar-thumb {
@@ -4155,25 +4168,26 @@ h4.fyers, .h4-fyers {
 }
 
 /* ============================================
-   SCROLLBAR STYLES (FYERS)
+   SCROLLBAR STYLES (FYERS) - HIDDEN GLOBALLY
    ============================================ */
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border-default-fyers);
+  background: transparent;
   border-radius: 0;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--border-dark-fyers);
+  background: transparent;
 }
 
 /* ============================================

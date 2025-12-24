@@ -71,7 +71,7 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
 
   const assistantsIcon = {
     icon: iconURL ? (
-      <div className="relative flex h-6 w-6 items-center justify-center">
+      <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
         <div
           title={assistantName}
           style={{
@@ -89,8 +89,8 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
         </div>
       </div>
     ) : (
-      <div className="h-6 w-6">
-        <div className="shadow-stroke flex h-6 w-6 items-center justify-center overflow-hidden rounded-full">
+      <div style={{ width: size, height: size }}>
+        <div className="shadow-stroke flex items-center justify-center overflow-hidden rounded-full" style={{ width: size, height: size }}>
           <AssistantIcon className="h-2/3 w-2/3 text-gray-400" />
         </div>
       </div>
@@ -100,7 +100,7 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
 
   const agentsIcon = {
     icon: iconURL ? (
-      <div className="relative flex h-6 w-6 items-center justify-center">
+      <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
         <div
           title={agentName}
           style={{
@@ -118,8 +118,8 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
         </div>
       </div>
     ) : (
-      <div className="h-6 w-6">
-        <div className="shadow-stroke flex h-6 w-6 items-center justify-center overflow-hidden rounded-full">
+      <div style={{ width: size, height: size }}>
+        <div className="shadow-stroke flex items-center justify-center overflow-hidden rounded-full" style={{ width: size, height: size }}>
           <Feather className="h-2/3 w-2/3 text-gray-400" />
         </div>
       </div>
@@ -134,13 +134,13 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
     [EModelEndpoint.agents]: agentsIcon,
     [EModelEndpoint.azureAssistants]: assistantsIcon,
     [EModelEndpoint.azureOpenAI]: {
-      icon: <FIAIcon size={size * 0.5555555555555556} />,
-      bg: 'linear-gradient(0.375turn, #61bde2, #4389d0)',
+      icon: <FIAIcon size={size} />,
+      bg: 'transparent',
       name: 'ChatGPT',
     },
     [EModelEndpoint.openAI]: {
-      icon: <FIAIcon size={size * 0.5555555555555556} />,
-      bg: getOpenAIColor(model),
+      icon: <FIAIcon size={size} />,
+      bg: 'transparent',
       name: 'ChatGPT',
     },
     [EModelEndpoint.gptPlugins]: {
@@ -153,8 +153,8 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
       name: getGoogleModelName(model),
     },
     [EModelEndpoint.anthropic]: {
-      icon: <FIAIcon size={size * 0.5555555555555556} />,
-      bg: '#d09a74',
+      icon: <FIAIcon size={size} />,
+      bg: 'transparent',
       name: 'Claude',
     },
     [EModelEndpoint.bedrock]: {
@@ -166,11 +166,11 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
       icon: <CustomMinimalIcon size={size * 0.7} />,
       name: 'Custom',
     },
-    null: { icon: <FIAIcon size={size * 0.7} />, bg: 'grey', name: 'N/A' },
+    null: { icon: <FIAIcon size={size} />, bg: 'transparent', name: 'N/A' },
     default: {
       icon: (
-        <div className="h-6 w-6">
-          <div className="overflow-hidden rounded-full">
+        <div style={{ width: size, height: size }}>
+          <div className="overflow-hidden rounded-full" style={{ width: size, height: size }}>
             <UnknownIcon
               iconURL={iconURL}
               endpoint={endpoint ?? ''}
@@ -206,7 +206,7 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
         height: size,
       }}
       className={cn(
-        'relative flex h-9 w-9 items-center justify-center rounded-sm p-1 text-white',
+        'relative flex items-center justify-center rounded-sm text-white',
         props.className ?? '',
       )}
     >

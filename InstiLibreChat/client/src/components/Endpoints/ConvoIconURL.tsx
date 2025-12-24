@@ -16,12 +16,13 @@ interface ConvoIconURLProps {
 
 const classMap = {
   'menu-item': 'relative flex h-full items-center justify-center overflow-hidden rounded-full',
-  message: 'icon-md',
+  message: 'relative flex h-full items-center justify-center overflow-hidden rounded-full',
   default: 'icon-xl relative flex h-full overflow-hidden rounded-full',
 };
 
 const styleMap = {
   'menu-item': { width: '20px', height: '20px' },
+  message: { width: '100%', height: '100%' },
   default: { width: '100%', height: '100%' },
 };
 
@@ -57,10 +58,10 @@ const ConvoIconURL: React.FC<ConvoIconURLProps> = ({
   }
 
   return (
-    <div className="shadow-stroke relative flex h-full items-center justify-center rounded-full bg-white text-black">
+    <div className="shadow-stroke relative flex h-full w-full items-center justify-center rounded-full bg-white text-black">
       {Icon && (
         <Icon
-          size={41}
+          size={context === 'message' ? 40 : 41}
           context={context}
           className="h-2/3 w-2/3"
           agentName={agentName}

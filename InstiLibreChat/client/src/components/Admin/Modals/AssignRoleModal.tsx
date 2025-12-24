@@ -91,8 +91,10 @@ export default function AssignRoleModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedRoleId) {
-      setError('Please select a role');
+    
+    // Validate role selection
+    if (!selectedRoleId || selectedRoleId.trim() === '') {
+      setError('Please select a valid role');
       return;
     }
 
@@ -100,13 +102,9 @@ export default function AssignRoleModal({
     setError(null);
 
     try {
-      // Ensure role_id is a valid UUID string
-      if (!selectedRoleId || selectedRoleId.trim() === '') {
-        throw new Error('Please select a valid role');
-      }
-
       await saasApi.assignRoleToUser(user.id, selectedRoleId);
       onSuccess();
+      onClose();
     } catch (err: any) {
       setError(err.message || 'Failed to assign role. Please try again.');
     } finally {
@@ -160,7 +158,7 @@ export default function AssignRoleModal({
             )}
           </div>
 
-          <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-6">
+          <div className="flex gap-3 pt-4 border-t border-gray-400 dark:border-gray-700 mt-6">
             <Button type="button" onClick={onClose} variant="outline" className="flex-1">
               Cancel
             </Button>

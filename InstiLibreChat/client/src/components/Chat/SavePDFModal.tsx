@@ -825,12 +825,13 @@ export default function SavePDFModal({ conversationId, pdfContent, onClose }: Sa
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" onClick={onClose} variant="outline" disabled={saving}>
+            <Button type="button" onClick={onClose} variant="outline" disabled={saving} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium border border-gray-300 dark:border-gray-400 rounded-lg">
               Cancel
             </Button>
             <Button 
               onClick={handleSave} 
               disabled={saving || loading || (isSuperAdmin && !selectedOrgId) || !pdfName.trim()}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
             >
               {saving ? (
                 <>

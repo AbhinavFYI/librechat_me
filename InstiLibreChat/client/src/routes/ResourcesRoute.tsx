@@ -466,184 +466,189 @@ export default function ResourcesRoute() {
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header - Responsive */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 sm:px-4 md:px-6 py-3 sm:py-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
-            {isSuperAdmin && organizations.length > 0 && (
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <label className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  Org:
-                </label>
-                <select
-                  value={selectedOrgId}
-                  onChange={(e) => {
-                    const newOrgId = e.target.value;
-                    setSelectedOrgId(newOrgId);
-                    if (newOrgId) {
-                      loadFolders(newOrgId);
-                      navigateToFolder(null, 'Home');
-                    }
-                  }}
-                  className="px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 flex-1 sm:flex-none sm:min-w-[200px] md:min-w-[300px] lg:max-w-[500px]"
-                >
-                  {organizations.map((org) => (
-                    <option key={org.id} value={org.id}>
-                      {org.name} {org.legal_name ? `(${org.legal_name})` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-          {canManage && (
-            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-              <button
-                onClick={() => {
-                  setShowCreateFolderModal(true);
+        <div className="flex flex-col gap-3">
+          {/* First Row: Org selector (if super admin) */}
+          {isSuperAdmin && organizations.length > 0 && (
+            <div className="flex items-center gap-2">
+              <label className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                Org:
+              </label>
+              <select
+                value={selectedOrgId}
+                onChange={(e) => {
+                  const newOrgId = e.target.value;
+                  setSelectedOrgId(newOrgId);
+                  if (newOrgId) {
+                    loadFolders(newOrgId);
+                    navigateToFolder(null, 'Home');
+                  }
                 }}
-                className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-medium transition-colors flex-1 sm:flex-none"
+                className="px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 flex-1 sm:flex-none sm:min-w-[200px] md:min-w-[300px] lg:max-w-[500px]"
               >
-                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">New folder</span>
-                <span className="sm:hidden">Folder</span>
-              </button>
-              <button
-                onClick={() => {
-                  setShowUploadFileModal(true);
-                }}
-                className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs sm:text-sm font-medium transition-colors flex-1 sm:flex-none"
-              >
-                <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Upload document</span>
-                <span className="sm:hidden">Upload</span>
-              </button>
-              {showSearch ? (
-                <div className="relative">
-                  <input
-                    id="resources-search"
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search files and folders..."
-                    className="pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-64"
-                    autoFocus
-                    onKeyDown={(e) => {
-                      if (e.key === 'Escape') {
-                        setShowSearch(false);
-                        setSearchQuery('');
-                      }
-                    }}
-                  />
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <button
-                    onClick={() => {
-                      setShowSearch(false);
-                      setSearchQuery('');
-                    }}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                    title="Close search"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => {
-                    setShowSearch(true);
-                  }}
-                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                  title="Search files and folders"
-                >
-                  <Search className="h-5 w-5" />
-                </button>
-              )}
+                {organizations.map((org) => (
+                  <option key={org.id} value={org.id}>
+                    {org.name} {org.legal_name ? `(${org.legal_name})` : ''}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Tabs and Breadcrumbs - Responsive */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="px-3 sm:px-4 md:px-6 py-2 sm:py-3">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+          
+          {/* Second Row: Tabs + Actions */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             {/* Tabs */}
-            <div className="flex items-center gap-4 sm:gap-6 border-b border-gray-200 dark:border-gray-700 -mb-2 sm:-mb-3 w-full sm:w-auto">
+            <div className="flex items-center gap-4 sm:gap-6">
               <button
                 onClick={() => {
                   setActiveTab('documents');
                   navigateToFolder(null, 'Home');
-                  setShowSearch(false); // Hide search when switching tabs
+                  setShowSearch(false);
                 }}
-                className={`px-1 pb-2 sm:pb-3 text-xs sm:text-sm font-medium transition-colors ${
+                className={`px-0 py-3 text-[14px] leading-[20px] font-normal transition-colors border-b-2 ${
                   activeTab === 'documents'
-                    ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                    ? 'text-[#2A2A2A] dark:text-gray-100 border-[#2434E7]'
+                    : 'text-[#6D6D6D] dark:text-gray-400 hover:text-[#2A2A2A] dark:hover:text-gray-200 border-transparent'
                 }`}
+                style={{ fontFamily: 'Inter, sans-serif' }}
               >
                 Documents
               </button>
               <button
                 onClick={() => {
                   setActiveTab('reports');
-                  setSearchQuery(''); // Clear search when switching tabs
-                  setShowSearch(false); // Hide search when switching tabs
+                  setSearchQuery('');
+                  setShowSearch(false);
                 }}
-                className={`px-1 pb-3 text-sm font-medium transition-colors ${
+                className={`px-0 py-3 text-[14px] leading-[20px] font-normal transition-colors border-b-2 ${
                   activeTab === 'reports'
-                    ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                    ? 'text-[#2A2A2A] dark:text-gray-100 border-[#2434E7]'
+                    : 'text-[#6D6D6D] dark:text-gray-400 hover:text-[#2A2A2A] dark:hover:text-gray-200 border-transparent'
                 }`}
+                style={{ fontFamily: 'Inter, sans-serif' }}
               >
                 Reports
               </button>
             </div>
             
-            {/* View Toggle and Breadcrumbs */}
-            <div className="flex items-center gap-4">
-              {/* View Toggle */}
-              <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+            {/* Action Buttons */}
+            {canManage && (
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                 <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-1.5 rounded transition-colors ${
-                    viewMode === 'list'
-                      ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                  }`}
-                  title="List View"
+                  onClick={() => {
+                    setShowCreateFolderModal(true);
+                  }}
+                  className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-medium transition-colors flex-1 sm:flex-none"
                 >
-                  <List className="h-4 w-4" />
+                  <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">New folder</span>
+                  <span className="sm:hidden">Folder</span>
                 </button>
                 <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-1.5 rounded transition-colors ${
-                    viewMode === 'grid'
-                      ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                  }`}
-                  title="Grid View"
+                  onClick={() => {
+                    setShowUploadFileModal(true);
+                  }}
+                  className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs sm:text-sm font-medium transition-colors flex-1 sm:flex-none"
                 >
-                  <Grid3x3 className="h-4 w-4" />
+                  <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Upload document</span>
+                  <span className="sm:hidden">Upload</span>
                 </button>
+                {showSearch ? (
+                  <div className="relative">
+                    <input
+                      id="resources-search"
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search files and folders..."
+                      className="pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-64"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setShowSearch(false);
+                          setSearchQuery('');
+                        }
+                      }}
+                    />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <button
+                      onClick={() => {
+                        setShowSearch(false);
+                        setSearchQuery('');
+                      }}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                      title="Close search"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setShowSearch(true);
+                    }}
+                    className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    title="Search files and folders"
+                  >
+                    <Search className="h-5 w-5" />
+                  </button>
+                )}
               </div>
-              
-              {/* Breadcrumbs - only show for Documents tab */}
-              {activeTab === 'documents' && (
-                <div className="flex items-center gap-2 text-sm">
-                  {breadcrumbs.map((crumb, index) => (
-                    <div key={crumb.id || 'home'} className="flex items-center gap-2">
-                      {index > 0 && <ChevronRight className="h-4 w-4 text-gray-400" />}
-                      <button
-                        onClick={() => navigateToFolder(crumb.id, crumb.name)}
-                        className={`px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 ${
-                          index === breadcrumbs.length - 1 ? 'font-semibold' : ''
-                        }`}
-                      >
-                        {index === 0 ? <Home className="h-4 w-4 inline mr-1" /> : null}
-                        {crumb.name}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Breadcrumbs and View Toggle - Responsive */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="px-3 sm:px-4 md:px-6 py-2 sm:py-3">
+          <div className="flex flex-row items-center justify-between gap-4">
+            {/* Breadcrumbs - only show for Documents tab */}
+            {activeTab === 'documents' ? (
+              <div className="flex items-center gap-2 text-sm flex-1">
+                {breadcrumbs.map((crumb, index) => (
+                  <div key={crumb.id || 'home'} className="flex items-center gap-2">
+                    {index > 0 && <ChevronRight className="h-4 w-4 text-gray-400" />}
+                    <button
+                      onClick={() => navigateToFolder(crumb.id, crumb.name)}
+                      className={`px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 ${
+                        index === breadcrumbs.length - 1 ? 'font-semibold' : ''
+                      }`}
+                    >
+                      {index === 0 ? <Home className="h-4 w-4 inline mr-1" /> : null}
+                      {crumb.name}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex-1"></div>
+            )}
+            
+            {/* View Toggle */}
+            <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-1.5 rounded transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                }`}
+                title="List View"
+              >
+                <List className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-1.5 rounded transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                }`}
+                title="Grid View"
+              >
+                <Grid3x3 className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>

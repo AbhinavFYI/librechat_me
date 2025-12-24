@@ -204,7 +204,7 @@ export default function TopNavBar() {
         }
         break;
       }
-      case 'Templates':
+      case 'Customise':
         navigate(`${baseHref}templates`);
         break;
       case 'Screeners':
@@ -298,10 +298,10 @@ export default function TopNavBar() {
     });
   }, [userInfo]);
 
-  // Show only 4 tabs for verified users: Stock research, Screeners, Resources, Templates
+  // Show only 4 tabs for verified users: Stock research, Screeners, Resources, Customise
   // Admin is only shown for super admins or users with org_role === 'admin'
   // CRITICAL: Default to hiding Admin tab - only show if explicitly allowed
-  const allMenus = ['Admin', 'Stock research', 'Screeners', 'Resources', 'Templates'];
+  const allMenus = ['Admin', 'Stock research', 'Screeners', 'Resources', 'Customise'];
   const menus = allMenus.filter((menu) => {
     // STRICT CHECK: Only show Admin if canAccessAdmin is explicitly true
     // This ensures Admin is hidden by default for ALL users (including when userInfo hasn't loaded)
@@ -313,7 +313,7 @@ export default function TopNavBar() {
       // Hide Admin tab for all other cases
       return false;
     }
-    // Always show Templates, Stock research, Screeners, and Resources
+    // Always show Customise, Stock research, Screeners, and Resources
     return true;
   });
 

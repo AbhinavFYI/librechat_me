@@ -132,7 +132,8 @@ export default function OrganizationsView({
                         Edit
                       </button>
                     )}
-                    {permissionManager && permissionManager.canDelete('organizations') && (
+                    {/* Only superadmin can delete organizations */}
+                    {isSuperAdmin && permissionManager && permissionManager.canDelete('organizations') && (
                       <button
                         onClick={() => handleDeleteOrg(org)}
                         className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"

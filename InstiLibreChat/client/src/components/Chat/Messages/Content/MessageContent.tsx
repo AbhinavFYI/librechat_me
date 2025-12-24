@@ -11,6 +11,7 @@ import Thinking from './Parts/Thinking';
 import { useLocalize } from '~/hooks';
 import Container from './Container';
 import Markdown from './Markdown';
+import Files from './Files';
 import { cn } from '~/utils';
 import store from '~/store';
 
@@ -189,32 +190,6 @@ const DisplayMessage = ({ text, isCreatedByUser, message, showCursor }: TDisplay
               <>{userQuery}</>
             )
           )}
-          {(documentNames || personaName || templateName) && (
-            <div 
-              className="mt-2 flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400"
-              style={{
-                justifyContent: isCreatedByUser ? 'flex-end' : 'flex-start'
-              }}
-            >
-              {documentNames && (
-                <span className="flex items-center gap-1">
-                  <span>📄</span>
-                  <span>{documentNames}</span>
-                </span>
-              )}
-              {personaName && (
-                <span className="flex items-center gap-1">
-                  <span>{personaName}</span>
-                </span>
-              )}
-              {templateName && (
-                <span className="flex items-center gap-1">
-
-                  <span>{templateName}</span>
-                </span>
-              )}
-            </div>
-          )}
         </>
       );
     }
@@ -246,11 +221,6 @@ const DisplayMessage = ({ text, isCreatedByUser, message, showCursor }: TDisplay
               <>{userQuery}</>
             )
           )}
-          {documentNames && (
-            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-              {documentNames}
-            </div>
-          )}
         </>
       );
     }
@@ -273,11 +243,6 @@ const DisplayMessage = ({ text, isCreatedByUser, message, showCursor }: TDisplay
               <>{userQuery}</>
             )
           )}
-          {documents && (
-            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-              {documents}
-            </div>
-          )}
         </>
       );
     }
@@ -291,20 +256,131 @@ const DisplayMessage = ({ text, isCreatedByUser, message, showCursor }: TDisplay
     return <>{text}</>;
   }, [isCreatedByUser, enableUserMsgMarkdown, text, isLatestMessage]);
 
+  // Extract metadata for user messages
+  const metadata = useMemo(() => {
+    if (!isCreatedByUser) return null;
+    
+    let documentNames = '';
+    let personaName = '';
+    let templateName = '';
+    
+    // Parse new structured JSON format
+    if (text.trim().startsWith('{') && (text.includes('"documents"') || text.includes('"query"'))) {
+      try {
+        const requestObject = JSON.parse(text);
+        
+        if (requestObject.documents && Array.isArray(requestObject.documents) && requestObject.documents.length > 0) {
+          documentNames = requestObject.documents.map((doc: any) => doc.name).join(', ');
+        }
+        
+        if (requestObject.template && requestObject.template.description) {
+          templateName = requestObject.template.description.substring(0, 50);
+          if (requestObject.template.description.length > 50) templateName += '...';
+        }
+        
+        if (requestObject.persona && requestObject.persona.description) {
+          personaName = requestObject.persona.description.substring(0, 50);
+          if (requestObject.persona.description.length > 50) personaName += '...';
+        }
+      } catch (e) {
+        // Continue to fallback parsing
+      }
+    }
+    
+    // Parse request block format
+    if (!documentNames && !personaName && !templateName && text.includes('request: {')) {
+      const documentsMatch = text.match(/Documents:\s*\[\s*\{\s*name:"([^"]*)"[^}]*\}/s);
+      if (documentsMatch) {
+        documentNames = documentsMatch[1];
+      }
+      
+      const personaMatch = text.match(/persona:\s*"((?:[^"\\]|\\.)*)"/s);
+      if (personaMatch && personaMatch[1].trim()) {
+        const personaContent = personaMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+        personaName = personaContent.split('\n')[0].trim() || 'Persona';
+      }
+      
+      const templateMatch = text.match(/template:\s*"((?:[^"\\]|\\.)*)"/s);
+      if (templateMatch && templateMatch[1].trim()) {
+        const templateContent = templateMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+        templateName = templateContent.split('\n')[0].trim() || 'Template';
+      }
+    }
+    
+    // Parse Document{} format
+    if (!documentNames && text.includes('Document{')) {
+      const documentBlockMatch = text.match(/Document\{[^}]*\}/s);
+      if (documentBlockMatch) {
+        const nameMatch = documentBlockMatch[0].match(/name:"([^"]*)"/);
+        if (nameMatch) {
+          documentNames = nameMatch[1];
+        }
+      }
+    }
+    
+    // Parse <documents> format
+    if (!documentNames && text.includes('<documents>')) {
+      const documentsMatch = text.match(/<documents>(.*?)<\/documents>/s);
+      if (documentsMatch) {
+        documentNames = documentsMatch[1].trim();
+      }
+    }
+    
+    if (!documentNames && !personaName && !templateName) return null;
+    
+    return (
+      <div 
+        className="mt-2 flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400"
+        style={{
+          justifyContent: isCreatedByUser ? 'flex-end' : 'flex-start'
+        }}
+      >
+        {documentNames && (
+          <span className="flex items-center gap-1">
+            <span>📄</span>
+            <span>{documentNames}</span>
+          </span>
+        )}
+        {personaName && (
+          <span className="flex items-center gap-1">
+            <span>👤</span>
+            <span>{personaName}</span>
+          </span>
+        )}
+        {templateName && (
+          <span className="flex items-center gap-1">
+            <span>📝</span>
+            <span>{templateName}</span>
+          </span>
+        )}
+      </div>
+    );
+  }, [isCreatedByUser, text]);
+
   return (
-    <Container message={message}>
+    <div
+      className="text-message flex min-h-[20px] flex-col gap-3 overflow-visible [.text-message+&]:mt-5"
+      style={{
+        alignItems: isCreatedByUser ? 'flex-end' : 'flex-start'
+      }}
+      dir="auto"
+    >
       <div
         className={cn(
-          'markdown prose message-content dark:prose-invert light w-full break-words',
+          'markdown prose message-content dark:prose-invert light break-words',
           isSubmitting && 'submitting',
           showCursorState && text.length > 0 && 'result-streaming',
           isCreatedByUser && !enableUserMsgMarkdown && 'whitespace-pre-wrap',
           isCreatedByUser ? 'dark:text-gray-20' : 'dark:text-gray-100',
+          isCreatedByUser && 'rounded-2xl px-4 py-3 bg-[#F7F7F7] dark:bg-[#222222] inline-block',
         )}
+        style={{ width: isCreatedByUser ? 'fit-content' : '100%', maxWidth: '100%' }}
       >
         {content}
       </div>
-    </Container>
+      {metadata}
+      {isCreatedByUser && <Files message={message} />}
+    </div>
   );
 };
 

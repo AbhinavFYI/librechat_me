@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import { Upload } from 'lucide-react';
 import { TooltipAnchor, Dialog, DialogContent, DialogHeader, DialogTitle } from '@librechat/client';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
@@ -43,7 +42,12 @@ const UploadButton = ({ disabled }: UploadButtonProps) => {
             )}
           >
             <div className="flex w-full items-center justify-center gap-2">
-              <Upload className="icon-md text-gray-700 dark:text-white" />
+              <img 
+                src="/assets/Import.svg" 
+                alt="Upload Document" 
+                className="icon-md dark:invert"
+                style={{ width: '20px', height: '20px' }}
+              />
             </div>
           </button>
         }

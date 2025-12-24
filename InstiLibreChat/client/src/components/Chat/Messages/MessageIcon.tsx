@@ -56,7 +56,8 @@ const MessageIcon = memo(
           <img 
             src="/assets/loader.gif" 
             alt="Loading..." 
-            className="h-6 w-6 object-contain"
+            className="object-contain"
+            style={{ width: '32px', height: '32px' }}
             onError={(e) => console.error('Failed to load GIF:', e)}
             onLoad={() => console.log('GIF loaded successfully')}
           />
@@ -79,6 +80,7 @@ const MessageIcon = memo(
       );
     }
 
+    console.log('MessageIcon rendering Icon with size:', 32, 'endpoint:', endpoint, 'isCreatedByUser:', iconData?.isCreatedByUser);
     return (
       <Icon
         isCreatedByUser={iconData?.isCreatedByUser ?? false}
@@ -87,7 +89,7 @@ const MessageIcon = memo(
         model={iconData?.model}
         assistantName={assistantName}
         agentName={agentName}
-        size={28.8}
+        size={32}
       />
     );
   },

@@ -26,7 +26,7 @@ export default function EditOrganizationModal({
     state_province: organization.state_province || '',
     postal_code: organization.postal_code || '',
     country: organization.country || '',
-    subscription_plan: organization.subscription_plan || 'basic',
+    subscription_plan: organization.subscription_plan || 'free',
     status: organization.status || 'active',
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -335,9 +335,11 @@ export default function EditOrganizationModal({
               onChange={(e) => setFormData({ ...formData, subscription_plan: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
-              <option value="basic">Basic</option>
+              <option value="free">Free</option>
+              <option value="starter">Starter</option>
               <option value="pro">Pro</option>
               <option value="enterprise">Enterprise</option>
+              <option value="trial">Trial</option>
             </select>
           </div>
 

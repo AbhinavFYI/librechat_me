@@ -158,11 +158,12 @@ export default function AdminDashboard({ userInfo }: AdminDashboardProps) {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`py-4 px-1 border-b-2 font-medium transition ${
+              className={`px-0 py-3 border-b-2 font-normal text-[14px] leading-[20px] transition ${
                 activeTab === tab
-                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                  ? 'border-[#2434E7] text-[#2A2A2A] dark:text-gray-100'
+                  : 'border-transparent text-[#6D6D6D] hover:text-[#2A2A2A] dark:text-gray-400 dark:hover:text-gray-200'
               }`}
+              style={{ fontFamily: 'Inter, sans-serif' }}
             >
               {tab}
             </button>

@@ -111,33 +111,6 @@ const TextPart = memo(({ text, isCreatedByUser, showCursor }: TextPartProps) => 
               <>{userQuery}</>
             )
           )}
-          {(documentNames || personaName || templateName) && (
-            <div 
-              className="mt-2 flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400"
-              style={{
-                justifyContent: isCreatedByUser ? 'flex-end' : 'flex-start'
-              }}
-            >
-              {documentNames && (
-                <span className="flex items-center gap-1">
-                  <span>📄</span>
-                  <span>{documentNames}</span>
-                </span>
-              )}
-              {personaName && (
-                <span className="flex items-center gap-1">
-
-                  <span>{personaName}</span>
-                </span>
-              )}
-              {templateName && (
-                <span className="flex items-center gap-1">
-
-                  <span>{templateName}</span>
-                </span>
-              )}
-            </div>
-          )}
         </>
       );
     }
