@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@librechat/client';
 import { Button } from '@librechat/client';
-import { saasApi } from '~/services/saasApi';
+import { saasApi } from '~/services/saasApi'; // API service - connects to insti-inquora backend
 import { Loader2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -59,6 +59,7 @@ export default function SavePDFModal({ conversationId, pdfContent, onClose }: Sa
 
   const loadUserInfo = async () => {
     try {
+      // API call: GET /api/v1/auth/me (insti-inquora)
       const user: any = await saasApi.getMe();
       setUserInfo(user);
     } catch (err) {
@@ -69,6 +70,7 @@ export default function SavePDFModal({ conversationId, pdfContent, onClose }: Sa
 
   const loadOrganizations = async () => {
     try {
+      // API call: GET /api/v1/organizations (insti-inquora)
       const data = await saasApi.getOrganizations(true, undefined);
       const orgs = Array.isArray(data) ? data : (data as any).data || [];
       setOrganizations(orgs);
@@ -90,6 +92,7 @@ export default function SavePDFModal({ conversationId, pdfContent, onClose }: Sa
     try {
       setLoading(true);
       setError(null);
+      // API call: GET /api/v1/folders/tree?org_id={orgId} (insti-inquora)
       const data = await saasApi.getFolderTree(orgId);
       setFolders(Array.isArray(data) ? data : []);
     } catch (err: any) {
@@ -141,18 +144,28 @@ export default function SavePDFModal({ conversationId, pdfContent, onClose }: Sa
       }
 
       // If not found, create Reports folder
-      const newFolder = await saasApi.createFolder({
+      // API call: POST /api/v1/folders (insti-inquora)
+      const newFolderResponse: any = await saasApi.createFolder({
         name: 'Reports',
         parent_id: undefined, // Root level
         org_id: orgId,
       });
 
-      // Reload folders to get the new folder ID
-      await loadFolders(orgId);
+      // Extract folder ID from response (handle multiple formats)
+      const newFolderId = newFolderResponse?.id || newFolderResponse?.data?.id || newFolderResponse?.folder?.id;
       
-      // Find the newly created folder
-      const updatedFolders = await saasApi.getFolderTree(orgId);
-      const updatedFlat = flattenFolders(Array.isArray(updatedFolders) ? updatedFolders : []);
+      if (newFolderId) {
+        // Reload folders to refresh the tree
+        await loadFolders(orgId);
+        return newFolderId;
+      }
+
+      // Fallback: Try to find the newly created folder
+      const updatedFoldersResponse: any = await saasApi.getFolderTree(orgId);
+      const updatedFolders = Array.isArray(updatedFoldersResponse) 
+        ? updatedFoldersResponse 
+        : (updatedFoldersResponse?.data || []);
+      const updatedFlat = flattenFolders(updatedFolders);
       const newReportsFolder = updatedFlat.find(f => f.name.toLowerCase() === 'reports');
       
       return newReportsFolder?.id || null;
@@ -689,27 +702,38 @@ export default function SavePDFModal({ conversationId, pdfContent, onClose }: Sa
         folderId: reportsFolderId,
       });
 
+      // API call: POST /api/v1/documents/upload (insti-inquora)
+      // This will save to Reports folder (skips AI processing)
       const uploadResponse: any = await saasApi.uploadFile(pdfFile, reportsFolderId, orgId);
       
       console.log('Upload response:', uploadResponse);
 
-      if (!uploadResponse || !uploadResponse.file) {
+      // Handle both response formats: { file: {...} } or { data: { file: {...} } } or direct file object
+      let fileData = uploadResponse?.file || uploadResponse?.data?.file || uploadResponse?.data || uploadResponse;
+      
+      if (!fileData || (!fileData.id && !fileData.document_id)) {
         throw new Error('Upload failed: No file returned from server');
       }
 
+      // Normalize file ID (could be 'id' or 'document_id')
+      const uploadedFileId = fileData.id || fileData.document_id;
+      const uploadedFileName = fileData.name || fileData.filename || pdfFile.name;
+      const uploadedFileSize = fileData.size_bytes || fileData.size;
+      const uploadedStorageKey = fileData.storage_key || fileData.file_path;
+
       console.log('PDF uploaded successfully:', {
-        fileId: uploadResponse.file.id,
-        fileName: uploadResponse.file.name,
-        fileSize: uploadResponse.file.size_bytes,
-        storageKey: uploadResponse.file.storage_key,
+        fileId: uploadedFileId,
+        fileName: uploadedFileName,
+        fileSize: uploadedFileSize,
+        storageKey: uploadedStorageKey,
       });
 
       // Store the file ID in localStorage for quick access
       try {
         const fileAccessKey = `chat-pdf-file-${conversationId}`;
         localStorage.setItem(fileAccessKey, JSON.stringify({
-          fileId: uploadResponse.file.id,
-          fileName: uploadResponse.file.name,
+          fileId: uploadedFileId,
+          fileName: uploadedFileName,
           uploadedAt: new Date().toISOString(),
         }));
       } catch (storageError) {
@@ -719,12 +743,12 @@ export default function SavePDFModal({ conversationId, pdfContent, onClose }: Sa
       // Ask user if they want to download the PDF
       // Automatically download the PDF without showing popup
         try {
-          // Download the PDF file directly
-          const blob = await saasApi.downloadFile(uploadResponse.file.id);
+          // API call: GET /api/v1/documents/{id}/download (insti-inquora)
+          const blob = await saasApi.downloadFile(uploadedFileId);
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
-          link.download = uploadResponse.file.name || 'chat-report.pdf';
+          link.download = uploadedFileName || 'chat-report.pdf';
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);

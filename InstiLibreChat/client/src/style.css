@@ -443,7 +443,7 @@ nav .rounded-full {
   --spacing-3xl: 48px;
   
   /* Font Family */
-  --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   
@@ -551,7 +551,7 @@ html {
 }
 .dark {
   --brand-purple: #ab68ff;
-  --presentation: var(--gray-800);
+  --presentation: #111111;
   --text-primary: var(--gray-100);
   --text-secondary: var(--gray-300);
   --text-secondary-alt: var(--gray-400);
@@ -564,14 +564,14 @@ html {
   --surface-active-alt: var(--gray-700);
   --surface-hover: var(--gray-600);
   --surface-hover-alt: var(--gray-600);
-  --surface-primary: var(--gray-900);
-  --surface-primary-alt: var(--gray-850);
-  --surface-primary-contrast: var(--gray-850);
-  --surface-secondary: var(--gray-800);
-  --surface-secondary-alt: var(--gray-800);
+  --surface-primary: #111111;
+  --surface-primary-alt: #111111;
+  --surface-primary-contrast: #111111;
+  --surface-secondary: #2A2A2A;
+  --surface-secondary-alt: #2A2A2A;
   --surface-tertiary: var(--gray-700);
   --surface-tertiary-alt: var(--gray-700);
-  --surface-dialog: var(--gray-850);
+  --surface-dialog: #111111;
   --surface-submit: var(--green-700);
   --surface-submit-hover: var(--green-800);
   --surface-destructive: var(--red-800);
@@ -1949,11 +1949,7 @@ html {
   height: 100%;
 }
 
-.dark body,
-.dark html {
-  --tw-bg-opacity: 1;
-  background-color: rgba(23, 23, 23, var(--tw-bg-opacity));
-}
+/* Removed dark body/html background override to allow Tailwind classes */
 
 #__next,
 #root {
@@ -2214,11 +2210,7 @@ body,
 html {
   height: 100%;
 }
-.dark body,
-.dark html {
-  --tw-bg-opacity: 1;
-  background-color: rgba(33, 33, 33, var(--tw-bg-opacity));
-}
+/* Removed duplicate dark body/html background override */
 #__next,
 #root {
   height: 100%;
@@ -3294,7 +3286,7 @@ html {
 
 body {
   font-family: var(--font-primary);
-  background-color: var(--bg-secondary);
+  /* Removed background-color to allow Root.tsx to control the background */
   color: var(--text-primary-fyers);
   line-height: var(--lh-normal);
   font-size: var(--text-base-fyers);

@@ -168,16 +168,6 @@ export default function useSideNavLinks({
       Component: FilesPanel,
     });
 
-    if (hasAccessToBookmarks) {
-      links.push({
-        title: 'com_sidepanel_conversation_tags',
-        label: '',
-        icon: Bookmark,
-        id: 'bookmarks',
-        Component: BookmarkPanel,
-      });
-    }
-
     // Only show MCP settings (flower/gear icon) for super admins
     // Hide completely for org admins and regular users
     // Only add if userInfo is loaded AND user is confirmed super admin

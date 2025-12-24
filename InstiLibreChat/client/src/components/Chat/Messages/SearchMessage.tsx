@@ -24,7 +24,13 @@ const MessageAvatar = ({ iconData }: { iconData: TMessageIcon }) => (
 
 const MessageBody = ({ message, messageLabel, fontSize }) => (
   <div
-    className={cn('relative flex w-11/12 flex-col', message.isCreatedByUser ? '' : 'agent-turn')}
+    className={cn(
+      'relative flex w-11/12 flex-col',
+      message.isCreatedByUser ? '' : 'agent-turn'
+    )}
+    style={{
+      alignItems: message.isCreatedByUser ? 'flex-end' : 'flex-start'
+    }}
   >
     <div className={cn('select-none font-semibold', fontSize)}>{messageLabel}</div>
     <SearchContent message={message} />
@@ -74,7 +80,12 @@ export default function SearchMessage({ message }: Pick<TMessageProps, 'message'
   return (
     <div className="text-token-text-primary w-full bg-transparent">
       <div className="m-auto p-4 py-2 md:gap-6">
-        <div className="final-completion group mx-auto flex flex-1 gap-3 md:max-w-3xl md:px-5 lg:max-w-[40rem] lg:px-1 xl:max-w-[48rem] xl:px-5">
+        <div 
+          className="final-completion group mx-auto flex flex-1 gap-3 md:max-w-3xl md:px-5 lg:max-w-[40rem] lg:px-1 xl:max-w-[48rem] xl:px-5"
+          style={{
+            flexDirection: message.isCreatedByUser ? 'row-reverse' : 'row'
+          }}
+        >
           <MessageAvatar iconData={iconData} />
           <MessageBody message={message} messageLabel={messageLabel} fontSize={fontSize} />
         </div>

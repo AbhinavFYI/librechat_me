@@ -1,5 +1,16 @@
-// API service for saas-api backend (port 8080)
-// All requests go through the proxy at /api/v1/*
+/**
+ * API Service for insti-inquora backend
+ * 
+ * This service connects to the insti-inquora API (Go backend) through the proxy.
+ * All requests are sent to /api/v1/* which routes to:
+ *   - insti-inquora backend (port 3001) for most API calls
+ *   - Handles authentication, documents, folders, users, organizations, etc.
+ * 
+ * The service handles both response formats:
+ *   - insti-inquora: { code: 200, s: "ok", data: {...}, message: "..." }
+ *   - Legacy saas-api: { access_token, refresh_token, user, ... } (flat structure)
+ * 
+ */
 
 const API_BASE_URL = '/api/v1';
 
@@ -16,6 +27,21 @@ function getAuthHeaders(): HeadersInit {
     headers['Authorization'] = `Bearer ${token}`;
   }
   return headers;
+}
+
+/**
+ * Normalize API response structure
+ * Handles both response formats:
+ * 1. insti-inquora: { code: 200, s: "ok", data: {...}, message: "..." }
+ * 2. saas-api: { access_token, refresh_token, user, ... } (flat structure)
+ */
+function normalizeResponse<T>(data: any): T {
+  // If response has 'data' field (insti-inquora format), extract it
+  if (data && typeof data === 'object' && 'data' in data) {
+    return data.data as T;
+  }
+  // Otherwise return as-is (saas-api format)
+  return data as T;
 }
 
 async function handleResponse<T>(response: Response, originalRequest?: { url: string; method: string; body?: string }, retry = true): Promise<T> {
@@ -35,10 +61,12 @@ async function handleResponse<T>(response: Response, originalRequest?: { url: st
 
           if (refreshResponse.ok) {
             const refreshData: any = await refreshResponse.json();
-            if (refreshData.access_token) {
-              localStorage.setItem('access_token', refreshData.access_token);
-              if (refreshData.refresh_token) {
-                localStorage.setItem('refresh_token', refreshData.refresh_token);
+            // Handle both response formats for access_token
+            const normalizedRefreshData = normalizeResponse<any>(refreshData);
+            if (normalizedRefreshData.access_token) {
+              localStorage.setItem('access_token', normalizedRefreshData.access_token);
+              if (normalizedRefreshData.refresh_token) {
+                localStorage.setItem('refresh_token', normalizedRefreshData.refresh_token);
               }
               // Retry the original request with new token
               const retryResponse = await fetch(originalRequest.url, {
@@ -64,12 +92,12 @@ async function handleResponse<T>(response: Response, originalRequest?: { url: st
             // Don't throw error if we're already handling redirect
             // This prevents showing error messages when user is being redirected to login
             if (window.location.pathname.includes('/login')) {
-              return Promise.reject(new Error(errorData.message || 'Session expired. Please login again.'));
+              return Promise.reject(new Error(errorData.message || errorData.error || 'Session expired. Please login again.'));
             }
             
             // Only redirect if we're not already on the login page
             window.location.href = '/login';
-            return Promise.reject(new Error(errorData.message || 'Session expired. Please login again.'));
+            return Promise.reject(new Error(errorData.message || errorData.error || 'Session expired. Please login again.'));
           }
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
@@ -86,9 +114,12 @@ async function handleResponse<T>(response: Response, originalRequest?: { url: st
     }
 
     const error = await response.json().catch(() => ({ message: 'Request failed' }));
-    throw new Error(error.message || `HTTP error! status: ${response.status}`);
+    // Handle both 'message' and 'error' fields
+    throw new Error(error.message || error.error || `HTTP error! status: ${response.status}`);
   }
-  return response.json();
+  
+  const data = await response.json();
+  return normalizeResponse<T>(data);
 }
 
 export const saasApi = {
@@ -113,9 +144,10 @@ export const saasApi = {
 
   // Organizations
   async getOrganizations(isSuperAdmin: boolean, orgId?: string) {
-    const url = isSuperAdmin
-      ? `${API_BASE_URL}/admin/organizations`
-      : `${API_BASE_URL}/organizations/${orgId}`;
+    // Both super admin and org admin use the same list endpoint
+    // Backend distinguishes based on JWT claims (is_super_admin, org_id)
+    // Super admin sees all orgs, org admin sees only their org
+    const url = `${API_BASE_URL}/organizations?limit=1000`;
     const response = await fetch(url, {
       method: 'GET',
       headers: getAuthHeaders(),
@@ -151,9 +183,9 @@ export const saasApi = {
 
   // Users
   async getUsers(isSuperAdmin: boolean, orgId?: string) {
-    let url = isSuperAdmin
-      ? `${API_BASE_URL}/admin/users?limit=1000`
-      : `${API_BASE_URL}/users?limit=1000`;
+    // Both super admin and org admin use the same endpoint
+    // Backend distinguishes based on JWT claims (is_super_admin, org_id)
+    let url = `${API_BASE_URL}/users?limit=1000`;
     if (isSuperAdmin && orgId) {
       url += `&org_id=${orgId}`;
     }

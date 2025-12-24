@@ -30,10 +30,20 @@ export default function TemplatesView() {
     setTemplatesLoading(true);
     try {
       const data = await saasApi.getTemplates();
-      const templatesList = Array.isArray((data as any).data) ? (data as any).data : Array.isArray(data) ? data : ((data as any).data || []);
+      // Handle null response or various response formats
+      if (!data) {
+        setTemplates([]);
+        return;
+      }
+      const templatesList = Array.isArray((data as any).data) 
+        ? (data as any).data 
+        : Array.isArray(data) 
+        ? data 
+        : ((data as any).data || []);
       setTemplates(templatesList);
     } catch (error) {
       console.error('Error fetching templates:', error);
+      setTemplates([]); // Set empty array on error
     } finally {
       setTemplatesLoading(false);
     }
@@ -43,10 +53,20 @@ export default function TemplatesView() {
     setPersonasLoading(true);
     try {
       const data = await saasApi.getPersonas();
-      const personasList = Array.isArray((data as any).data) ? (data as any).data : Array.isArray(data) ? data : ((data as any).data || []);
+      // Handle null response or various response formats
+      if (!data) {
+        setPersonas([]);
+        return;
+      }
+      const personasList = Array.isArray((data as any).data) 
+        ? (data as any).data 
+        : Array.isArray(data) 
+        ? data 
+        : ((data as any).data || []);
       setPersonas(personasList);
     } catch (error) {
       console.error('Error fetching personas:', error);
+      setPersonas([]); // Set empty array on error
     } finally {
       setPersonasLoading(false);
     }
@@ -81,18 +101,18 @@ export default function TemplatesView() {
   const deleteTemplate = async (id: string) => {
     try {
       await saasApi.deleteTemplate(id);
+    } finally {
+      // Always refresh the list, even if deletion fails
       await fetchTemplates();
-    } catch (error) {
-      throw error;
     }
   };
 
   const deletePersona = async (id: string) => {
     try {
       await saasApi.deletePersona(id);
+    } finally {
+      // Always refresh the list, even if deletion fails
       await fetchPersonas();
-    } catch (error) {
-      throw error;
     }
   };
 
@@ -115,6 +135,9 @@ export default function TemplatesView() {
       setDeleting(true);
       try {
         await deleteTemplate(template.id);
+      } catch (error: any) {
+        console.error('Error deleting template:', error);
+        alert(error.message || 'Failed to delete template');
       } finally {
         setDeleting(false);
       }
@@ -128,6 +151,9 @@ export default function TemplatesView() {
       setDeleting(true);
       try {
         await deletePersona(persona.id);
+      } catch (error: any) {
+        console.error('Error deleting persona:', error);
+        alert(error.message || 'Failed to delete persona');
       } finally {
         setDeleting(false);
       }
@@ -1447,12 +1473,12 @@ function CreatePersonaModal({
 
           <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-6">
             <Button type="button" onClick={onClose} variant="outline" className="flex-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                Cancel
-              </Button>
+              Cancel
+            </Button>
               <Button type="submit" disabled={loading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                {loading ? 'Creating...' : 'Save Persona'}
-              </Button>
-            </div>
+            {loading ? 'Creating...' : 'Save Persona'}
+          </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

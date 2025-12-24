@@ -599,7 +599,7 @@ COMMENT ON COLUMN folders.parent_id IS 'Parent folder ID (NULL for root folders)
 
 -- Create document_status enum if it doesn't exist
 DO $$ BEGIN
-  CREATE TYPE document_status AS ENUM ('queued', 'processing', 'embedding', 'completed', 'failed');
+  CREATE TYPE document_status AS ENUM ('pending', 'processing', 'embedding', 'completed', 'failed');
 EXCEPTION
   WHEN duplicate_object THEN null;
 END $$;
@@ -621,7 +621,7 @@ CREATE TABLE documents (
   file_path VARCHAR(1024),
   json_file_path VARCHAR(1024),
   -- Status
-  status document_status DEFAULT 'queued',
+  status document_status DEFAULT 'pending',
   error_message TEXT, 
   -- JSONB metadata for flexible storage
   content JSONB DEFAULT '{

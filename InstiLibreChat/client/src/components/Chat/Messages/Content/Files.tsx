@@ -13,7 +13,13 @@ const Files = ({ message }: { message?: TMessage }) => {
   }, [message?.files]);
 
   return (
-    <>
+    <div 
+      className="flex flex-col gap-2"
+      style={{
+        alignItems: message?.isCreatedByUser ? 'flex-end' : 'flex-start',
+        width: '100%'
+      }}
+    >
       {otherFiles.length > 0 &&
         otherFiles.map((file) => <FileContainer key={file.file_id} file={file as TFile} />)}
       {imageFiles.length > 0 &&
@@ -32,7 +38,7 @@ const Files = ({ message }: { message?: TMessage }) => {
             // i={i}
           />
         ))}
-    </>
+    </div>
   );
 };
 

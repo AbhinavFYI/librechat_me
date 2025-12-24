@@ -341,7 +341,7 @@ export default function TopNavBar() {
   };
 
   return (
-    <nav className="bg-white dark:bg-gray-850 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0 z-50">
+    <nav className="bg-white dark:!bg-[#111111] border-b border-[#EDEDED] dark:border-gray-700 px-3 py-1 flex-shrink-0 z-50 min-h-[48px]">
       <div className="flex items-center justify-between">
         {/* Left: FYERS Logo & Financial Data */}
         <div className="flex items-center gap-4">
@@ -365,7 +365,7 @@ export default function TopNavBar() {
               <span 
                 className={`text-[14px] font-normal leading-[20px] tabular-nums whitespace-nowrap ${
                   formatNiftyChange().isPositive 
-                    ? 'text-green-600 dark:text-green-400' 
+                    ? 'text-[#007A27] dark:text-[#7DDB89]' 
                     : 'text-red-600 dark:text-red-400'
                 }`}
               >
@@ -374,7 +374,7 @@ export default function TopNavBar() {
             )}
             {niftyError && (
               <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap" title={niftyError}>
-                ⚠️
+                Data not availables
               </span>
             )}
           </div>

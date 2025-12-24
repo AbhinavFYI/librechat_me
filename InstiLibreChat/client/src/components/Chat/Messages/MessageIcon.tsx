@@ -12,10 +12,12 @@ const MessageIcon = memo(
     iconData,
     assistant,
     agent,
+    isSubmitting = false,
   }: {
     iconData?: TMessageIcon;
     assistant?: Assistant;
     agent?: Agent;
+    isSubmitting?: boolean;
   }) => {
     logger.log('icon_data', iconData, assistant, agent);
     const { data: endpointsConfig } = useGetEndpointsQuery();
@@ -45,6 +47,22 @@ const MessageIcon = memo(
       () => getEndpointField(endpointsConfig, endpoint, 'iconURL'),
       [endpointsConfig, endpoint],
     );
+
+    // Show loading animation for AI messages that are being generated
+    if (!iconData?.isCreatedByUser && isSubmitting) {
+      console.log('Showing loader GIF - isSubmitting:', isSubmitting, 'isCreatedByUser:', iconData?.isCreatedByUser);
+      return (
+        <div className="flex h-full w-full items-center justify-center">
+          <img 
+            src="/assets/loader.gif" 
+            alt="Loading..." 
+            className="h-6 w-6 object-contain"
+            onError={(e) => console.error('Failed to load GIF:', e)}
+            onLoad={() => console.log('GIF loaded successfully')}
+          />
+        </div>
+      );
+    }
 
     if (iconData?.isCreatedByUser !== true && iconURL != null && iconURL.includes('http')) {
       return (

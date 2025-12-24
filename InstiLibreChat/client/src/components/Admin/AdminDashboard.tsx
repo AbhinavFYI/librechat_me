@@ -55,9 +55,15 @@ export default function AdminDashboard({ userInfo }: AdminDashboardProps) {
     setError(null);
     try {
       const data = await saasApi.getOrganizations(isSuperAdmin, userOrgId || undefined);
-      const orgs = Array.isArray(data) ? data : (data as any).data || ((data as any).id ? [data] : []);
+      // Handle both response formats
+      // After normalizeResponse: { organizations: [...], page, limit, total, total_pages }
+      const orgs = Array.isArray(data) 
+        ? data 
+        : (data as any).organizations || (data as any).data || ((data as any).id ? [data] : []);
+      console.log('📊 Fetched organizations:', { count: orgs.length, data, orgs });
       setOrganizations(orgs);
     } catch (err: any) {
+      console.error('❌ Error fetching organizations:', err);
       setError(err.message || 'Failed to fetch organizations');
     } finally {
       setLoading(false);
@@ -70,25 +76,19 @@ export default function AdminDashboard({ userInfo }: AdminDashboardProps) {
     setError(null);
     try {
       const data = await saasApi.getUsers(isSuperAdmin, orgFilterId || undefined);
-      const usersList = Array.isArray(data) ? data : (data as any).data || [];
+      // Handle both response formats
+      // After normalizeResponse: { users: [...], page, limit, total, total_pages }
+      const usersList = Array.isArray(data) 
+        ? data 
+        : (data as any).users || (data as any).data || [];
+      console.log('👥 Fetched users:', { count: usersList.length, isSuperAdmin, orgFilterId, data, usersList });
       
-      // Apply client-side filtering if needed
-      if (isSuperAdmin && orgFilterId && orgFilterId !== '') {
-        const filteredUsers = usersList.filter((user: any) => {
-          const userOrgId = user.org_id ? String(user.org_id) : null;
-          return userOrgId === orgFilterId;
-        });
-        setUsers(filteredUsers);
-      } else if (!isSuperAdmin && userOrgId) {
-        const filteredUsers = usersList.filter((user: any) => {
-          const userOrgId = user.org_id ? String(user.org_id) : null;
-          return userOrgId === String(userOrgId);
-        });
-        setUsers(filteredUsers);
-      } else {
+      // Note: Backend now handles filtering based on JWT claims
+      // Super admin sees only org admins, org admin sees all users in their org
+      // Client-side filtering is no longer needed, but kept for compatibility
         setUsers(usersList);
-      }
     } catch (err: any) {
+      console.error('❌ Error fetching users:', err);
       setError(err.message || 'Failed to fetch users');
     } finally {
       setLoading(false);
@@ -101,7 +101,9 @@ export default function AdminDashboard({ userInfo }: AdminDashboardProps) {
     setError(null);
     try {
       const data = await saasApi.getRoles(orgFilterId || undefined);
-      const rolesList = Array.isArray(data) ? data : (data as any).data || [];
+      const rolesList = Array.isArray(data) 
+        ? data 
+        : (data as any).roles || (data as any).data || [];
       const filteredRoles = isSuperAdmin
         ? rolesList
         : rolesList.filter((role: any) => {
@@ -109,8 +111,10 @@ export default function AdminDashboard({ userInfo }: AdminDashboardProps) {
             if (!role.org_id || !userOrgId) return false;
             return String(role.org_id) === String(userOrgId);
           });
+      console.log('🎭 Fetched roles:', { count: rolesList.length, filtered: filteredRoles.length });
       setRoles(filteredRoles);
     } catch (err: any) {
+      console.error('❌ Error fetching roles:', err);
       setError(err.message || 'Failed to fetch roles');
     } finally {
       setLoading(false);
@@ -123,9 +127,13 @@ export default function AdminDashboard({ userInfo }: AdminDashboardProps) {
     setError(null);
     try {
       const data = await saasApi.getPermissions();
-      const permsList = Array.isArray(data) ? data : (data as any).data || [];
+      const permsList = Array.isArray(data) 
+        ? data 
+        : (data as any).permissions || (data as any).data || [];
+      console.log('🔐 Fetched permissions:', { count: permsList.length });
       setPermissions(permsList);
     } catch (err: any) {
+      console.error('❌ Error fetching permissions:', err);
       setError(err.message || 'Failed to fetch permissions');
     } finally {
       setLoading(false);

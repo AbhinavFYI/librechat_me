@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, Button, Input } from '@librechat/client';
 import { saasApi } from '~/services/saasApi';
 
@@ -17,9 +17,34 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
     org_role: user.org_role || 'user',
     timezone: user.timezone || '',
     locale: user.locale || '',
+    role_id: '',
+    role_name: '',
   });
+  const [availableRoles, setAvailableRoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch roles on mount
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const data = await saasApi.getRoles();
+        const rolesList = Array.isArray(data)
+          ? data
+          : (data as any).roles || (data as any).data || [];
+
+        // Remove duplicates based on role ID
+        const uniqueRoles = Array.from(
+          new Map(rolesList.map((role: any) => [role.id, role])).values()
+        );
+        setAvailableRoles(uniqueRoles);
+      } catch (error) {
+        console.error('Error fetching roles:', error);
+      }
+    };
+
+    fetchRoles();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +60,13 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
       if (formData.org_role) payload.org_role = formData.org_role;
       if (formData.timezone) payload.timezone = formData.timezone;
       if (formData.locale) payload.locale = formData.locale;
+
+      // Include role assignment if selected
+      if (formData.role_id && formData.role_id.trim() !== '') {
+        payload.role_id = formData.role_id;
+      } else if (formData.role_name && formData.role_name.trim() !== '') {
+        payload.role_name = formData.role_name;
+      }
 
       await saasApi.updateUser(user.id, payload);
       onSuccess();
@@ -138,6 +170,49 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               This determines login eligibility. Admin can log in via OTP.
             </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Assign Role (Permissions)
+            </label>
+            <select
+              value={formData.role_id || ''}
+              onChange={(e) => {
+                const selectedRoleId = e.target.value;
+                if (selectedRoleId) {
+                  const selectedRole = availableRoles.find((r) => r.id === selectedRoleId);
+                  if (selectedRole) {
+                    setFormData({
+                      ...formData,
+                      role_id: selectedRole.id,
+                      role_name: selectedRole.name,
+                    });
+                  }
+                } else {
+                  setFormData({ ...formData, role_id: '', role_name: '' });
+                }
+              }}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            >
+              <option value="">Keep current role (no change)</option>
+              {availableRoles.length === 0 ? (
+                <option value="" disabled>
+                  No roles available
+                </option>
+              ) : (
+                availableRoles.map((role) => (
+                  <option key={role.id} value={role.id}>
+                    {role.name} {role.type === 'system' ? '(System)' : ''}
+                  </option>
+                ))
+              )}
+            </select>
+            {availableRoles.length === 0 && (
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                No roles available. Please create a role first.
+              </p>
+            )}
           </div>
 
           <div>

@@ -140,6 +140,9 @@ const MessageRender = memo(
           conditionalClasses.focus,
           'message-render',
         )}
+        style={{
+          flexDirection: msg.isCreatedByUser ? 'row-reverse' : 'row'
+        }}
         onClick={clickHandler}
         onKeyDown={(e) => {
           if ((e.key === 'Enter' || e.key === ' ') && clickHandler) {
@@ -155,7 +158,12 @@ const MessageRender = memo(
 
         <div className="relative flex flex-shrink-0 flex-col items-center">
           <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full">
-            <MessageIcon iconData={iconData} assistant={assistant} agent={agent} />
+            <MessageIcon 
+              iconData={iconData} 
+              assistant={assistant} 
+              agent={agent}
+              isSubmitting={effectiveIsSubmitting}
+            />
           </div>
         </div>
 
@@ -164,10 +172,14 @@ const MessageRender = memo(
             'relative flex w-11/12 flex-col',
             msg.isCreatedByUser ? 'user-turn' : 'agent-turn',
           )}
+          style={{
+            alignItems: msg.isCreatedByUser ? 'flex-end' : 'flex-start',
+            textAlign: msg.isCreatedByUser ? 'right' : 'left'
+          }}
         >
           <h2 className={cn('select-none font-semibold', fontSize)}>{messageLabel}</h2>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1" style={{ width: '100%' }}>
             <div className="flex max-w-full flex-grow flex-col gap-0">
               <MessageContext.Provider
                 value={{
@@ -199,7 +211,7 @@ const MessageRender = memo(
             {hasNoChildren && (isSubmittingFamily === true || effectiveIsSubmitting) ? (
               <PlaceholderRow isCard={isCard} />
             ) : (
-              <SubRow classes="text-xs">
+              <SubRow classes="text-xs" isUser={msg.isCreatedByUser}>
                 <SiblingSwitch
                   siblingIdx={siblingIdx}
                   siblingCount={siblingCount}

@@ -97,7 +97,14 @@ export default function Message(props: TMessageProps) {
           <div
             id={messageId ?? ''}
             aria-label={`message-${message.depth}-${messageId}`}
-            className={cn(baseClasses.common, baseClasses.chat, 'message-render')}
+            className={cn(
+              baseClasses.common,
+              baseClasses.chat,
+              'message-render'
+            )}
+            style={{
+              flexDirection: isCreatedByUser ? 'row-reverse' : 'row'
+            }}
           >
             <div className="relative flex flex-shrink-0 flex-col items-center">
               <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full pt-0.5">
@@ -109,6 +116,9 @@ export default function Message(props: TMessageProps) {
                 'relative flex w-11/12 flex-col',
                 isCreatedByUser ? 'user-turn' : 'agent-turn',
               )}
+              style={{
+                alignItems: isCreatedByUser ? 'flex-end' : 'flex-start'
+              }}
             >
               <h2 className={cn('select-none font-semibold text-text-primary', fontSize)}>
                 {name}

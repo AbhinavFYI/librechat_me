@@ -79,14 +79,15 @@ export default function Root() {
           <AgentsMapContext.Provider value={agentsMap}>
             <PromptGroupsProvider>
               <Banner onHeightChange={setBannerHeight} />
-              <div className="flex flex-col" style={{ height: `calc(100dvh - ${bannerHeight}px)` }}>
+              <div className="flex flex-col bg-[#F6F8FF] dark:!bg-[#2A2A2A]" style={{ height: `calc(100dvh - ${bannerHeight}px)` }}>
                 <TopNavBar />
-                <div className="flex flex-1 overflow-hidden">
-                <div className="relative z-0 flex h-full w-full overflow-hidden">
+                {/* Container with 12px horizontal padding and 16px gap (FYERS Design) */}
+                <div className="flex flex-1 px-3 py-2 overflow-hidden">
+                  <div className="relative z-0 flex h-full w-full gap-2 overflow-hidden">
                     {shouldShowNav && <Nav navVisible={navVisible} setNavVisible={setNavVisible} />}
-                  <div className="relative flex h-full max-w-full flex-1 flex-col overflow-hidden">
+                    <div className="relative flex h-full max-w-full flex-1 flex-col overflow-hidden">
                       {shouldShowNav && <MobileNav navVisible={navVisible} setNavVisible={setNavVisible} />}
-                    <Outlet context={{ navVisible, setNavVisible } satisfies ContextType} />
+                      <Outlet context={{ navVisible, setNavVisible } satisfies ContextType} />
                     </div>
                   </div>
                 </div>

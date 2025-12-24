@@ -28,20 +28,34 @@ export default function AssignRoleModal({
     const fetchRoles = async () => {
       try {
         const data = await saasApi.getRoles();
-        const rolesList = Array.isArray(data) ? data : (data as any).data || [];
+        // Handle both response formats
+        // After normalizeResponse: { roles: [...], total } or plain array
+        const rolesList = Array.isArray(data) 
+          ? data 
+          : (data as any).roles || (data as any).data || [];
+        
+        console.log('🎭 AssignRoleModal - Fetched roles:', { count: rolesList.length, rolesList });
+        
+        // Remove duplicates based on role ID
+        const uniqueRoles = Array.from(
+          new Map(rolesList.map((role: any) => [role.id, role])).values()
+        );
+        
         // Filter roles based on user type
         const filteredRoles = isSuperAdmin
-          ? rolesList
-          : rolesList.filter((role: any) => {
+          ? uniqueRoles
+          : uniqueRoles.filter((role: any) => {
               if (role.type === 'system') return true;
               if (!role.org_id || !userOrgId) return false;
               const roleOrgId = typeof role.org_id === 'string' ? role.org_id : String(role.org_id);
               const userOrgIdStr = typeof userOrgId === 'string' ? userOrgId : String(userOrgId);
               return roleOrgId === userOrgIdStr;
             });
+        
+        console.log('🎭 AssignRoleModal - Filtered roles:', { count: filteredRoles.length });
         setAvailableRoles(filteredRoles);
       } catch (error) {
-        console.error('Error fetching roles:', error);
+        console.error('❌ Error fetching roles:', error);
       }
     };
 

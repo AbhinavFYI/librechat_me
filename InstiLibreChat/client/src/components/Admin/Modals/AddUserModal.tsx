@@ -36,20 +36,33 @@ export default function AddUserModal({
     const fetchRoles = async () => {
       try {
         const data = await saasApi.getRoles();
-        const rolesList = Array.isArray(data) ? data : (data as any).data || [];
+        // Handle both response formats
+        // After normalizeResponse: { roles: [...], page, limit, total, total_pages }
+        const rolesList = Array.isArray(data) 
+          ? data 
+          : (data as any).roles || (data as any).data || [];
+        console.log('🎭 AddUserModal - Fetched roles:', { count: rolesList.length, rolesList });
+        
+        // Remove duplicates based on role ID
+        const uniqueRoles = Array.from(
+          new Map(rolesList.map((role: any) => [role.id, role])).values()
+        );
+        console.log('🎭 AddUserModal - Unique roles:', { count: uniqueRoles.length });
+        
         // Filter roles based on user type
         const filteredRoles = isSuperAdmin
-          ? rolesList
-          : rolesList.filter((role: any) => {
+          ? uniqueRoles
+          : uniqueRoles.filter((role: any) => {
               if (role.type === 'system') return true;
               if (!role.org_id || !userOrgId) return false;
               const roleOrgId = typeof role.org_id === 'string' ? role.org_id : String(role.org_id);
               const userOrgIdStr = typeof userOrgId === 'string' ? userOrgId : String(userOrgId);
               return roleOrgId === userOrgIdStr;
             });
+        console.log('🎭 AddUserModal - Filtered roles:', { count: filteredRoles.length, filteredRoles });
         setAvailableRoles(filteredRoles);
       } catch (error) {
-        console.error('Error fetching roles:', error);
+        console.error('❌ Error fetching roles:', error);
       }
     };
 
@@ -58,10 +71,21 @@ export default function AddUserModal({
       if (!isSuperAdmin) return;
       try {
         const data = await saasApi.getOrganizations(true);
-        const orgsList = Array.isArray(data) ? data : (data as any).data || [];
-        setAvailableOrganizations(orgsList);
+        // Handle both response formats
+        // After normalizeResponse: { organizations: [...], page, limit, total, total_pages }
+        const orgsList = Array.isArray(data) 
+          ? data 
+          : (data as any).organizations || (data as any).data || [];
+        console.log('🏢 AddUserModal - Fetched organizations:', { count: orgsList.length, orgsList });
+        
+        // Remove duplicates based on org ID
+        const uniqueOrgs = Array.from(
+          new Map(orgsList.map((org: any) => [org.id, org])).values()
+        );
+        console.log('🏢 AddUserModal - Unique organizations:', { count: uniqueOrgs.length });
+        setAvailableOrganizations(uniqueOrgs);
       } catch (error) {
-        console.error('Error fetching organizations:', error);
+        console.error('❌ Error fetching organizations:', error);
       }
     };
 
@@ -85,24 +109,25 @@ export default function AddUserModal({
       };
 
       // Super admin can specify org_id, org admin uses their own org
-      if (isSuperAdmin && formData.org_id) {
-        payload.org_id = formData.org_id;
+      if (isSuperAdmin) {
+        if (formData.org_id) {
+          payload.org_id = formData.org_id;
+        }
+      } else if (userOrgId) {
+        // Org admin: use their own org_id
+        payload.org_id = userOrgId;
       }
 
-      // Support both role_name and role_id (prefer role_id as it's more reliable)
+      // Always include role assignment if selected
       if (formData.role_id && formData.role_id.trim() !== '') {
-        // Validate UUID format (basic check)
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        if (uuidRegex.test(formData.role_id)) {
-          payload.role_id = formData.role_id;
-        } else {
-          if (formData.role_name && formData.role_name.trim() !== '') {
-            payload.role_name = formData.role_name;
-          }
-        }
+        payload.role_id = formData.role_id;
+        console.log('🎭 Sending role_id:', formData.role_id);
       } else if (formData.role_name && formData.role_name.trim() !== '') {
         payload.role_name = formData.role_name;
+        console.log('🎭 Sending role_name:', formData.role_name);
       }
+      
+      console.log('📤 Creating user with payload:', payload);
 
       await saasApi.createUser(payload);
       onSuccess();

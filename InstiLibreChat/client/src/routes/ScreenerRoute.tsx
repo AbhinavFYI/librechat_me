@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, Heart, Info, History, Trash2, ArrowLeft } from 'lucide-react';
 import { HoverCard, HoverCardTrigger, HoverCardContent, HoverCardPortal, useToastContext } from '@librechat/client';
 
@@ -67,7 +67,11 @@ export default function ScreenerRoute() {
   const [query, setQuery] = useState<string>(() => {
     return localStorage.getItem('screener_query') || '';
   });
-  const [savedScreeners, setSavedScreeners] = useState<any[]>([]);
+  const [savedScreeners, setSavedScreeners] = useState<any[]>(() => {
+    // Load cached screeners from localStorage for instant display
+    const cached = localStorage.getItem('cached_saved_screeners');
+    return cached ? JSON.parse(cached) : [];
+  });
   const [isSaved, setIsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showSavedScreenerOverlay, setShowSavedScreenerOverlay] = useState(false);
@@ -121,6 +125,8 @@ export default function ScreenerRoute() {
   useEffect(() => {
     if (activeTab === 'saved') {
       fetchSavedScreeners();
+    } else if (activeTab === 'create') {
+      checkIfSaved();
     }
   }, [activeTab]);
 
@@ -297,9 +303,17 @@ export default function ScreenerRoute() {
       setIsSaved(false);
       return;
     }
+    
+    // Normalize searchQuery for comparison (trim and lowercase)
+    const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+    
     const isCurrentlySaved = savedScreeners.some(
-      (screener) => (screener.screener_name || screener.ScreenerName) === searchQuery
+      (screener) => {
+        const screenerName = (screener.screener_name || screener.ScreenerName || '').trim().toLowerCase();
+        return screenerName === normalizedSearchQuery;
+      }
     );
+    
     setIsSaved(isCurrentlySaved);
   };
 
@@ -329,12 +343,12 @@ export default function ScreenerRoute() {
       }
 
       const data = await response.json();
-      if (data.status === 'success') {
-        setSavedScreeners(data.data || []);
-      } else {
-        // Handle Go API response format
-        setSavedScreeners(data.data || []);
-      }
+      const screeners = data.data || [];
+      
+      setSavedScreeners(screeners);
+      
+      // Cache in localStorage for instant display on next load
+      localStorage.setItem('cached_saved_screeners', JSON.stringify(screeners));
     } catch (err: any) {
       console.error('Error fetching saved screeners:', err);
     }
@@ -345,9 +359,9 @@ export default function ScreenerRoute() {
       return;
     }
 
-    // If already saved, delete it (toggle behavior)
+    // Toggle behavior: if already saved, delete it
     if (isSaved) {
-      // Fetch latest saved screeners to get the current ID
+      // Fetch latest saved screeners to get the real ID (not optimistic temp ID)
       const baseUrl = document.querySelector('base')?.getAttribute('href') || '/';
       const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
       const apiUrl = `${cleanBaseUrl}/api/v1/screeners/saved`;
@@ -369,21 +383,62 @@ export default function ScreenerRoute() {
         if (response.ok) {
           const data = await response.json();
           const currentSavedScreeners = data.data || [];
+          
+          // Normalize searchQuery for comparison
+          const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+          
           const savedScreener = currentSavedScreeners.find(
-            (screener: any) => (screener.screener_name || screener.ScreenerName) === searchQuery
+            (screener: any) => {
+              const screenerName = (screener.screener_name || screener.ScreenerName || '').trim().toLowerCase();
+              return screenerName === normalizedSearchQuery;
+            }
           );
+          
           if (savedScreener) {
             await handleDeleteScreener(savedScreener.id || savedScreener.ID, true);
-            setIsSaved(false);
             return;
+          } else {
+            showToast({
+              message: 'Screener not found',
+              status: 'error',
+              duration: 3000
+            });
           }
         }
       } catch (err) {
-        console.error('Error fetching saved screeners for toggle:', err);
+        console.error('Error fetching screener for delete:', err);
+        showToast({
+          message: 'Failed to delete screener',
+          status: 'error',
+          duration: 3000
+        });
+        return;
       }
     }
 
+    // Otherwise, save the screener
+    // OPTIMISTIC UI UPDATE: Set saved immediately and add to list
+    setIsSaved(true);
+    
+    // Create optimistic screener object to add to list
+    const optimisticScreener = {
+      id: `temp-${Date.now()}`, // Temporary ID until DB fetch
+      screener_name: searchQuery,
+      tableName: cleanStringValue(exchange) || '',
+      query: query,
+      universeList: cleanStringValue(universe) || '',
+      explainer: explainer,
+      created_at: new Date().toISOString(),
+    };
+    
+    // Add to list optimistically
+    const previousScreeners = [...savedScreeners];
+    const updatedScreeners = [optimisticScreener, ...savedScreeners];
+    setSavedScreeners(updatedScreeners);
+    localStorage.setItem('cached_saved_screeners', JSON.stringify(updatedScreeners));
+    
     setSaving(true);
+    
     try {
       const baseUrl = document.querySelector('base')?.getAttribute('href') || '/';
       const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
@@ -399,23 +454,30 @@ export default function ScreenerRoute() {
       }
 
       // Clean and normalize optional fields before sending - remove all quotes and whitespace
-      const cleanedUniverse = cleanStringValue(universe) || undefined;
-      const cleanedExchange = cleanStringValue(exchange) || undefined;
+      const cleanedUniverse = cleanStringValue(universe) || '';
+      const cleanedExchange = cleanStringValue(exchange) || '';
       
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers,
         credentials: 'include',
         body: JSON.stringify({
-          screener_name: searchQuery,
-          tableName: cleanedExchange,
-          query: query,
-          universeList: cleanedUniverse,
-          explainer: explainer,
+          prompt: searchQuery, // Backend expects 'prompt' field for screener name
+          data: {
+            exchange: cleanedExchange,
+            explainer: explainer || '',
+            query: query || '',
+            universe: cleanedUniverse,
+          },
         }),
       });
 
       if (!response.ok) {
+        // Revert optimistic updates on error
+        setIsSaved(false);
+        setSavedScreeners(previousScreeners);
+        localStorage.setItem('cached_saved_screeners', JSON.stringify(previousScreeners));
+        
         // Handle 409 Conflict - should not happen anymore as backend handles toggle
         if (response.status === 409) {
           const errorData = await response.json().catch(() => ({}));
@@ -425,6 +487,7 @@ export default function ScreenerRoute() {
             duration: 3000 
           });
           setIsSaved(true);
+          // Fetch fresh data from DB
           await fetchSavedScreeners();
           return;
         }
@@ -467,6 +530,11 @@ export default function ScreenerRoute() {
                   });
 
                   if (!retryResponse.ok) {
+                    // Revert optimistic updates
+                    setIsSaved(false);
+                    setSavedScreeners(previousScreeners);
+                    localStorage.setItem('cached_saved_screeners', JSON.stringify(previousScreeners));
+                    
                     // Handle 409 Conflict - should not happen anymore as backend handles toggle
                     if (retryResponse.status === 409) {
                       const errorData = await retryResponse.json().catch(() => ({}));
@@ -476,7 +544,7 @@ export default function ScreenerRoute() {
                         duration: 3000 
                       });
                       setIsSaved(true);
-                      await fetchSavedScreeners();
+                      await fetchSavedScreeners(); // Fetch fresh data from DB
                       return;
                     }
                     const errorData = await retryResponse.json().catch(() => ({}));
@@ -485,7 +553,7 @@ export default function ScreenerRoute() {
 
                   const retryData = await retryResponse.json();
                   if (retryData.status === 'success') {
-                    setIsSaved(true);
+                    // Fetch fresh data from DB
                     await fetchSavedScreeners();
                   }
                   return;
@@ -503,8 +571,7 @@ export default function ScreenerRoute() {
 
       const data = await response.json();
       if (data.status === 'success') {
-        setIsSaved(true);
-        // Refresh saved screeners list
+        // Fetch fresh data from DB to update the list and cache
         await fetchSavedScreeners();
         showToast({
           message: 'Screener saved successfully',
@@ -514,6 +581,10 @@ export default function ScreenerRoute() {
       }
     } catch (err: any) {
       console.error('Error saving screener:', err);
+      // Revert optimistic updates on error
+      setIsSaved(false);
+      setSavedScreeners(previousScreeners);
+      localStorage.setItem('cached_saved_screeners', JSON.stringify(previousScreeners));
       setError(err.message || 'Failed to save screener');
       showToast({
         message: err.message || 'Failed to save screener',
@@ -529,6 +600,20 @@ export default function ScreenerRoute() {
     if (!skipConfirm && !confirm('Are you sure you want to delete this screener?')) {
       return;
     }
+
+    // OPTIMISTIC UI UPDATE: Update state immediately
+    const wasCurrentlyDisplayed = isSaved;
+    if (wasCurrentlyDisplayed) {
+      setIsSaved(false);
+    }
+    
+    // Optimistically remove from saved list
+    const previousScreeners = [...savedScreeners];
+    const updatedScreeners = savedScreeners.filter(s => (s.id || s.ID) !== screenerId);
+    setSavedScreeners(updatedScreeners);
+    
+    // Update cache immediately
+    localStorage.setItem('cached_saved_screeners', JSON.stringify(updatedScreeners));
 
     try {
       const baseUrl = document.querySelector('base')?.getAttribute('href') || '/';
@@ -551,15 +636,17 @@ export default function ScreenerRoute() {
       });
 
       if (!response.ok) {
+        // Revert optimistic updates on error
+        setSavedScreeners(previousScreeners);
+        localStorage.setItem('cached_saved_screeners', JSON.stringify(previousScreeners));
+        if (wasCurrentlyDisplayed) {
+          setIsSaved(true);
+        }
         throw new Error('Failed to delete screener');
       }
 
-      // Refresh saved screeners list
+      // Success - fetch fresh data from DB to confirm and update cache
       await fetchSavedScreeners();
-      // If we deleted the currently displayed screener, reset state
-      if (isSaved) {
-        setIsSaved(false);
-      }
       
       showToast({
         message: 'Screener deleted successfully',
@@ -568,6 +655,7 @@ export default function ScreenerRoute() {
       });
     } catch (err: any) {
       console.error('Error deleting screener:', err);
+      // Optimistic updates already reverted above
       setError(err.message || 'Failed to delete screener');
       showToast({
         message: err.message || 'Failed to delete screener',
@@ -769,9 +857,9 @@ export default function ScreenerRoute() {
                       onClick={handleSaveScreener}
                       disabled={saving || !query || !explainer}
                       className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors ${
-                        isSaved ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'
+                        isSaved ? 'text-red-500 dark:text-red-500' : 'text-gray-600 dark:text-gray-400'
                       } ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      title={isSaved ? 'Screener is saved' : 'Save screener'}
+                      title={isSaved ? 'Click to delete screener' : 'Click to save screener'}
                     >
                       <Heart className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
                     </button>

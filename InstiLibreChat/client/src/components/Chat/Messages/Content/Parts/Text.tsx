@@ -112,7 +112,12 @@ const TextPart = memo(({ text, isCreatedByUser, showCursor }: TextPartProps) => 
             )
           )}
           {(documentNames || personaName || templateName) && (
-            <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <div 
+              className="mt-2 flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400"
+              style={{
+                justifyContent: isCreatedByUser ? 'flex-end' : 'flex-start'
+              }}
+            >
               {documentNames && (
                 <span className="flex items-center gap-1">
                   <span>📄</span>

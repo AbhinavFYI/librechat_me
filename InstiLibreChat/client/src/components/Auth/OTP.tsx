@@ -71,16 +71,21 @@ function OTP() {
         credentials: 'include', // Include cookies for auth
       });
 
-      const data = await response.json();
+      const responseData = await response.json();
 
       if (!response.ok) {
         showToast({
-          message: data.message || 'Invalid OTP',
+          message: responseData.message || 'Invalid OTP',
           status: 'error',
         });
         setIsLoading(false);
         return;
       }
+
+      // Handle both response formats:
+      // 1. insti-inquora: { code: 200, s: "ok", data: { access_token, refresh_token, user, permissions } }
+      // 2. saas-api: { access_token, refresh_token, user, permissions }
+      const data = responseData.data || responseData;
 
       // Store tokens
       if (data.access_token) {

@@ -34,6 +34,21 @@ export interface DocumentListResponse {
   } | DocumentListItem[];
 }
 
+/**
+ * Normalize API response structure
+ * Handles both response formats:
+ * 1. insti-inquora: { code: 200, s: "ok", data: {...}, message: "..." }
+ * 2. saas-api: { access_token, refresh_token, user, ... } (flat structure)
+ */
+function normalizeResponse<T>(data: any): T {
+  // If response has 'data' field (insti-inquora format), extract it
+  if (data && typeof data === 'object' && 'data' in data) {
+    return data.data as T;
+  }
+  // Otherwise return as-is (saas-api format)
+  return data as T;
+}
+
 function getAuthToken(): string | null {
   return localStorage.getItem('access_token');
 }
@@ -91,10 +106,20 @@ export const uploadDocument = async (
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: 'Upload failed' }));
-      throw new Error(errorData.message || `Upload failed: ${response.statusText}`);
+      // Handle both "message" and "error" fields from different API formats
+      const errorMessage = errorData.message || errorData.error || `Upload failed: ${response.statusText}`;
+      console.error('Document upload failed:', { status: response.status, errorData });
+      throw new Error(errorMessage);
     }
 
-    return await response.json();
+    const responseData = await response.json();
+    // Return normalized response structure
+    return {
+      ...responseData,
+      // Ensure code and s fields are present for compatibility
+      code: responseData.code || 200,
+      s: responseData.s || 'ok',
+    };
   } catch (error) {
     console.error('Document upload error:', error);
     throw error;
@@ -118,7 +143,8 @@ export const fetchDocuments = async (): Promise<DocumentListResponse> => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: 'Fetch failed' }));
-      throw new Error(errorData.message || `Fetch failed: ${response.statusText}`);
+      // Handle both "message" and "error" fields from different API formats
+      throw new Error(errorData.message || errorData.error || `Fetch failed: ${response.statusText}`);
     }
 
     const data = await response.json();

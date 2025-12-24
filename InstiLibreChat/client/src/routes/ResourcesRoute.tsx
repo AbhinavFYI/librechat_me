@@ -25,7 +25,8 @@ interface FolderNode {
 }
 
 interface FileNode {
-  id: number; // Changed from string to number (documents use int64 IDs)
+  id: string; // Legacy UUID for compatibility
+  document_id?: number; // Actual document ID for deletion/updates
   name: string;
   extension?: string;
   size_bytes?: number;
@@ -180,7 +181,11 @@ export default function ResourcesRoute() {
   const loadOrganizations = async () => {
     try {
       const data = await saasApi.getOrganizations(isSuperAdmin, undefined);
-      const orgs = Array.isArray(data) ? data : (data as any).data || ((data as any).id ? [data] : []);
+      // Handle both response formats
+      const orgs = Array.isArray(data) 
+        ? data 
+        : (data as any).organizations || (data as any).data || ((data as any).id ? [data] : []);
+      console.log('🏢 ResourcesRoute - Loaded organizations:', { count: orgs.length, orgs });
       setOrganizations(orgs);
       
       if (orgs.length > 0) {
@@ -374,7 +379,12 @@ export default function ResourcesRoute() {
   const handleDeleteFile = async (file: FileNode) => {
     if (!confirm(`Delete file "${file.name}"?`)) return;
     try {
-      await saasApi.deleteFile(file.id);
+      // Use document_id if available, otherwise fall back to id (for backward compatibility)
+      const fileId = file.document_id || parseInt(file.id);
+      if (isNaN(fileId)) {
+        throw new Error('Invalid file ID');
+      }
+      await saasApi.deleteFile(fileId);
       loadFolders(isSuperAdmin ? selectedOrgId : userOrgId);
     } catch (err: any) {
       alert(err.message || 'Failed to delete file');
@@ -383,7 +393,12 @@ export default function ResourcesRoute() {
 
   const handleDownloadFile = async (file: FileNode) => {
     try {
-      const blob = await saasApi.downloadFile(file.id);
+      // Use document_id if available, otherwise fall back to id (for backward compatibility)
+      const fileId = file.document_id || parseInt(file.id);
+      if (isNaN(fileId)) {
+        throw new Error('Invalid file ID');
+      }
+      const blob = await saasApi.downloadFile(fileId);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;

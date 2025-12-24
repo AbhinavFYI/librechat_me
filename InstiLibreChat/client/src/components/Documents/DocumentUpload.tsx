@@ -37,6 +37,7 @@ export default function DocumentUpload({ onUploadSuccess, className }: DocumentU
         // HTML
         'text/html',
         'application/xhtml+xml',
+        'application/xhtml',
         // Images
         'image/jpeg',
         'image/jpg',
@@ -57,9 +58,32 @@ export default function DocumentUpload({ onUploadSuccess, className }: DocumentU
         'text/json',
       ];
 
-      if (!allowedTypes.includes(file.type)) {
+      // Allowed file extensions 
+      const allowedExtensions = [
+        '.docx', '.dotx', '.docm', '.dotm',  // Word
+        '.pptx',                              // PowerPoint
+        '.pdf',                               // PDF
+        '.md',                                // Markdown
+        '.html', '.htm', '.xhtml',            // HTML
+        '.jpg', '.jpeg', '.png', '.tiff', '.bmp', '.webp',  // Images
+        '.csv',                               // CSV
+        '.xlsx', '.xlsm',                     // Excel
+        '.txt',                               // Text
+        '.json',                              // JSON
+      ];
+
+      // Get file extension
+      const fileName = file.name.toLowerCase();
+      const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
+      
+      // Check if file type or extension is valid
+      const isValidType = allowedTypes.includes(file.type);
+      const isValidExtension = allowedExtensions.includes(fileExtension);
+
+
+      if (!isValidType && !isValidExtension) {
         showToast({
-          message: 'Please select a valid document file (DOCX, DOTX, DOCM, DOTM, PPTX, PDF, MD, HTML, JPG, PNG, TIFF, BMP, WEBP, CSV, XLSX, XLSM, TXT, JSON)',
+          message: 'Please select a valid document file (DOCX, DOTX, DOCM, DOTM, PPTX, PDF, MD, HTML, HTM, XHTML, JPG, JPEG, PNG, TIFF, BMP, WEBP, CSV, XLSX, XLSM, TXT, JSON)',
           status: 'error',
         });
         return;
