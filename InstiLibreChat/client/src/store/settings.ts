@@ -35,10 +35,10 @@ const localStorageAtoms = {
   saveDrafts: atomWithLocalStorage('saveDrafts', true),
   showScrollButton: atomWithLocalStorage('showScrollButton', true),
   forkSetting: atomWithLocalStorage('forkSetting', ''),
-  splitAtTarget: atomWithLocalStorage('splitAtTarget', false),
+  splitAtTarget: atomWithLocalStorage('splitAtTarget', true),
   rememberDefaultFork: atomWithLocalStorage(LocalStorageKeys.REMEMBER_FORK_OPTION, false),
   showThinking: atomWithLocalStorage('showThinking', false),
-  saveBadgesState: atomWithLocalStorage('saveBadgesState', false),
+  saveBadgesState: atomWithLocalStorage('saveBadgesState', true),
 
   // Beta features settings
   modularChat: atomWithLocalStorage('modularChat', true),

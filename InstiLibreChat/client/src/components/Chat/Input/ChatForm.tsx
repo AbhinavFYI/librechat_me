@@ -266,7 +266,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                 <div className="relative flex-1">
                   <TextareaAutosize
                     {...registerProps}
-                    placeholder="Message FIA"
+                    placeholder="Ask FIA"
                     ref={(e) => {
                       ref(e);
                       (textAreaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current =

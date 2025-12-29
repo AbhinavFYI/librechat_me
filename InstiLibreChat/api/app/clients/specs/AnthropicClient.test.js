@@ -2,7 +2,7 @@ const { SplitStreamHandler } = require('@librechat/agents');
 const { anthropicSettings } = require('librechat-data-provider');
 const AnthropicClient = require('~/app/clients/AnthropicClient');
 
-const HUMAN_PROMPT = '\n\nHuman:';
+const HUMAN_PROMPT = '\n\nUser:';
 const AI_PROMPT = '\n\nAssistant:';
 
 describe('AnthropicClient', () => {

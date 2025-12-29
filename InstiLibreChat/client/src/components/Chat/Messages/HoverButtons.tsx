@@ -1,5 +1,4 @@
 import React, { useState, useMemo, memo } from 'react';
-import { useRecoilState } from 'recoil';
 import { useParams } from 'react-router-dom';
 import type { TConversation, TMessage, TFeedback } from 'librechat-data-provider';
 import { EditIcon, Clipboard, CheckMark, ContinueIcon, RegenerateIcon } from '@librechat/client';
@@ -8,12 +7,9 @@ import { useGenerationsByLatest, useLocalize } from '~/hooks';
 import { useGetMessagesByConvoId } from '~/data-provider';
 import { buildTree } from 'librechat-data-provider';
 import { useFileMapContext } from '~/Providers';
-import { Fork } from '~/components/Conversations';
-import MessageAudio from './MessageAudio';
 import Feedback from './Feedback';
 import SavePDFModal from '../SavePDFModal';
 import { cn } from '~/utils';
-import store from '~/store';
 
 type THoverButtons = {
   isEditing: boolean;
@@ -232,7 +228,6 @@ const HoverButtons = ({
 }: THoverButtons) => {
   const localize = useLocalize();
   const [isCopied, setIsCopied] = useState(false);
-  const [TextToSpeech] = useRecoilState<boolean>(store.textToSpeech);
   const { conversationId } = useParams<{ conversationId?: string }>();
   const [showPDFModal, setShowPDFModal] = useState(false);
   const fileMap = useFileMapContext();
@@ -264,7 +259,6 @@ const HoverButtons = ({
     hideEditButton,
     regenerateEnabled,
     continueSupported,
-    forkingSupported,
     isEditableEndpoint,
   } = generationCapabilities;
 
@@ -300,25 +294,6 @@ const HoverButtons = ({
 
   return (
     <div className="group visible flex justify-center gap-0.5 self-end focus-within:outline-none lg:justify-start">
-      {/* Text to Speech */}
-      {TextToSpeech && (
-        <MessageAudio
-          index={index}
-          isLast={isLast}
-          messageId={message.messageId}
-          content={extractMessageContent(message)}
-          renderButton={(props) => (
-            <HoverButton
-              onClick={props.onClick}
-              title={props.title}
-              icon={props.icon}
-              isActive={props.isActive}
-              isLast={isLast}
-            />
-          )}
-        />
-      )}
-
       {/* Copy Button */}
       <HoverButton
         onClick={handleCopy}
@@ -344,15 +319,6 @@ const HoverButtons = ({
           className={isCreatedByUser ? '' : 'active'}
         />
       )}
-
-      {/* Fork Button */}
-      <Fork
-        messageId={message.messageId}
-        conversationId={conversation.conversationId}
-        forkingSupported={forkingSupported}
-        latestMessageId={latestMessage?.messageId}
-        isLast={isLast}
-      />
 
       {/* Feedback Buttons */}
       {!isCreatedByUser && handleFeedback != null && (

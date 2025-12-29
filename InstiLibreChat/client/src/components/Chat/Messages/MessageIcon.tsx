@@ -5,6 +5,7 @@ import type { TMessageIcon } from '~/common';
 import ConvoIconURL from '~/components/Endpoints/ConvoIconURL';
 import { useGetEndpointsQuery } from '~/data-provider';
 import { getIconEndpoint, logger } from '~/utils';
+import { useChatContext } from '~/Providers';
 import Icon from '~/components/Endpoints/Icon';
 
 const MessageIcon = memo(
@@ -19,8 +20,8 @@ const MessageIcon = memo(
     agent?: Agent;
     isSubmitting?: boolean;
   }) => {
-    logger.log('icon_data', iconData, assistant, agent);
     const { data: endpointsConfig } = useGetEndpointsQuery();
+    const { isSubmitting: chatIsSubmitting } = useChatContext();
 
     const agentName = useMemo(() => agent?.name ?? '', [agent]);
     const agentAvatar = useMemo(() => agent?.avatar?.filepath ?? '', [agent]);
@@ -49,8 +50,12 @@ const MessageIcon = memo(
     );
 
     // Show loading animation for AI messages that are being generated
-    if (!iconData?.isCreatedByUser && isSubmitting) {
-      console.log('Showing loader GIF - isSubmitting:', isSubmitting, 'isCreatedByUser:', iconData?.isCreatedByUser);
+    // Use chatIsSubmitting from ChatContext as fallback since this component
+    // is rendered outside MessageContext
+    const effectiveIsSubmitting = isSubmitting || chatIsSubmitting;
+    const shouldShowLoader = effectiveIsSubmitting && iconData?.isCreatedByUser === false;
+
+    if (shouldShowLoader) {
       return (
         <div className="flex h-full w-full items-center justify-center">
           <img 
@@ -58,8 +63,6 @@ const MessageIcon = memo(
             alt="Loading..." 
             className="object-contain"
             style={{ width: '32px', height: '32px' }}
-            onError={(e) => console.error('Failed to load GIF:', e)}
-            onLoad={() => console.log('GIF loaded successfully')}
           />
         </div>
       );
@@ -80,7 +83,6 @@ const MessageIcon = memo(
       );
     }
 
-    console.log('MessageIcon rendering Icon with size:', 32, 'endpoint:', endpoint, 'isCreatedByUser:', iconData?.isCreatedByUser);
     return (
       <Icon
         isCreatedByUser={iconData?.isCreatedByUser ?? false}

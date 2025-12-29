@@ -37,17 +37,38 @@ export default function AdminDashboard({ userInfo }: AdminDashboardProps) {
 
   // Load permissions from localStorage
   useEffect(() => {
-    const storedPerms = localStorage.getItem('permissions');
-    if (storedPerms) {
-      try {
-        const perms = JSON.parse(storedPerms);
-        setPermissions(perms);
-        setPermissionManager(new PermissionManager(perms));
-      } catch (error) {
-        console.error('Error parsing permissions:', error);
+    let perms: Permission[] = [];
+    
+    // If superadmin, grant ALL permissions automatically
+    if (isSuperAdmin) {
+      // Create all possible permissions for superadmin
+      const resources = ['organizations', 'users', 'roles', 'permissions'];
+      const actions = ['read', 'create', 'update', 'delete'];
+      
+      perms = resources.flatMap(resource =>
+        actions.map(action => ({
+          id: `${resource}-${action}`,
+          resource,
+          action, 
+        }))
+      );
+      
+      console.log('🔑 Superadmin detected - granting all permissions:', perms.length);
+    } else {
+      // For non-superadmins, load from localStorage
+      const storedPerms = localStorage.getItem('permissions');
+      if (storedPerms) {
+        try {
+          perms = JSON.parse(storedPerms);
+        } catch (error) {
+          console.error('Error parsing permissions:', error);
+        }
       }
     }
-  }, []);
+    
+    setPermissions(perms);
+    setPermissionManager(new PermissionManager(perms));
+  }, [isSuperAdmin]);
 
   // Fetch organizations
   const fetchOrganizations = async () => {

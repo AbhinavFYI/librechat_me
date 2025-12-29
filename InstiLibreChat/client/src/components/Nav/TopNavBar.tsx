@@ -23,7 +23,7 @@ export default function TopNavBar() {
   const { user, logout } = useAuthContext();
   const [userInfo, setUserInfo] = useState<any>(null);
   const [permissionManager, setPermissionManager] = useState<PermissionManager | null>(null);
-  const [activeMenu, setActiveMenu] = useState('Stock research');
+  const [activeMenu, setActiveMenu] = useState('FIA research');
   const [niftyData, setNiftyData] = useState<NiftyData | null>(null);
   const [niftyLoading, setNiftyLoading] = useState(true);
   const [niftyError, setNiftyError] = useState<string | null>(null);
@@ -89,11 +89,11 @@ export default function TopNavBar() {
     } else if (path.includes('/resources')) {
       setActiveMenu('Resources');
     } else if (path.includes('/templates')) {
-      setActiveMenu('Templates');
-    } else if (path.includes('/screener')) {
-      setActiveMenu('Screeners');
+      setActiveMenu('Customise');
+    // } else if (path.includes('/screener')) {
+    //   setActiveMenu('Screeners');
     } else {
-      setActiveMenu('Stock research');
+      setActiveMenu('FIA research');
     }
 
     // Store current conversation ID when on a chat route
@@ -194,7 +194,7 @@ export default function TopNavBar() {
       case 'Admin':
         navigate(`${baseHref}admin`);
         break;
-      case 'Stock research': {
+      case 'FIA research': {
         // Restore last conversation if available, otherwise go to new chat
         const lastConversationId = localStorage.getItem('lastConversationId');
         if (lastConversationId && lastConversationId !== 'new') {
@@ -207,9 +207,9 @@ export default function TopNavBar() {
       case 'Customise':
         navigate(`${baseHref}templates`);
         break;
-      case 'Screeners':
-        navigate(`${baseHref}screener`);
-        break;
+      // case 'Screeners':
+      //   navigate(`${baseHref}screener`);
+      //   break;
       case 'Resources':
         navigate(`${baseHref}resources`);
         break;
@@ -298,10 +298,10 @@ export default function TopNavBar() {
     });
   }, [userInfo]);
 
-  // Show only 4 tabs for verified users: Stock research, Screeners, Resources, Customise
+  // Show only 4 tabs for verified users: FIA research, Screeners, Resources, Customise
   // Admin is only shown for super admins or users with org_role === 'admin'
   // CRITICAL: Default to hiding Admin tab - only show if explicitly allowed
-  const allMenus = ['Admin', 'Stock research', 'Screeners', 'Resources', 'Customise'];
+  const allMenus = ['Admin', 'FIA research', 'Resources', 'Customise'];//screeners removed
   const menus = allMenus.filter((menu) => {
     // STRICT CHECK: Only show Admin if canAccessAdmin is explicitly true
     // This ensures Admin is hidden by default for ALL users (including when userInfo hasn't loaded)
@@ -313,7 +313,7 @@ export default function TopNavBar() {
       // Hide Admin tab for all other cases
       return false;
     }
-    // Always show Customise, Stock research, Screeners, and Resources
+    // Always show Customise, FIA research, Screeners, and Resources
     return true;
   });
 

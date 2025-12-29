@@ -392,7 +392,7 @@ export default function TemplatesView() {
                                   if (button) {
                                     const rect = button.getBoundingClientRect();
                                     setDropdownPosition({
-                                      top: rect.top - 8,
+                                      top: rect.bottom + 4,
                                       right: window.innerWidth - rect.right,
                                     });
                                   }
@@ -410,7 +410,6 @@ export default function TemplatesView() {
                                 style={{
                                   top: `${dropdownPosition.top}px`,
                                   right: `${dropdownPosition.right}px`,
-                                  transform: 'translateY(-100%)',
                                 }}
                                 onClick={(e) => e.stopPropagation()}
                               >
@@ -495,7 +494,7 @@ export default function TemplatesView() {
                                   if (button) {
                                     const rect = button.getBoundingClientRect();
                                     setDropdownPosition({
-                                      top: rect.top - 8,
+                                      top: rect.bottom + 4,
                                       right: window.innerWidth - rect.right,
                                     });
                                   }
@@ -513,7 +512,6 @@ export default function TemplatesView() {
                                 style={{
                                   top: `${dropdownPosition.top}px`,
                                   right: `${dropdownPosition.right}px`,
-                                  transform: 'translateY(-100%)',
                                 }}
                                 onClick={(e) => e.stopPropagation()}
                               >

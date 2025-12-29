@@ -60,7 +60,7 @@ export default function AdminRoute() {
       // Only super admins or users with org_role === 'admin' can access admin panel
       // Verified users (email_verified && active) should NOT see the admin panel
       if (!canAccessAdmin) {
-        // Immediately redirect to chat (Stock research)
+        // Immediately redirect to chat (FIA research)
         const baseHref = document.querySelector('base')?.getAttribute('href') || '/';
         const lastConversationId = localStorage.getItem('lastConversationId');
         if (lastConversationId && lastConversationId !== 'new') {
@@ -116,7 +116,7 @@ export default function AdminRoute() {
         <div className="text-center">
           <p className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Access Denied</p>
           <p className="text-gray-500 dark:text-gray-400">You don't have permission to access the Admin section.</p>
-          <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">Redirecting to Stock research...</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">Redirecting to FIA research...</p>
         </div>
       </div>
     );

@@ -43,7 +43,7 @@ const UploadButton = ({ disabled }: UploadButtonProps) => {
           >
             <div className="flex w-full items-center justify-center gap-2">
               <img 
-                src="/assets/Import.svg" 
+                src="/assets/export.svg" 
                 alt="Upload Document" 
                 className="icon-md dark:invert"
                 style={{ width: '20px', height: '20px' }}

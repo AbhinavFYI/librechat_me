@@ -33,7 +33,7 @@ export default function Root() {
 
   const { isAuthenticated, logout } = useAuthContext();
 
-  // Only show chat history sidebar on chat routes (Stock research), not on admin/templates/screener/resources
+  // Only show chat history sidebar on chat routes (FIA research), not on admin/templates/screener/resources
   const shouldShowNav = !location.pathname.startsWith('/admin') && 
                         !location.pathname.startsWith('/templates') && 
                         !location.pathname.startsWith('/screener') &&

@@ -1,7 +1,6 @@
 import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
-import { easings } from '@react-spring/web';
 import { EModelEndpoint } from 'librechat-data-provider';
-import { BirthdayIcon, TooltipAnchor, SplitText } from '@librechat/client';
+import { BirthdayIcon, TooltipAnchor } from '@librechat/client';
 import { useChatContext, useAgentsMapContext, useAssistantsMapContext } from '~/Providers';
 import { useGetEndpointsQuery, useGetStartupConfig } from '~/data-provider';
 import ConvoIcon from '~/components/Endpoints/ConvoIcon';
@@ -148,30 +147,15 @@ export default function Landing({ centerFormOnLanding }: { centerFormOnLanding: 
       className={`flex h-full transform-gpu flex-col items-center justify-center pb-16 transition-all duration-200 ${centerFormOnLanding ? 'max-h-full sm:max-h-0' : 'max-h-full'}`}
     >
       <div className="flex flex-col items-center gap-3 p-2 mb-6">
-        {/* Main Heading with animation */}
-        <div 
-          id="landing-heading-32px"
-          className="[&_*]:!text-[32px] [&_*]:!leading-[40px]"
-          style={{ 
-            fontSize: '32px',
-            lineHeight: '40px'
-          }}
+        {/* Main Heading */}
+        <h1 
+          className="text-[32px] font-semibold leading-[40px] text-[#2A2A2A] dark:text-white text-center"
         >
-          <SplitText
-            text="Analyse the markets with FIA"
-            className="!text-[32px] font-semibold !leading-[40px] text-[#2A2A2A] dark:text-white"
-            delay={50}
-            textAlign="center"
-            animationFrom={{ opacity: 0, transform: 'translate3d(0,50px,0)' }}
-            animationTo={{ opacity: 1, transform: 'translate3d(0,0,0)' }}
-            easing={easings.easeOutCubic}
-            threshold={0}
-            rootMargin="0px"
-          />
-        </div>
+          Analyse the markets with FIA
+        </h1>
         
-        {/* Subtitle with animation */}
-        <div className="text-[16px] font-normal leading-[24px] text-[#666666] dark:text-gray-400 text-center max-w-2xl animate-fadeIn">
+        {/* Subtitle */}
+        <div className="text-[16px] font-normal leading-[24px] text-[#666666] dark:text-gray-400 text-center max-w-2xl">
           Get institutional-grade insights, analyse documents, and explore <br/>market data with the power of AI.
         </div>
       </div>

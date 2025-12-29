@@ -160,7 +160,22 @@ export default function ResourcesRoute() {
       setUserInfo(user);
       if (user) {
         let permissions = user.permissions || [];
-        if (!permissions || permissions.length === 0) {
+        
+        // If superadmin, grant ALL permissions automatically
+        if (user.is_super_admin === true) {
+          const resources = ['organizations', 'users', 'roles', 'permissions', 'folders', 'files', 'documents'];
+          const actions = ['read', 'create', 'update', 'delete'];
+          
+          permissions = resources.flatMap((resource: string) =>
+            actions.map((action: string) => ({
+              id: `${resource}-${action}`,
+              resource,
+              action,
+            }))
+          );
+          
+          console.log('🔑 ResourcesRoute - Superadmin detected - granting all permissions:', permissions.length);
+        } else if (!permissions || permissions.length === 0) {
           const storedPerms = localStorage.getItem('permissions');
           if (storedPerms) {
             try {
@@ -170,6 +185,7 @@ export default function ResourcesRoute() {
             }
           }
         }
+        
         const pm = new PermissionManager(permissions as any[]);
         setPermissionManager(pm);
       }
@@ -735,7 +751,7 @@ export default function ResourcesRoute() {
                                     if (button) {
                                       const rect = button.getBoundingClientRect();
                                       setDropdownPosition({
-                                        top: rect.top - 8, // Position above button
+                                        top: rect.bottom + 4, // Position below button
                                         right: window.innerWidth - rect.right,
                                       });
                                     }
@@ -753,7 +769,6 @@ export default function ResourcesRoute() {
                                   style={{
                                     top: `${dropdownPosition.top}px`,
                                     right: `${dropdownPosition.right}px`,
-                                    transform: 'translateY(-100%)',
                                   }}
                                   onClick={(e) => e.stopPropagation()}
                                 >
@@ -863,7 +878,7 @@ export default function ResourcesRoute() {
                                     if (button) {
                                       const rect = button.getBoundingClientRect();
                                       setDropdownPosition({
-                                        top: rect.top - 8, // Position above button
+                                        top: rect.bottom + 4, // Position below button
                                         right: window.innerWidth - rect.right,
                                       });
                                     }
@@ -881,7 +896,6 @@ export default function ResourcesRoute() {
                                   style={{
                                     top: `${dropdownPosition.top}px`,
                                     right: `${dropdownPosition.right}px`,
-                                    transform: 'translateY(-100%)',
                                   }}
                                   onClick={(e) => e.stopPropagation()}
                                 >
