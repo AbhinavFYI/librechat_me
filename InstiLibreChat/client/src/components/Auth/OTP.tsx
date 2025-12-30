@@ -242,99 +242,99 @@ function OTP() {
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex flex-col lg:flex-row min-h-screen overflow-x-hidden">
       {/* Left Section - Same Blue Gradient as Login */}
-      <div className="flex-1 bg-gradient-to-br from-[#2434E7] to-[#3B4FE8] p-12 flex flex-col">
+      <div className="flex-1 bg-gradient-to-br from-[#2434E7] to-[#3B4FE8] p-6 sm:p-8 lg:p-12 flex flex-col min-h-[40vh] lg:min-h-screen">
         {/* Logo */}
-        <div className="flex items-center gap-3 mb-20">
-          <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center p-1">
+        <div className="flex items-center gap-2 sm:gap-3 mb-8 sm:mb-12 lg:mb-20">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-lg flex items-center justify-center p-1 flex-shrink-0">
             <img
               src="assets/Logo.svg"
               alt="FIA Logo"
               className="w-full h-full object-contain"
             />
           </div>
-          <span className="text-white text-xl font-medium">FIA - FYERS Intelligent Assistant</span>
+          <span className="text-white text-base sm:text-lg lg:text-xl font-medium">FIA - FYERS Intelligent Assistant</span>
         </div>
 
-        <div style={{ maxWidth: '1400px' }}>
+        <div className="max-w-full lg:max-w-[1400px]">
           {/* Main Headline */}
-          <h1 className="text-white text-5xl font-bold leading-tight mb-8">
+          <h1 className="text-white text-2xl sm:text-3xl lg:text-5xl font-bold leading-tight mb-6 lg:mb-8">
             Institutional-grade research<br />with the power of AI.
           </h1>
 
           {/* Feature List */}
-          <div className="space-y-4 mb-12">
-            <div className="flex items-center gap-3 text-white">
-              <TrendingUp className="w-5 h-5" />
-              <span className="text-lg">AI-powered institutional research</span>
+          <div className="space-y-3 sm:space-y-4 mb-8 lg:mb-12">
+            <div className="flex items-center gap-2 sm:gap-3 text-white text-sm sm:text-base lg:text-lg">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+              <span>AI-powered institutional research</span>
             </div>
-            <div className="flex items-center gap-3 text-white">
-              <Shield className="w-5 h-5" />
-              <span className="text-lg">Secure document intelligence</span>
+            <div className="flex items-center gap-2 sm:gap-3 text-white text-sm sm:text-base lg:text-lg">
+              <Shield className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+              <span>Secure document intelligence</span>
             </div>
-            <div className="flex items-center gap-3 text-white">
-              <Users className="w-5 h-5" />
-              <span className="text-lg">Collaborative reporting for teams</span>
+            <div className="flex items-center gap-2 sm:gap-3 text-white text-sm sm:text-base lg:text-lg">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+              <span>Collaborative reporting for teams</span>
             </div>
           </div>
 
-          {/* Interactive Cards */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6" style={{ width: '1000px', maxWidth: '100%' }}>
-            <div className="flex gap-8 mb-6" style={{ justifyContent: 'center' }}>
+          {/* Interactive Cards - Hidden on mobile, visible on larger screens */}
+          <div className="hidden md:block bg-white/10 backdrop-blur-sm rounded-2xl p-4 lg:p-6 max-w-full">
+            <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 mb-4 lg:mb-6 justify-center">
               {/* Document Analysis Card */}
-              <div className="bg-white rounded-xl p-6 flex flex-col" style={{ width: '450px', aspectRatio: '1.8' }}>
-                <div className="flex items-center justify-between mb-4">
+              <div className="bg-white rounded-xl p-4 lg:p-6 flex flex-col w-full lg:w-[450px] lg:max-w-[450px]">
+                <div className="flex items-center justify-between mb-3 lg:mb-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-white" />
+                    <div className="w-7 h-7 lg:w-8 lg:h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
                     </div>
-                    <span className="font-semibold text-gray-900">Document Analysis</span>
+                    <span className="font-semibold text-gray-900 text-sm lg:text-base">Document Analysis</span>
                   </div>
                   <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">NEW</span>
                 </div>
-                <div className="space-y-2 mb-4 flex-1">
+                <div className="space-y-2 mb-3 lg:mb-4 flex-1">
                   <div className="h-2 bg-gray-200 rounded w-full"></div>
                   <div className="h-2 bg-gray-200 rounded w-full"></div>
                   <div className="h-2 bg-gray-200 rounded w-3/4"></div>
                   <div className="h-2 bg-gray-200 rounded w-1/2"></div>
                 </div>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-600" />
-                  <span className="text-sm text-green-800">Document analyzed successfully</span>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-2 lg:p-3 flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  <span className="text-xs lg:text-sm text-green-800">Document analyzed successfully</span>
                 </div>
               </div>
 
               {/* Stocks on Chat Card */}
-              <div className="bg-white rounded-xl p-6 flex flex-col" style={{ width: '450px', aspectRatio: '1.8' }}>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                    <MessageSquare className="w-5 h-5 text-white" />
+              <div className="bg-white rounded-xl p-4 lg:p-6 flex flex-col w-full lg:w-[450px] lg:max-w-[450px]">
+                <div className="flex items-center gap-2 mb-3 lg:mb-4">
+                  <div className="w-7 h-7 lg:w-8 lg:h-8 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <MessageSquare className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
                   </div>
-                  <span className="font-semibold text-gray-900">Stocks on Chat</span>
+                  <span className="font-semibold text-gray-900 text-sm lg:text-base">Stocks on Chat</span>
                 </div>
-                <div className="space-y-3 flex-1">
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-sm text-gray-600">What's the main topic?</p>
+                <div className="space-y-2 lg:space-y-3 flex-1">
+                  <div className="bg-gray-50 rounded-lg p-2 lg:p-3">
+                    <p className="text-xs lg:text-sm text-gray-600">What's the main topic?</p>
                   </div>
-                  <div className="bg-blue-500 rounded-lg p-3">
-                    <p className="text-sm text-white">The document discusses AI implementation strategies...</p>
+                  <div className="bg-blue-500 rounded-lg p-2 lg:p-3">
+                    <p className="text-xs lg:text-sm text-white">The document discusses AI implementation strategies...</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-sm text-gray-600">Can you summarize key points?</p>
+                  <div className="bg-gray-50 rounded-lg p-2 lg:p-3">
+                    <p className="text-xs lg:text-sm text-gray-600">Can you summarize key points?</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Bottom Navigation */}
-            <div className="flex items-center justify-center gap-6 text-white">
+            <div className="flex items-center justify-center gap-4 lg:gap-6 text-white text-sm">
               <button className="flex items-center gap-2 hover:opacity-80 transition">
-                <FileText className="w-4 h-4" />
+                <FileText className="w-4 h-4 flex-shrink-0" />
                 <span>DocuAI Analyser</span>
               </button>
               <button className="flex items-center gap-2 hover:opacity-80 transition">
-                <MessageSquare className="w-4 h-4" />
+                <MessageSquare className="w-4 h-4 flex-shrink-0" />
                 <span>DocuAI Chat</span>
               </button>
             </div>
@@ -343,41 +343,42 @@ function OTP() {
       </div>
 
       {/* Right Section - OTP Form */}
-      <div className="w-[500px] bg-white p-12 flex flex-col">
+      <div className="w-full lg:w-[500px] bg-white p-6 sm:p-8 lg:p-12 flex flex-col">
         {/* Back Button */}
         <button 
-          className="flex items-center gap-2 text-gray-700 mb-8 hover:text-gray-900 transition"
+          className="flex items-center gap-2 text-gray-700 mb-6 sm:mb-8 hover:text-gray-900 transition self-start"
           onClick={() => navigate('/login')}
         >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="font-medium">Back</span>
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+          <span className="font-medium text-sm sm:text-base">Back</span>
         </button>
 
         <div className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Login to FIA</h2>
-          <p className="text-gray-600 mb-2">{companyName}</p>
-          <p className="text-sm text-gray-500 mb-8">OTP sent to: {email}</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Login to FIA</h2>
+          <p className="text-gray-600 mb-2 text-sm sm:text-base">{companyName}</p>
+          <p className="text-xs sm:text-sm text-gray-500 mb-6 sm:mb-8 break-all">OTP sent to: {email}</p>
 
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">Enter OTP</label>
-            <div className="flex gap-[14px]">
+            <div className="flex gap-2 sm:gap-[14px] justify-center sm:justify-start">
               {otp.map((digit, index) => (
                 <input
                   key={index}
                   id={`otp-${index}`}
                   type="text"
+                  inputMode="numeric"
                   maxLength={1}
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="w-14 h-14 border-2 border-gray-300 rounded-lg text-center text-lg font-semibold focus:border-[#2434E7] focus:outline-none"
+                  className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 border-2 border-gray-300 rounded-lg text-center text-base sm:text-lg font-semibold focus:border-[#2434E7] focus:outline-none"
                 />
               ))}
             </div>
           </div>
 
           <button 
-            className="w-full bg-[#2434E7] text-white font-semibold py-3 rounded-lg hover:bg-[#1a28b8] transition mb-4 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="w-full bg-[#2434E7] text-white font-semibold py-3 rounded-lg hover:bg-[#1a28b8] transition mb-4 disabled:bg-gray-400 disabled:cursor-not-allowed text-base"
             onClick={handleLogin}
             disabled={isLoading || otp.join('').length !== 6}
           >
@@ -385,7 +386,7 @@ function OTP() {
           </button>
 
           <button 
-            className="w-full text-gray-700 font-medium py-3 hover:text-gray-900 transition border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full text-gray-700 font-medium py-3 hover:text-gray-900 transition border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed text-base"
             onClick={handleResend}
             disabled={isResending}
           >

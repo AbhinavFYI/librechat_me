@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FileText, X, Check } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { Constants } from 'librechat-data-provider';
 import { cn } from '~/utils';
@@ -21,28 +21,41 @@ export default function SelectedTemplate() {
     if (templateDataStr) {
       try {
         const templateData = JSON.parse(templateDataStr);
-        // Show the actual template content/structure instead of just name
-        if (templateData.detailedPrompt) {
-          // Show the template structure (first few lines or truncated)
-          const lines = templateData.detailedPrompt.split('\n').filter(line => line.trim());
-          const preview = lines.slice(0, 3).join(' | '); // Show first 3 lines
-          setTemplateName(preview.length > 40 ? `${preview.substring(0, 40)}...` : preview);
+        console.log('[SelectedTemplate] Loaded template data:', templateData);
+        
+        // Priority: name > template > description > framework > first lines of detailedPrompt
+        if (templateData.name) {
+          setTemplateName(templateData.name);
+          console.log('[SelectedTemplate] Using name field:', templateData.name);
+        } else if (templateData.template) {
+          setTemplateName(templateData.template);
+          console.log('[SelectedTemplate] Using template field:', templateData.template);
         } else if (templateData.description) {
-          setTemplateName(templateData.description.length > 40 
+          const truncated = templateData.description.length > 40 
             ? `${templateData.description.substring(0, 40)}...` 
-            : templateData.description);
-        } else if (templateData.template || templateData.name) {
-          setTemplateName(templateData.template || templateData.name);
+            : templateData.description;
+          setTemplateName(truncated);
+          console.log('[SelectedTemplate] Using description field:', truncated);
         } else if (templateData.framework) {
           setTemplateName(templateData.framework);
+          console.log('[SelectedTemplate] Using framework field:', templateData.framework);
+        } else if (templateData.detailedPrompt) {
+          // Show the template structure (first few lines or truncated) as fallback
+          const lines = templateData.detailedPrompt.split('\n').filter(line => line.trim());
+          const preview = lines.slice(0, 3).join(' | '); // Show first 3 lines
+          const truncated = preview.length > 40 ? `${preview.substring(0, 40)}...` : preview;
+          setTemplateName(truncated);
+          console.log('[SelectedTemplate] Using detailedPrompt:', truncated);
         } else {
           setTemplateName('Template');
+          console.log('[SelectedTemplate] Using fallback: Template');
         }
       } catch (error) {
-        console.error('Error parsing template data:', error);
+        console.error('[SelectedTemplate] Error parsing template data:', error);
         setTemplateName('');
       }
     } else {
+      console.log('[SelectedTemplate] No template data found in localStorage');
       setTemplateName('');
     }
   }, [conversationId]);
@@ -123,7 +136,11 @@ export default function SelectedTemplate() {
       )}
     >
       <Check className="h-3 w-3 text-text-secondary flex-shrink-0" />
-      <FileText className="h-3 w-3 text-text-secondary flex-shrink-0" />
+      <img 
+        src="/assets/documents.svg" 
+        alt="Template" 
+        className="h-3 w-3 text-text-secondary flex-shrink-0 opacity-70 dark:brightness-0 dark:invert dark:opacity-70" 
+      />
       <span className="text-text-primary whitespace-nowrap" title={fullTemplateContent}>
         {displayName}
       </span>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, CircleCheckBig } from 'lucide-react';
+import { CircleCheckBig } from 'lucide-react';
 import type { Artifact } from '~/common';
 import { Button } from '@librechat/client';
 import useArtifactProps from '~/hooks/Artifacts/useArtifactProps';
@@ -41,7 +41,16 @@ const DownloadArtifact = ({ artifact }: { artifact: Artifact }) => {
       onClick={handleDownload}
       aria-label={localize('com_ui_download_artifact')}
     >
-      {isDownloaded ? <CircleCheckBig size={16} /> : <Download size={16} />}
+      {isDownloaded ? (
+        <CircleCheckBig size={16} />
+      ) : (
+        <img 
+          src="/assets/download.svg" 
+          alt="Download" 
+          className="opacity-70 dark:invert dark:opacity-70" 
+          style={{ width: '16px', height: '16px' }}
+        />
+      )}
     </Button>
   );
 };

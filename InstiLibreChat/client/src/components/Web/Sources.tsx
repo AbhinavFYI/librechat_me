@@ -3,7 +3,7 @@ import { useRecoilValue } from 'recoil';
 import * as Ariakit from '@ariakit/react';
 import { VisuallyHidden } from '@ariakit/react';
 import { Tools } from 'librechat-data-provider';
-import { X, Globe, Newspaper, Image, ChevronDown, File, Download } from 'lucide-react';
+import { X, Globe, Newspaper, Image, ChevronDown, File } from 'lucide-react';
 import {
   OGDialog,
   AnimatedTabs,
@@ -298,7 +298,13 @@ const FileItem = React.memo(function FileItem({
           <span className="truncate text-xs font-medium text-text-secondary">
             {localize('com_sources_agent_file')}
           </span>
-          {!isLocalFile && <Download className="ml-auto h-3 w-3" />}
+          {!isLocalFile && (
+            <img 
+              src="/assets/download.svg" 
+              alt="Download" 
+              className="ml-auto h-3 w-3 opacity-70 dark:invert dark:opacity-70" 
+            />
+          )}
         </div>
         <div className="mt-1 min-w-0">
           <span className="line-clamp-2 break-all text-left text-sm font-medium text-text-primary md:line-clamp-3">
@@ -337,7 +343,13 @@ const FileItem = React.memo(function FileItem({
         <span className="truncate text-xs font-medium text-text-secondary">
           {localize('com_sources_agent_file')}
         </span>
-        {!isLocalFile && <Download className="ml-auto h-3 w-3" />}
+        {!isLocalFile && (
+          <img 
+            src="/assets/download.svg" 
+            alt="Download" 
+            className="ml-auto h-3 w-3 opacity-70 dark:invert dark:opacity-70" 
+          />
+        )}
       </div>
       <div className="mt-1 min-w-0">
         <span className="line-clamp-2 break-all text-left text-sm font-medium text-text-primary md:line-clamp-3">

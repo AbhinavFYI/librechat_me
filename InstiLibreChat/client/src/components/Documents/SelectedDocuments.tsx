@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { FileText, X, Check } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { Constants } from 'librechat-data-provider';
+import { HoverCard, HoverCardTrigger, HoverCardContent, HoverCardPortal } from '@librechat/client';
 import { cn } from '~/utils';
 
 interface StoredDocument {
@@ -95,15 +96,23 @@ export default function SelectedDocuments() {
 
   const documentCount = useMemo(() => selectedDocuments.length, [selectedDocuments.length]);
 
+  const documentNames = useMemo(() => {
+    return selectedDocuments
+      .map(doc => doc.filename || doc.name || 'Unknown')
+      .join('\n');
+  }, [selectedDocuments]);
+
   if (documentCount === 0) {
     return null;
   }
 
   return (
+    <HoverCard openDelay={150}>
+      <HoverCardTrigger asChild>
     <div
       className={cn(
         'flex items-center gap-1.5 rounded-lg border border-border-light bg-surface-secondary px-2 py-1 text-xs',
-        'hover:bg-surface-hover transition-colors'
+            'hover:bg-surface-hover transition-colors cursor-default'
       )}
     >
       <Check className="h-3 w-3 text-text-secondary flex-shrink-0" />
@@ -120,6 +129,19 @@ export default function SelectedDocuments() {
         <X className="h-3 w-3 text-text-secondary" />
       </button>
     </div>
+      </HoverCardTrigger>
+      <HoverCardPortal>
+        <HoverCardContent side="bottom" className="w-auto max-w-md">
+          <div className="space-y-1">
+            {selectedDocuments.map((doc, index) => (
+              <p key={index} className="text-xs text-text-secondary whitespace-nowrap">
+                • {doc.filename || doc.name || 'Unknown'}
+              </p>
+            ))}
+          </div>
+        </HoverCardContent>
+      </HoverCardPortal>
+    </HoverCard>
   );
 }
 

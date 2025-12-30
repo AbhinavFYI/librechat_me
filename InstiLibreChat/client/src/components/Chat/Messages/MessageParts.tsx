@@ -75,6 +75,22 @@ export default function Message(props: TMessageProps) {
     ],
   );
 
+  // Only show loader for the latest message
+  const isLatestMessage = message?.messageId === latestMessage?.messageId;
+  const effectiveIsSubmitting = isLatestMessage ? isSubmitting : false;
+
+  // Temporary debug logging
+  if (isSubmitting) {
+    console.log('[MessageParts] SUBMITTING STATE:', {
+      messageId: message?.messageId,
+      latestMessageId: latestMessage?.messageId,
+      isLatestMessage,
+      isSubmitting,
+      effectiveIsSubmitting,
+      isCreatedByUser: message?.isCreatedByUser,
+    });
+  }
+
   if (!message) {
     return null;
   }
@@ -108,8 +124,13 @@ export default function Message(props: TMessageProps) {
           >
             {!isCreatedByUser && (
               <div className="relative flex flex-shrink-0 flex-col items-center">
-                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full pt-0.5">
-                  <MessageIcon iconData={iconData} assistant={assistant} agent={agent} />
+                <div className="flex items-center justify-center overflow-hidden rounded-full" style={{ width: '32px', height: '32px' }}>
+                  <MessageIcon 
+                    iconData={iconData} 
+                    assistant={assistant} 
+                    agent={agent}
+                    isSubmitting={effectiveIsSubmitting}
+                  />
                 </div>
               </div>
             )}

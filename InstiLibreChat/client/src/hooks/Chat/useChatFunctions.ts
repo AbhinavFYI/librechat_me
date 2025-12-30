@@ -691,6 +691,7 @@ export default function useChatFunctions({
           }
         
         const templateObj: any = {
+          name: templateData.name || templateData.template || 'Template',
           description: description
         };
         
@@ -722,6 +723,7 @@ export default function useChatFunctions({
       try {
         const personaData = JSON.parse(storedPersonaData);
         const personaObj: any = {
+          name: personaData.name || personaData.persona || 'Persona',
           description: personaData.description || 'Defines the role and behavioral style of the assistant.'
         };
         

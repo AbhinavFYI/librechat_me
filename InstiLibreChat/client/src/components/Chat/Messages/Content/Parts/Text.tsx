@@ -24,7 +24,7 @@ const TextPart = memo(({ text, isCreatedByUser, showCursor }: TextPartProps) => 
 
   const content: ContentType = useMemo(() => {
     // Parse new structured JSON format: { documents: [...], template: {...}, persona: {...}, query: "..." }
-    if (isCreatedByUser && (text.trim().startsWith('{') && (text.includes('"documents"') || text.includes('"query"')))) {
+    if (isCreatedByUser && text.trim().startsWith('{')) {
       let documentNames = '';
       let userQuery = '';
       let templateName = '';
@@ -34,15 +34,15 @@ const TextPart = memo(({ text, isCreatedByUser, showCursor }: TextPartProps) => 
         // Try to parse as JSON
         const requestObject = JSON.parse(text);
         
+        // Check if this is our structured format (has query field)
+        if (requestObject.query !== undefined && requestObject.query !== null) {
         // Extract documents
         if (requestObject.documents && Array.isArray(requestObject.documents) && requestObject.documents.length > 0) {
           documentNames = requestObject.documents.map((doc: any) => doc.name).join(', ');
         }
         
         // Extract query
-        if (requestObject.query) {
           userQuery = requestObject.query;
-        }
         
         // Extract template description (for display)
         if (requestObject.template && requestObject.template.description) {
@@ -54,6 +54,10 @@ const TextPart = memo(({ text, isCreatedByUser, showCursor }: TextPartProps) => 
         if (requestObject.persona && requestObject.persona.description) {
           personaName = requestObject.persona.description.substring(0, 50);
           if (requestObject.persona.description.length > 50) personaName += '...';
+          }
+        } else {
+          // Not our format, show as-is
+          userQuery = text;
         }
       } catch (e) {
         // Fallback: try to parse old format

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, X, FileText, User, Calendar, Check } from 'lucide-react';
+import { RefreshCw, X, Calendar, Check } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, Button } from '@librechat/client';
 import { useLocalize, useMCPServerManager } from '~/hooks';
 import { fetchDocuments, type DocumentListItem } from '~/data-provider/document-service';
@@ -181,10 +181,12 @@ export default function DocumentSelector({
   };
 
   const getStatusColor = (status: string) => {
-    if (status === 'completed' || status === 'indexed') {
+    if (status === 'Completed' || status === 'completed' || status === 'indexed') {
       return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-    } else if (status === 'failed' || status === 'error') {
+    } else if (status === 'Failed' || status === 'failed' || status === 'error') {
       return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+    } else if (status === 'Pending' || status === 'pending' || status === 'Processing' || status === 'processing' || status === 'Embedding' || status === 'embedding') {
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
     }
     return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
   };
@@ -199,17 +201,17 @@ export default function DocumentSelector({
               <button
                 onClick={loadDocuments}
                 disabled={loading}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
                 aria-label="Refresh"
               >
-                <RefreshCw className={cn('h-5 w-5', loading && 'animate-spin')} />
+                <RefreshCw className={cn('h-5 w-5 text-gray-700 dark:text-gray-300', loading && 'animate-spin')} />
               </button>
               <button
                 onClick={handleDismiss}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
                 aria-label="Close"
               >
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5 text-gray-700 dark:text-gray-300" />
               </button>
             </div>
           </div>
@@ -277,7 +279,11 @@ export default function DocumentSelector({
                               {isSelected && <Check className="h-3 w-3 text-white" />}
                             </div>
                             <div className="flex items-center gap-2 min-w-0">
-                              <FileText className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                              <img 
+                                src="/assets/documents.svg" 
+                                alt="Document" 
+                                className="h-4 w-4 flex-shrink-0 opacity-70 dark:invert dark:opacity-70" 
+                              />
                               <div className="min-w-0">
                                 <div className="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
                                   {doc.name}
@@ -290,12 +296,9 @@ export default function DocumentSelector({
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-gray-400" />
                             <span className="text-sm text-gray-700 dark:text-gray-300">
-                              System
+                            {doc.owner || 'System'}
                             </span>
-                          </div>
                         </td>
                         <td className="py-3 px-4">
                           <span className="text-sm text-gray-700 dark:text-gray-300">

@@ -58,7 +58,7 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
   }[] = [
     {
       value: SettingsTabValues.GENERAL,
-      icon: <img src="/assets/settings.svg" alt="Settings" className="w-4 h-4 dark:invert" />,
+      icon: <img src="/assets/settings.svg" alt="Settings" className="w-4 h-4 dark:brightness-0 dark:invert" />,
       label: 'com_nav_setting_general',
     },
     {

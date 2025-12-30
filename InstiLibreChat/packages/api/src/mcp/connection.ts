@@ -67,7 +67,7 @@ function isStreamableHTTPOptions(options: t.MCPOptions): options is t.Streamable
 }
 
 const FIVE_MINUTES = 5 * 60 * 1000;
-const DEFAULT_TIMEOUT = 60000;
+const DEFAULT_TIMEOUT = 300000; // 5 minutes for long-running MCP operations
 
 interface MCPConnectionParams {
   serverName: string;

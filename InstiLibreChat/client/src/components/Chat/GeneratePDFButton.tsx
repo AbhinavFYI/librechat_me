@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { FileText, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@librechat/client';
 import { useGetMessagesByConvoId } from '~/data-provider';
 import { buildTree } from 'librechat-data-provider';
@@ -234,7 +234,11 @@ export default function GeneratePDFButton() {
           </>
         ) : (
           <>
-            <FileText className="h-4 w-4" />
+            <img 
+              src="/assets/documents.svg" 
+              alt="Generate PDF" 
+              className="h-4 w-4 opacity-70 dark:invert dark:opacity-70" 
+            />
             Generate PDF Report
           </>
         )}

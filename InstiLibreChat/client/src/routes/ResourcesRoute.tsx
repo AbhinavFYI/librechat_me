@@ -5,8 +5,8 @@ import { saasApi } from '~/services/saasApi';
 import { PermissionManager } from '~/utils/permissions';
 import { 
   Folder, File, Plus, Upload, Trash2, Edit, ChevronRight, Home, 
-  FileText, Image, FileSpreadsheet, FileCode, FileVideo, FileAudio, FileArchive,
-  Download, Eye, Grid3x3, List, MoreVertical, Search, X
+  Image, FileSpreadsheet, FileCode, FileVideo, FileAudio, FileArchive,
+  Eye, Grid3x3, List, MoreVertical, Search, X
 } from 'lucide-react';
 import CreateFolderModal from '~/components/Resources/Modals/CreateFolderModal';
 import EditFolderModal from '~/components/Resources/Modals/EditFolderModal';
@@ -35,9 +35,28 @@ interface FileNode {
   created_by_name?: string;
 }
 
+// Custom document icon component for list view
+const DocumentIcon = () => (
+  <img 
+    src="/assets/documents.svg" 
+    alt="Document" 
+    className="opacity-70 dark:brightness-0 dark:invert dark:opacity-70" 
+    style={{ width: '16px', height: '16px' }}
+  />
+);
+
+// Custom document icon component for grid view (larger)
+const DocumentIconLarge = ({ className = "h-16 w-16" }: { className?: string }) => (
+  <img 
+    src="/assets/documents.svg" 
+    alt="Document" 
+    className={`${className} opacity-70 dark:brightness-0 dark:invert dark:opacity-70`}
+  />
+);
+
 // Get file icon based on extension
 const getFileIcon = (extension?: string) => {
-  if (!extension) return FileText;
+  if (!extension) return DocumentIcon;
   const ext = extension.toLowerCase();
   if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext)) return Image;
   if (['mp4', 'avi', 'mov', 'wmv'].includes(ext)) return FileVideo;
@@ -45,8 +64,22 @@ const getFileIcon = (extension?: string) => {
   if (['xls', 'xlsx', 'csv'].includes(ext)) return FileSpreadsheet;
   if (['js', 'ts', 'py', 'java', 'html', 'css', 'json'].includes(ext)) return FileCode;
   if (['zip', 'rar', '7z', 'tar'].includes(ext)) return FileArchive;
-  if (['pdf', 'doc', 'docx'].includes(ext)) return FileText;
-  return FileText;
+  if (['pdf', 'doc', 'docx'].includes(ext)) return DocumentIcon;
+  return DocumentIcon;
+};
+
+// Get file icon for grid view (larger versions)
+const getFileIconLarge = (extension?: string) => {
+  if (!extension) return DocumentIconLarge;
+  const ext = extension.toLowerCase();
+  if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext)) return Image;
+  if (['mp4', 'avi', 'mov', 'wmv'].includes(ext)) return FileVideo;
+  if (['mp3', 'wav', 'flac'].includes(ext)) return FileAudio;
+  if (['xls', 'xlsx', 'csv'].includes(ext)) return FileSpreadsheet;
+  if (['js', 'ts', 'py', 'java', 'html', 'css', 'json'].includes(ext)) return FileCode;
+  if (['zip', 'rar', '7z', 'tar'].includes(ext)) return FileArchive;
+  if (['pdf', 'doc', 'docx'].includes(ext)) return DocumentIconLarge;
+  return DocumentIconLarge;
 };
 
 // Format date for display
@@ -784,7 +817,11 @@ export default function ResourcesRoute() {
                                       }}
                                       className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
                                     >
-                                      <Edit className="h-4 w-4" />
+                                      <img 
+                                        src="/assets/edit.svg" 
+                                        alt="Edit" 
+                                        className="h-4 w-4 opacity-70 dark:brightness-0 dark:invert dark:opacity-70" 
+                                      />
                                       Rename
                                     </button>
                                     <button
@@ -798,7 +835,11 @@ export default function ResourcesRoute() {
                                       }}
                                       className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
                                     >
-                                      <Trash2 className="h-4 w-4" />
+                                      <img 
+                                        src="/assets/delete.svg" 
+                                        alt="Delete" 
+                                        className="h-4 w-4 opacity-70 dark:brightness-0 dark:invert dark:opacity-70" 
+                                      />
                                       Delete
                                     </button>
                                   </div>
@@ -853,7 +894,11 @@ export default function ResourcesRoute() {
                             className="p-1 hover:bg-green-100 dark:hover:bg-green-900/30 rounded"
                             title="Download"
                           >
-                            <Download className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            <img 
+                              src="/assets/download.svg" 
+                              alt="Download" 
+                              className="h-4 w-4 opacity-70 dark:brightness-0 dark:invert dark:opacity-70" 
+                            />
                           </button>
                           {canManageFiles && (
                             <div className="relative">
@@ -913,7 +958,11 @@ export default function ResourcesRoute() {
                                         }}
                                         className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
                                       >
-                                        <Edit className="h-4 w-4" />
+                                        <img 
+                                          src="/assets/edit.svg" 
+                                          alt="Edit" 
+                                          className="h-4 w-4 opacity-70 dark:invert dark:opacity-70" 
+                                        />
                                         Rename
                                       </button>
                                     )}
@@ -929,7 +978,11 @@ export default function ResourcesRoute() {
                                         }}
                                         className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
                                       >
-                                        <Trash2 className="h-4 w-4" />
+                                        <img 
+                                          src="/assets/delete.svg" 
+                                          alt="Delete" 
+                                          className="h-4 w-4 opacity-70 dark:invert dark:opacity-70" 
+                                        />
                                         Delete
                                       </button>
                                     )}
@@ -980,7 +1033,11 @@ export default function ResourcesRoute() {
                         className="p-1 hover:bg-gray-200 rounded"
                         title="Rename"
                       >
-                        <Edit className="h-3 w-3" />
+                        <img 
+                          src="/assets/edit.svg" 
+                          alt="Edit" 
+                          className="h-3 w-3 opacity-70 dark:brightness-0 dark:invert dark:opacity-70" 
+                        />
                       </button>
                       <button
                         onClick={(e) => {
@@ -990,7 +1047,11 @@ export default function ResourcesRoute() {
                         className="p-1 hover:bg-red-100 rounded"
                         title="Delete"
                       >
-                        <Trash2 className="h-3 w-3 text-red-600" />
+                        <img 
+                          src="/assets/delete.svg" 
+                          alt="Delete" 
+                          className="h-3 w-3 opacity-70 dark:brightness-0 dark:invert dark:opacity-70" 
+                        />
                       </button>
                     </div>
                   )}
@@ -1000,7 +1061,7 @@ export default function ResourcesRoute() {
 
             {/* Files */}
             {filteredContent.files.map((file) => {
-              const FileIcon = getFileIcon(file.extension);
+              const FileIcon = getFileIconLarge(file.extension);
               const isSelected = selectedItem?.type === 'file' && selectedItem.id === file.id;
               return (
                 <div
@@ -1042,7 +1103,11 @@ export default function ResourcesRoute() {
                         className="p-1 hover:bg-green-100 rounded"
                         title="Download"
                       >
-                        <Download className="h-3 w-3 text-green-600" />
+                        <img 
+                          src="/assets/download.svg" 
+                          alt="Download" 
+                          className="h-3 w-3 opacity-70 dark:brightness-0 dark:invert dark:opacity-70" 
+                        />
                       </button>
                       {canManage && (
                         <button
@@ -1053,7 +1118,11 @@ export default function ResourcesRoute() {
                           className="p-1 hover:bg-red-100 rounded"
                           title="Delete"
                         >
-                          <Trash2 className="h-3 w-3 text-red-600" />
+                          <img 
+                            src="/assets/delete.svg" 
+                            alt="Delete" 
+                            className="h-3 w-3 opacity-70 dark:invert dark:opacity-70" 
+                          />
                         </button>
                       )}
                     </div>

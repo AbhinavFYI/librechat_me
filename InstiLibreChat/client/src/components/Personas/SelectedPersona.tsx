@@ -21,23 +21,36 @@ export default function SelectedPersona() {
     if (personaDataStr) {
       try {
         const personaData = JSON.parse(personaDataStr);
+        console.log('[SelectedPersona] Loaded persona data:', personaData);
+        
         // Extract persona name from various possible fields
-        if (personaData.detailedPrompt) {
-          // Get first line or first 30 chars as name
-          const firstLine = personaData.detailedPrompt.split('\n')[0].trim();
-          setPersonaName(firstLine.substring(0, 30) || 'Persona');
-        } else if (personaData.persona || personaData.name) {
-          setPersonaName(personaData.persona || personaData.name);
+        // Priority: name > persona > description > first line of detailedPrompt
+        if (personaData.name) {
+          setPersonaName(personaData.name);
+          console.log('[SelectedPersona] Using name field:', personaData.name);
+        } else if (personaData.persona) {
+          setPersonaName(personaData.persona);
+          console.log('[SelectedPersona] Using persona field:', personaData.persona);
         } else if (personaData.description) {
-          setPersonaName(personaData.description.substring(0, 30));
+          const truncated = personaData.description.substring(0, 30);
+          setPersonaName(truncated);
+          console.log('[SelectedPersona] Using description field:', truncated);
+        } else if (personaData.detailedPrompt) {
+          // Get first line or first 30 chars as fallback
+          const firstLine = personaData.detailedPrompt.split('\n')[0].trim();
+          const truncated = firstLine.substring(0, 30) || 'Persona';
+          setPersonaName(truncated);
+          console.log('[SelectedPersona] Using detailedPrompt first line:', truncated);
         } else {
           setPersonaName('Persona');
+          console.log('[SelectedPersona] Using fallback: Persona');
         }
       } catch (error) {
-        console.error('Error parsing persona data:', error);
+        console.error('[SelectedPersona] Error parsing persona data:', error);
         setPersonaName('');
       }
     } else {
+      console.log('[SelectedPersona] No persona data found in localStorage');
       setPersonaName('');
     }
   }, [conversationId]);

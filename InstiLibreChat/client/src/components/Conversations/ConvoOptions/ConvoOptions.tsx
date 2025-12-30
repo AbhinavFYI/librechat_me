@@ -2,12 +2,11 @@ import { useState, useId, useRef, memo, useCallback, useMemo } from 'react';
 import * as Menu from '@ariakit/react/menu';
 import { useParams, useNavigate } from 'react-router-dom';
 import { DropdownPopup, Spinner, useToastContext } from '@librechat/client';
-import { Ellipsis, Share2, CopyPlus, Archive, Pen, Trash } from 'lucide-react';
+import { Ellipsis, Share2, CopyPlus, Pen } from 'lucide-react';
 import type { MouseEvent } from 'react';
 import {
   useDuplicateConversationMutation,
   useGetStartupConfig,
-  useArchiveConvoMutation,
 } from '~/data-provider';
 import { useLocalize, useNavigateToConvo, useNewConvo } from '~/hooks';
 import { NotificationSeverity } from '~/common';
@@ -48,8 +47,6 @@ function ConvoOptions({
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const archiveConvoMutation = useArchiveConvoMutation();
-
   const duplicateConversation = useDuplicateConversationMutation({
     onSuccess: (data) => {
       navigateToConvo(data.conversation);
@@ -74,7 +71,6 @@ function ConvoOptions({
   });
 
   const isDuplicateLoading = duplicateConversation.isLoading;
-  const isArchiveLoading = archiveConvoMutation.isLoading;
 
   const handleShareClick = useCallback(() => {
     setShowShareDialog(true);
@@ -83,44 +79,6 @@ function ConvoOptions({
   const handleDeleteClick = useCallback(() => {
     setShowDeleteDialog(true);
   }, []);
-
-  const handleArchiveClick = useCallback(async () => {
-    const convoId = conversationId ?? '';
-    if (!convoId) {
-      return;
-    }
-
-    archiveConvoMutation.mutate(
-      { conversationId: convoId, isArchived: true },
-      {
-        onSuccess: () => {
-          if (currentConvoId === convoId || currentConvoId === 'new') {
-            newConversation();
-            navigate('/c/new', { replace: true });
-          }
-          retainView();
-          setIsPopoverActive(false);
-        },
-        onError: () => {
-          showToast({
-            message: localize('com_ui_archive_error'),
-            severity: NotificationSeverity.ERROR,
-            showIcon: true,
-          });
-        },
-      },
-    );
-  }, [
-    conversationId,
-    currentConvoId,
-    archiveConvoMutation,
-    navigate,
-    newConversation,
-    retainView,
-    setIsPopoverActive,
-    showToast,
-    localize,
-  ]);
 
   const handleDuplicateClick = useCallback(() => {
     duplicateConversation.mutate({
@@ -155,19 +113,9 @@ function ConvoOptions({
         ),
       },
       {
-        label: localize('com_ui_archive'),
-        onClick: handleArchiveClick,
-        hideOnClick: false,
-        icon: isArchiveLoading ? (
-          <Spinner className="size-4" />
-        ) : (
-          <Archive className="icon-sm mr-2 text-text-primary" />
-        ),
-      },
-      {
         label: localize('com_ui_delete'),
         onClick: handleDeleteClick,
-        icon: <Trash className="icon-sm mr-2 text-text-primary" />,
+        icon: <img src="/assets/delete.svg" alt="Delete" className="icon-sm mr-2 opacity-70 dark:brightness-0 dark:invert dark:opacity-70" />,
         hideOnClick: false,
         ref: deleteButtonRef,
         render: (props) => <button {...props} />,
@@ -180,8 +128,6 @@ function ConvoOptions({
       renameHandler,
       handleDuplicateClick,
       isDuplicateLoading,
-      handleArchiveClick,
-      isArchiveLoading,
       handleDeleteClick,
     ],
   );

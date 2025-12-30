@@ -3,7 +3,7 @@ import type { IconMapProps } from '~/common';
 import { cn } from '~/utils';
 
 export const FIAIcon: React.FC<IconMapProps> = ({ 
-  size = 24, 
+  size = 32, 
   className,
   context,
   endpoint,

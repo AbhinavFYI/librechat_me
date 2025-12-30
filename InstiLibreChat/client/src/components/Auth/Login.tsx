@@ -71,100 +71,100 @@ function Login() {
   };
 
     return (
-    <div className="flex min-h-screen">
+    <div className="flex flex-col lg:flex-row min-h-screen overflow-x-hidden">
       {/* Left Section - Blue Gradient */}
-      <div className="flex-1 bg-gradient-to-br from-[#2434E7] to-[#3B4FE8] p-12 flex flex-col">
+      <div className="flex-1 bg-gradient-to-br from-[#2434E7] to-[#3B4FE8] p-6 sm:p-8 lg:p-12 flex flex-col min-h-[40vh] lg:min-h-screen">
         {/* Logo */}
-        <div className="flex items-center gap-3 mb-20">
-          <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center p-1">
+        <div className="flex items-center gap-2 sm:gap-3 mb-8 sm:mb-12 lg:mb-20">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-lg flex items-center justify-center p-1 flex-shrink-0">
             <img
               src="assets/Logo.svg"
               alt="FIA Logo"
               className="w-full h-full object-contain"
             />
           </div>
-          <span className="text-white text-xl font-medium">FIA - FYERS Intelligent Assistant</span>
+          <span className="text-white text-base sm:text-lg lg:text-xl font-medium">FIA - FYERS Intelligent Assistant</span>
         </div>
 
-        <div style={{ maxWidth: '1400px' }}>
+        <div className="max-w-full lg:max-w-[1400px]">
           {/* Main Headline */}
-          <h1 className="text-white text-5xl font-bold leading-tight mb-8">
+          <h1 className="text-white text-2xl sm:text-3xl lg:text-5xl font-bold leading-tight mb-6 lg:mb-8">
             Institutional-grade research<br />with the power of AI.
           </h1>
 
           {/* Feature List */}
-          <div className="space-y-4 mb-12">
-            <div className="flex items-center gap-3 text-white text-lg">
-              <BarChart3 className="w-5 h-5" />
+          <div className="space-y-3 sm:space-y-4 mb-8 lg:mb-12">
+            <div className="flex items-center gap-2 sm:gap-3 text-white text-sm sm:text-base lg:text-lg">
+              <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
               <span>AI-powered institutional research</span>
             </div>
-            <div className="flex items-center gap-3 text-white text-lg">
-              <Shield className="w-5 h-5" />
+            <div className="flex items-center gap-2 sm:gap-3 text-white text-sm sm:text-base lg:text-lg">
+              <Shield className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
               <span>Secure document intelligence</span>
             </div>
-            <div className="flex items-center gap-3 text-white text-lg">
-              <Users className="w-5 h-5" />
+            <div className="flex items-center gap-2 sm:gap-3 text-white text-sm sm:text-base lg:text-lg">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
               <span>Collaborative reporting for teams</span>
             </div>
           </div>
 
-          {/* Interactive Cards */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6" style={{ width: '1000px', maxWidth: '100%' }}>
-            <div className="flex gap-8 mb-6" style={{ justifyContent: 'center' }}>
+          {/* Interactive Cards - Hidden on mobile, visible on larger screens */}
+          <div className="hidden md:block bg-white/10 backdrop-blur-sm rounded-2xl p-4 lg:p-6 max-w-full">
+            <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 mb-4 lg:mb-6 justify-center">
               {/* Document Analysis Card */}
-              <div className="bg-white rounded-xl p-6 flex flex-col" style={{ width: '450px', aspectRatio: '1.8' }}>
-                <div className="flex items-center justify-between mb-4">
+              <div className="bg-white rounded-xl p-4 lg:p-6 flex flex-col w-full lg:w-[450px] lg:max-w-[450px]">
+                <div className="flex items-center justify-between mb-3 lg:mb-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-white" />
+                    <div className="w-7 h-7 lg:w-8 lg:h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
                     </div>
-                    <span className="font-semibold text-gray-900">Document Analysis</span>
+                    <span className="font-semibold text-gray-900 text-sm lg:text-base">Document Analysis</span>
                   </div>
                   <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">NEW</span>
                 </div>
-                <div className="space-y-2 mb-4 flex-1">
+                <div className="space-y-2 mb-3 lg:mb-4 flex-1">
                   <div className="h-2 bg-gray-200 rounded w-full"></div>
                   <div className="h-2 bg-gray-200 rounded w-full"></div>
                   <div className="h-2 bg-gray-200 rounded w-3/4"></div>
                   <div className="h-2 bg-gray-200 rounded w-1/2"></div>
                 </div>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-600" />
-                  <span className="text-sm text-green-800">Document analyzed successfully</span>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-2 lg:p-3 flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  <span className="text-xs lg:text-sm text-green-800">Document analyzed successfully</span>
                 </div>
               </div>
 
               {/* Stocks on Chat Card */}
-              <div className="bg-white rounded-xl p-6 flex flex-col" style={{ width: '450px', aspectRatio: '1.8' }}>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                    <MessageSquare className="w-5 h-5 text-white" />
+              <div className="bg-white rounded-xl p-4 lg:p-6 flex flex-col w-full lg:w-[450px] lg:max-w-[450px]">
+                <div className="flex items-center gap-2 mb-3 lg:mb-4">
+                  <div className="w-7 h-7 lg:w-8 lg:h-8 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <MessageSquare className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
                   </div>
-                  <span className="font-semibold text-gray-900">Stocks on Chat</span>
+                  <span className="font-semibold text-gray-900 text-sm lg:text-base">Stocks on Chat</span>
                 </div>
-                <div className="space-y-3 flex-1">
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-sm text-gray-600">What's the main topic?</p>
+                <div className="space-y-2 lg:space-y-3 flex-1">
+                  <div className="bg-gray-50 rounded-lg p-2 lg:p-3">
+                    <p className="text-xs lg:text-sm text-gray-600">What's the main topic?</p>
                   </div>
-                  <div className="bg-blue-500 rounded-lg p-3">
-                    <p className="text-sm text-white">The document discusses AI implementation strategies...</p>
+                  <div className="bg-blue-500 rounded-lg p-2 lg:p-3">
+                    <p className="text-xs lg:text-sm text-white">The document discusses AI implementation strategies...</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-sm text-gray-600">Can you summarize key points?</p>
+                  <div className="bg-gray-50 rounded-lg p-2 lg:p-3">
+                    <p className="text-xs lg:text-sm text-gray-600">Can you summarize key points?</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Bottom Navigation */}
-            <div className="flex items-center justify-center gap-6 text-white">
+            <div className="flex items-center justify-center gap-4 lg:gap-6 text-white text-sm">
               <button className="flex items-center gap-2 hover:opacity-80 transition">
-                <FileText className="w-4 h-4" />
-                <span className="text-sm">DocuAI Analyser</span>
+                <FileText className="w-4 h-4 flex-shrink-0" />
+                <span>DocuAI Analyser</span>
               </button>
               <button className="flex items-center gap-2 hover:opacity-80 transition">
-                <MessageSquare className="w-4 h-4" />
-                <span className="text-sm">DocuAI Chat</span>
+                <MessageSquare className="w-4 h-4 flex-shrink-0" />
+                <span>DocuAI Chat</span>
               </button>
             </div>
           </div>
@@ -172,10 +172,10 @@ function Login() {
       </div>
 
       {/* Right Section - Login Form */}
-      <div className="w-[480px] bg-white p-12 flex flex-col justify-center">
-        <div className="max-w-md">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Login to FIA</h2>
-          <p className="text-gray-600 mb-8">{companyName}</p>
+      <div className="w-full lg:w-[480px] bg-white p-6 sm:p-8 lg:p-12 flex flex-col justify-center">
+        <div className="max-w-md mx-auto w-full">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Login to FIA</h2>
+          <p className="text-gray-600 mb-6 sm:mb-8 text-sm sm:text-base">{companyName}</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -185,7 +185,7 @@ function Login() {
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2434E7]"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2434E7] text-base"
                 required
                 disabled={isLoading}
               />
@@ -194,7 +194,7 @@ function Login() {
             <button 
               type="submit"
               disabled={isLoading || !email}
-              className={`w-full py-3 rounded-lg font-medium transition ${
+              className={`w-full py-3 rounded-lg font-medium transition text-base ${
                 isLoading || !email
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                   : 'bg-[#2434E7] text-white hover:bg-[#1a28b8]'

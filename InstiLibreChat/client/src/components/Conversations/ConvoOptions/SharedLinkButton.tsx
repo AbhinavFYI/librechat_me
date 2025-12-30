@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { QrCode, RotateCw, Trash2 } from 'lucide-react';
+import { QrCode, RotateCw } from 'lucide-react';
 import {
   Button,
   OGDialog,
@@ -168,7 +168,7 @@ export default function SharedLinkButton({
                   variant="destructive"
                   aria-label={localize('com_ui_delete')}
                 >
-                  <Trash2 className="size-4" />
+                  <img src="/assets/delete.svg" alt="Delete" className="size-4 opacity-70 dark:brightness-0 dark:invert dark:opacity-70" />
                 </Button>
               )}
             />

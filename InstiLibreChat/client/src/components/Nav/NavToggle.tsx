@@ -34,7 +34,6 @@ export default function NavToggle({
       className={cn(
         className,
         '-translate-y-1/2 transition-transform',
-        navVisible ? 'rotate-0' : 'rotate-180',
         navVisible && translateX ? 'translate-x-[260px]' : 'translate-x-0',
       )}
       onMouseEnter={() => setIsHovering(true)}
@@ -59,6 +58,16 @@ export default function NavToggle({
             className="flex h-[72px] w-8 items-center justify-center"
             style={{ ...transition, opacity: isHovering ? 1 : 0.25 }}
           >
+            {!navVisible ? (
+              // Show expander icon when nav is closed (for expanding)
+              <img
+                src="/assets/expander.svg"
+                alt="Expand"
+                className="h-4 w-4 dark:invert"
+                style={transition}
+              />
+            ) : (
+              // Show animated bars when nav is open (for collapsing)
             <div className="flex h-6 w-6 flex-col items-center">
               {/* Top bar */}
               <div
@@ -77,6 +86,7 @@ export default function NavToggle({
                 }}
               />
             </div>
+            )}
           </div>
         </span>
       </TooltipAnchor>

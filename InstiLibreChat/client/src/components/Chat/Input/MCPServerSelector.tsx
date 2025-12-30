@@ -86,7 +86,7 @@ export default function MCPServerSelector() {
 
   const selectedCount = mcpValues?.length || 0;
   const displayText = selectedCount === 0 
-    ? "MCP's" 
+    ? "Tools" 
     : selectedCount === 1 
       ? mcpValues[0] 
       : `${selectedCount} selected`;
@@ -104,7 +104,7 @@ export default function MCPServerSelector() {
         title="No MCP servers configured"
       >
         <Lightbulb className="h-4 w-4" />
-        <span>MCP's (No servers)</span>
+        <span>Tools (No servers)</span>
       </button>
     );
   }

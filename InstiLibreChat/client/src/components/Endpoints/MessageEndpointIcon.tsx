@@ -158,9 +158,9 @@ const MessageEndpointIcon: React.FC<IconProps> = (props) => {
       name: 'Claude',
     },
     [EModelEndpoint.bedrock]: {
-      icon: <BedrockIcon className="icon-xl text-white" />,
-      bg: '#268672',
-      name: alternateName[EModelEndpoint.bedrock],
+      icon: <FIAIcon size={size} />,
+      bg: 'transparent',
+      name: 'FIA',
     },
     [EModelEndpoint.custom]: {
       icon: <CustomMinimalIcon size={size * 0.7} />,

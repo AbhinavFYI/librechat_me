@@ -1,4 +1,4 @@
-import { TooltipAnchor, Button, Sidebar } from '@librechat/client';
+import { TooltipAnchor, Button } from '@librechat/client';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
 
@@ -30,7 +30,11 @@ export default function OpenSidebar({
             })
           }
         >
-          <Sidebar />
+          <img
+            src="/assets/expander.svg"
+            alt="Expand sidebar"
+            className="h-5 w-5 dark:invert"
+          />
         </Button>
       }
     />

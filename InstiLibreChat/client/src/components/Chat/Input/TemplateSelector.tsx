@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ChevronDown, FileText } from 'lucide-react';
+import { ChevronDown, Plus } from 'lucide-react';
 import * as Ariakit from '@ariakit/react';
 import { DropdownPopup } from '@librechat/client';
 import { saasApi } from '~/services/saasApi';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Constants } from 'librechat-data-provider';
 
 interface SavedTemplate {
@@ -20,6 +20,7 @@ export default function TemplateSelector() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const { conversationId } = useParams<{ conversationId?: string }>();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchData();
@@ -221,6 +222,18 @@ export default function TemplateSelector() {
       key: `template-${template.name}`,
       };
     }),
+    {
+      separate: true,
+      key: 'separator-create',
+    },
+    {
+      label: '➕ Create New Template',
+      onClick: () => {
+        setIsOpen(false);
+        navigate('/templates?tab=templates&action=create');
+      },
+      key: 'create-template',
+    },
     ...(selectedTemplate ? [{
       separate: true,
       key: 'separator',
@@ -238,7 +251,7 @@ export default function TemplateSelector() {
         disabled
         className="flex items-center gap-1.5 rounded-lg border border-border-light bg-transparent px-3 py-2 text-sm font-medium text-text-primary opacity-50"
       >
-        <FileText className="h-4 w-4" />
+        <img src="/assets/documents.svg" alt="Template" className="h-4 w-4 dark:invert" />
         <span>Loading...</span>
       </button>
     );
@@ -258,7 +271,7 @@ export default function TemplateSelector() {
         className="flex items-center gap-1.5 rounded-lg border border-border-light bg-transparent px-3 py-2 text-sm font-medium text-text-primary opacity-50"
         title="No templates available"
       >
-        <FileText className="h-4 w-4" />
+        <img src="/assets/documents.svg" alt="Template" className="h-4 w-4 dark:invert" />
         <span>{buttonText}</span>
       </button>
     );
@@ -275,7 +288,7 @@ export default function TemplateSelector() {
           <Ariakit.MenuButton
             className="flex items-center gap-1.5 rounded-lg border border-border-light bg-transparent px-3 py-2 text-sm font-medium text-text-primary transition-all hover:bg-surface-hover"
           >
-            <FileText className="h-4 w-4" />
+            <img src="/assets/documents.svg" alt="Template" className="h-4 w-4 dark:invert" />
             <span>{buttonText}</span>
             <ChevronDown className="h-4 w-4" />
           </Ariakit.MenuButton>

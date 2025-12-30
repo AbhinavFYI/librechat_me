@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ChevronDown, User } from 'lucide-react';
+import { ChevronDown, User, Plus } from 'lucide-react';
 import * as Ariakit from '@ariakit/react';
 import { DropdownPopup } from '@librechat/client';
 import { saasApi } from '~/services/saasApi';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Constants } from 'librechat-data-provider';
 
 interface SavedPersona {
@@ -18,6 +18,7 @@ export default function PersonaSelector() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedPersona, setSelectedPersona] = useState<string | null>(null);
   const { conversationId } = useParams<{ conversationId?: string }>();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchData();
@@ -175,6 +176,18 @@ export default function PersonaSelector() {
       key: `persona-${persona.name}`,
       };
     }),
+    {
+      separate: true,
+      key: 'separator-create',
+    },
+    {
+      label: '➕ Create New Persona',
+      onClick: () => {
+        setIsOpen(false);
+        navigate('/templates?tab=personas&action=create');
+      },
+      key: 'create-persona',
+    },
     ...(selectedPersona ? [{
       separate: true,
       key: 'separator',

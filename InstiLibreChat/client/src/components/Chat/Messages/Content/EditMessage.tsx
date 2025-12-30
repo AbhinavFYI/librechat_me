@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { TextareaAutosize, TooltipAnchor } from '@librechat/client';
@@ -9,6 +9,72 @@ import { cn, removeFocusRings } from '~/utils';
 import { useLocalize } from '~/hooks';
 import Container from './Container';
 import store from '~/store';
+
+// Helper function to extract just the query from JSON structure
+const extractQueryFromText = (text: string, isCreatedByUser: boolean): string => {
+  if (!isCreatedByUser) {
+    return text;
+  }
+
+  // Parse new structured JSON format: { documents: [...], template: {...}, persona: {...}, query: "..." }
+  if (text.trim().startsWith('{')) {
+    try {
+      // Try to parse as JSON
+      const requestObject = JSON.parse(text);
+      
+      // Extract query - check if it exists
+      if (requestObject.query !== undefined && requestObject.query !== null) {
+        return requestObject.query;
+      }
+    } catch (e) {
+      // If JSON parsing fails, try regex fallback
+      console.log('[EditMessage] JSON parse failed, trying regex fallback');
+    }
+  }
+
+  // Fallback: Parse old Document block format if present
+  if (text.includes('Document{')) {
+    const userPromptMatch = text.match(/User Prompt:\s*(.*)/s);
+    if (userPromptMatch) {
+      return userPromptMatch[1].trim();
+    }
+    return text.replace(/Document\{[^}]*\}/s, '').replace(/User Prompt:\s*/s, '').trim();
+  }
+
+  // Fallback: Parse old <documents> format if present
+  if (text.includes('<documents>')) {
+    return text.replace(/<documents>.*?<\/documents>/s, '').trim();
+  }
+
+  return text;
+};
+
+// Helper function to reconstruct the full JSON structure with updated query
+const reconstructTextWithQuery = (originalText: string, newQuery: string, isCreatedByUser: boolean): string => {
+  if (!isCreatedByUser) {
+    return newQuery;
+  }
+
+  // Parse new structured JSON format: { documents: [...], template: {...}, persona: {...}, query: "..." }
+  if (originalText.trim().startsWith('{') && (originalText.includes('"documents"') || originalText.includes('"query"'))) {
+    try {
+      // Try to parse as JSON
+      const requestObject = JSON.parse(originalText);
+      
+      // Update the query field
+      if ('query' in requestObject || 'documents' in requestObject) {
+        requestObject.query = newQuery;
+        return JSON.stringify(requestObject);
+      }
+    } catch (e) {
+      // If parsing fails, just return the new query
+      return newQuery;
+    }
+  }
+
+  // For old formats or plain text, just return the new query
+  return newQuery;
+};
 
 const EditMessage = ({
   text,
@@ -37,26 +103,38 @@ const EditMessage = ({
   const chatDirection = useRecoilValue(store.chatDirection).toLowerCase();
   const isRTL = chatDirection === 'rtl';
 
+  // Extract just the query from the text for editing
+  const editableText = useMemo(
+    () => extractQueryFromText(text ?? '', message.isCreatedByUser ?? false),
+    [text, message.isCreatedByUser],
+  );
+
   const { register, handleSubmit, setValue } = useForm({
     defaultValues: {
-      text: text ?? '',
+      text: editableText,
     },
   });
 
   useEffect(() => {
+    // Set the extracted text in the form
+    setValue('text', editableText);
+    
     const textArea = textAreaRef.current;
     if (textArea) {
       const length = textArea.value.length;
       textArea.focus();
       textArea.setSelectionRange(length, length);
     }
-  }, []);
+  }, [editableText, setValue]);
 
   const resubmitMessage = (data: { text: string }) => {
+    // Reconstruct the full JSON structure with documents if it was present in the original message
+    const reconstructedText = reconstructTextWithQuery(text ?? '', data.text, message.isCreatedByUser ?? false);
+    
     if (message.isCreatedByUser) {
       ask(
         {
-          text: data.text,
+          text: reconstructedText,
           parentMessageId,
           conversationId,
         },
@@ -76,7 +154,7 @@ const EditMessage = ({
       ask(
         { ...parentMessage },
         {
-          editedText: data.text,
+          editedText: reconstructedText,
           editedMessageId: messageId,
           isRegenerate: true,
           isEdited: true,
@@ -90,6 +168,9 @@ const EditMessage = ({
   };
 
   const updateMessage = (data: { text: string }) => {
+    // Reconstruct the full JSON structure with documents if it was present in the original message
+    const reconstructedText = reconstructTextWithQuery(text ?? '', data.text, message.isCreatedByUser ?? false);
+    
     const messages = getMessages();
     if (!messages) {
       return;
@@ -97,24 +178,24 @@ const EditMessage = ({
     updateMessageMutation.mutate({
       conversationId: conversationId ?? '',
       model: conversation?.model ?? 'gpt-3.5-turbo',
-      text: data.text,
+      text: reconstructedText,
       messageId,
     });
 
     if (message.messageId === latestMultiMessage?.messageId) {
-      setLatestMultiMessage({ ...latestMultiMessage, text: data.text });
+      setLatestMultiMessage({ ...latestMultiMessage, text: reconstructedText });
     }
 
     const isInMessages = messages.some((message) => message.messageId === messageId);
     if (!isInMessages) {
-      message.text = data.text;
+      message.text = reconstructedText;
     } else {
       setMessages(
         messages.map((msg) =>
           msg.messageId === messageId
             ? {
                 ...msg,
-                text: data.text,
+                text: reconstructedText,
               }
             : msg,
         ),

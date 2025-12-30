@@ -2,9 +2,12 @@ import { useOutletContext } from 'react-router-dom';
 import type { ContextType } from '~/common';
 import { HeaderNewChat, OpenSidebar } from './Menus';
 import { AnimatePresence, motion } from 'framer-motion';
+import ModelSelector from '~/components/Chat/Menus/Endpoints/ModelSelector';
+import { useGetStartupConfig } from '~/data-provider';
 
 export default function Header() {
   const { navVisible, setNavVisible } = useOutletContext<ContextType>();
+  const { data: startupConfig } = useGetStartupConfig();
 
   return (
     <div className="sticky top-0 z-10 flex h-14 w-full items-center justify-between bg-white p-2 font-semibold text-text-primary dark:!bg-[#111111]">
@@ -41,6 +44,13 @@ export default function Header() {
             style={{ fontSize: '20px' }}
           >
             FIA - FYERS Intelligent Assistant
+          </div>
+        </div>
+
+        {/* Right: Model Selector */}
+        <div className="mx-1 flex items-center">
+          <div className="scale-75 origin-right">
+            <ModelSelector startupConfig={startupConfig} />
           </div>
         </div>
       </div>

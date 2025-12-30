@@ -1,8 +1,7 @@
 import React, { useState, useMemo, memo } from 'react';
 import { useParams } from 'react-router-dom';
 import type { TConversation, TMessage, TFeedback } from 'librechat-data-provider';
-import { EditIcon, Clipboard, CheckMark, ContinueIcon, RegenerateIcon } from '@librechat/client';
-import { FileText } from 'lucide-react';
+import { ContinueIcon } from '@librechat/client';
 import { useGenerationsByLatest, useLocalize } from '~/hooks';
 import { useGetMessagesByConvoId } from '~/data-provider';
 import { buildTree } from 'librechat-data-provider';
@@ -275,7 +274,14 @@ const HoverButtons = ({
           <HoverButton
             onClick={regenerate}
             title={localize('com_ui_regenerate')}
-            icon={<RegenerateIcon size="19" />}
+            icon={
+              <img 
+                src="/assets/repeat.svg" 
+                alt="Regenerate" 
+                className="dark:brightness-0 dark:invert" 
+                style={{ width: '19px', height: '19px' }}
+              />
+            }
             isLast={isLast}
           />
         )}
@@ -300,7 +306,14 @@ const HoverButtons = ({
         title={
           isCopied ? localize('com_ui_copied_to_clipboard') : localize('com_ui_copy_to_clipboard')
         }
-        icon={isCopied ? <CheckMark className="h-[18px] w-[18px]" /> : <Clipboard size="19" />}
+        icon={
+          <img 
+            src="/assets/Copy.svg" 
+            alt={isCopied ? "Copied" : "Copy"} 
+            className="opacity-70 dark:brightness-0 dark:invert dark:opacity-70"
+            style={{ width: '19px', height: '19px' }}
+          />
+        }
         isLast={isLast}
         className={`ml-0 flex items-center gap-1.5 text-xs ${isSubmitting && isCreatedByUser ? 'md:opacity-0 md:group-hover:opacity-100' : ''}`}
       />
@@ -311,7 +324,14 @@ const HoverButtons = ({
           id={`edit-${message.messageId}`}
           onClick={onEdit}
           title={localize('com_ui_edit')}
-          icon={<EditIcon size="19" />}
+          icon={
+            <img 
+              src="/assets/edit.svg" 
+              alt="Edit" 
+              className="opacity-70 dark:brightness-0 dark:invert dark:opacity-70" 
+              style={{ width: '19px', height: '19px' }}
+            />
+          }
           isActive={isEditing}
           isVisible={!hideEditButton}
           isDisabled={hideEditButton}
@@ -330,7 +350,14 @@ const HoverButtons = ({
         <HoverButton
           onClick={regenerate}
           title={localize('com_ui_regenerate')}
-          icon={<RegenerateIcon size="19" />}
+          icon={
+            <img 
+              src="/assets/repeat.svg" 
+              alt="Regenerate" 
+              className="opacity-70 dark:brightness-0 dark:invert dark:opacity-70" 
+              style={{ width: '19px', height: '19px' }}
+            />
+          }
           isLast={isLast}
           className="active"
         />
@@ -341,7 +368,14 @@ const HoverButtons = ({
         <HoverButton
           onClick={() => setShowPDFModal(true)}
           title="Generate PDF Report"
-          icon={<FileText size="19" />}
+          icon={
+            <img 
+              src="/assets/documents.svg" 
+              alt="Generate PDF" 
+              className="opacity-70 dark:invert dark:opacity-70" 
+              style={{ width: '19px', height: '19px' }}
+            />
+          }
           isLast={isLast}
           className="active"
         />

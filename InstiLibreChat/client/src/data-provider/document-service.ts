@@ -20,6 +20,7 @@ export interface DocumentListItem {
   status: string;
   uploaded_at: string | null;
   processed_at?: string | null;
+  owner?: string | null;
 }
 
 export interface DocumentListResponse {
@@ -67,14 +68,11 @@ function getAuthHeaders(): HeadersInit {
  */
 export const uploadDocument = async (
   file: File,
-  owner?: string,
+  owner?: string,  // DEPRECATED: Not used by backend (user_id comes from JWT)
   orgId?: string
 ): Promise<DocumentUploadResponse> => {
-  const ownerValue = owner || 'default_user';
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('db_backend', 'docling_postgres');
-  formData.append('owner', ownerValue);
   
   // Add org_id if provided (optional for superadmins, required for org users)
   if (orgId) {
@@ -97,6 +95,13 @@ export const uploadDocument = async (
   }
 
   try {
+    console.log('[DocumentService] Uploading document:', {
+      filename: file.name,
+      size: file.size,
+      hasToken: !!getAuthToken(),
+      hasOrgId: !!orgId || !!(localStorage.getItem('user') && JSON.parse(localStorage.getItem('user') || '{}').org_id)
+    });
+    
     const response = await fetch(`${DOCUMENT_API_BASE}/documents/upload`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -108,7 +113,12 @@ export const uploadDocument = async (
       const errorData = await response.json().catch(() => ({ message: 'Upload failed' }));
       // Handle both "message" and "error" fields from different API formats
       const errorMessage = errorData.message || errorData.error || `Upload failed: ${response.statusText}`;
-      console.error('Document upload failed:', { status: response.status, errorData });
+      console.error('Document upload failed:', { 
+        status: response.status, 
+        statusText: response.statusText,
+        errorData,
+        url: response.url
+      });
       throw new Error(errorMessage);
     }
 

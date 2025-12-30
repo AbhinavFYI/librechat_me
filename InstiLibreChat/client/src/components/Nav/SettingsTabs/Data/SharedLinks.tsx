@@ -2,7 +2,7 @@ import { useCallback, useState, useMemo, useEffect } from 'react';
 import debounce from 'lodash/debounce';
 import { useRecoilValue } from 'recoil';
 import { Link } from 'react-router-dom';
-import { TrashIcon, MessageSquare, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { MessageSquare, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import type { SharedLinkItem, SharedLinksListParams } from 'librechat-data-provider';
 import {
   OGDialog,
@@ -264,7 +264,7 @@ export default function SharedLinks() {
               }}
               aria-label={`${localize('com_ui_delete')} - ${row.original.title || localize('com_ui_untitled')}`}
             >
-              <TrashIcon className="size-4" aria-hidden="true" />
+              <img src="/assets/delete.svg" alt="Delete" className="size-4 opacity-70 dark:brightness-0 dark:invert dark:opacity-70" aria-hidden="true" />
             </Button>
           </div>
         ),

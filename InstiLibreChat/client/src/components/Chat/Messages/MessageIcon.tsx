@@ -21,7 +21,6 @@ const MessageIcon = memo(
     isSubmitting?: boolean;
   }) => {
     const { data: endpointsConfig } = useGetEndpointsQuery();
-    const { isSubmitting: chatIsSubmitting } = useChatContext();
 
     const agentName = useMemo(() => agent?.name ?? '', [agent]);
     const agentAvatar = useMemo(() => agent?.avatar?.filepath ?? '', [agent]);
@@ -52,15 +51,16 @@ const MessageIcon = memo(
     // Show loading animation for AI messages that are being generated
     // Use chatIsSubmitting from ChatContext as fallback since this component
     // is rendered outside MessageContext
+    const { isSubmitting: chatIsSubmitting } = useChatContext();
     const effectiveIsSubmitting = isSubmitting || chatIsSubmitting;
     const shouldShowLoader = effectiveIsSubmitting && iconData?.isCreatedByUser === false;
 
     if (shouldShowLoader) {
       return (
         <div className="flex h-full w-full items-center justify-center">
-          <img 
-            src="/assets/loader.gif" 
-            alt="Loading..." 
+          <img
+            src="/assets/loader.gif"
+            alt="Loading..."
             className="object-contain"
             style={{ width: '32px', height: '32px' }}
           />

@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input, TextareaAutosize } from '@librechat/client';
 import { saasApi } from '~/services/saasApi';
 import { createPortal } from 'react-dom';
-import { FileText, User, Edit, Trash2, MoreVertical } from 'lucide-react';
+import { User, Edit, Trash2, MoreVertical } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 
 export default function TemplatesView() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<'personas' | 'templates'>('personas');
   const [templates, setTemplates] = useState<any[]>([]);
   const [personas, setPersonas] = useState<any[]>([]);
@@ -25,6 +27,31 @@ export default function TemplatesView() {
     fetchTemplates();
     fetchPersonas();
   }, []);
+
+  // Handle query parameters for opening create modals
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    const action = searchParams.get('action');
+
+    if (tab === 'personas') {
+      setActiveTab('personas');
+    } else if (tab === 'templates') {
+      setActiveTab('templates');
+    }
+
+    if (action === 'create') {
+      // Check the URL tab parameter first, then fall back to activeTab
+      const currentTab = tab || activeTab;
+      if (currentTab === 'personas') {
+        setShowCreatePersonaModal(true);
+      } else {
+        setShowCreateTemplateModal(true);
+      }
+      // Clear the action parameter after opening modal
+      searchParams.delete('action');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, activeTab, setSearchParams]);
 
   const fetchTemplates = async () => {
     setTemplatesLoading(true);
@@ -318,14 +345,18 @@ export default function TemplatesView() {
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-3">
-                            <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            <img 
+                              src="/assets/documents.svg" 
+                              alt="Template" 
+                              className="h-5 w-5 flex-shrink-0 opacity-70 dark:brightness-0 dark:invert dark:opacity-70" 
+                            />
+                            <div className="text-sm font-normal text-gray-700 dark:text-gray-300">
                               {template.name}
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm text-gray-500 dark:text-gray-400 whitespace-pre-wrap max-w-md">
+                          <div className="text-sm font-light text-gray-600 dark:text-gray-400 whitespace-pre-wrap max-w-md">
                             {(() => {
                               const templateContent = template.detailedPrompt || template.description || '';
                               if (!templateContent) return template.framework || 'No template content';
@@ -431,13 +462,17 @@ export default function TemplatesView() {
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       e.preventDefault();
-                                      handleDeleteTemplate(template);
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                    Delete
-                                  </button>
+                                    handleDeleteTemplate(template);
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                >
+                                  <img 
+                                    src="/assets/delete.svg" 
+                                    alt="Delete" 
+                                    className="h-4 w-4 opacity-70 dark:brightness-0 dark:invert dark:opacity-70" 
+                                  />
+                                  Delete
+                                </button>
                                 </div>
                               </div>,
                               document.body
@@ -458,13 +493,13 @@ export default function TemplatesView() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-3">
                             <User className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            <div className="text-sm font-normal text-gray-700 dark:text-gray-300">
                               {persona.name}
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                          <div className="text-sm font-light text-gray-600 dark:text-gray-400">
                             {persona.description || 'No description'}
                           </div>
                         </td>
@@ -532,14 +567,18 @@ export default function TemplatesView() {
                                     type="button"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      e.preventDefault();
-                                      handleDeletePersona(persona);
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                    Delete
-                                  </button>
+                                    e.preventDefault();
+                                    handleDeletePersona(persona);
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                >
+                                  <img 
+                                    src="/assets/delete.svg" 
+                                    alt="Delete" 
+                                    className="h-4 w-4 opacity-70 dark:brightness-0 dark:invert dark:opacity-70" 
+                                  />
+                                  Delete
+                                </button>
                                 </div>
                               </div>,
                               document.body
@@ -1430,18 +1469,18 @@ function CreatePersonaModal({
               </label>
               {formData.useTemplate && (
                 <div className="ml-6">
-                  <select
-                    value={formData.selectedTemplateId}
-                    onChange={(e) => setFormData({ ...formData, selectedTemplateId: e.target.value })}
+                <select
+                  value={formData.selectedTemplateId}
+                  onChange={(e) => setFormData({ ...formData, selectedTemplateId: e.target.value })}
                     className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                  >
-                    <option value="">-- Select Template --</option>
-                    {templates.map((template) => (
-                      <option key={template.id} value={template.id}>
-                        {template.name} ({template.framework})
-                      </option>
-                    ))}
-                  </select>
+                >
+                  <option value="">-- Select Template --</option>
+                  {templates.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.name} ({template.framework})
+                    </option>
+                  ))}
+                </select>
                 </div>
               )}
 
@@ -1461,15 +1500,15 @@ function CreatePersonaModal({
               </label>
               {!formData.useTemplate && (
                 <div className="ml-6">
-                  <TextareaAutosize
-                    value={formData.customTemplate}
-                    onChange={(e) => setFormData({ ...formData, customTemplate: e.target.value })}
-                    minRows={6}
-                    maxRows={12}
-                    aria-label="Custom persona template"
+                <TextareaAutosize
+                  value={formData.customTemplate}
+                  onChange={(e) => setFormData({ ...formData, customTemplate: e.target.value })}
+                  minRows={6}
+                  maxRows={12}
+                  aria-label="Custom persona template"
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
-                    placeholder="Enter your custom template here..."
-                  />
+                  placeholder="Enter your custom template here..."
+                />
                 </div>
               )}
             </div>
@@ -1686,18 +1725,18 @@ function EditPersonaModal({
               </label>
               {formData.useTemplate && (
                 <div className="ml-6">
-                  <select
-                    value={formData.selectedTemplateId}
-                    onChange={(e) => setFormData({ ...formData, selectedTemplateId: e.target.value })}
+                <select
+                  value={formData.selectedTemplateId}
+                  onChange={(e) => setFormData({ ...formData, selectedTemplateId: e.target.value })}
                     className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                  >
-                    <option value="">-- Select Template --</option>
-                    {templates.map((template) => (
-                      <option key={template.id} value={template.id}>
-                        {template.name} ({template.framework})
-                      </option>
-                    ))}
-                  </select>
+                >
+                  <option value="">-- Select Template --</option>
+                  {templates.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.name} ({template.framework})
+                    </option>
+                  ))}
+                </select>
                 </div>
               )}
 
@@ -1717,15 +1756,15 @@ function EditPersonaModal({
               </label>
               {!formData.useTemplate && (
                 <div className="ml-6">
-                  <TextareaAutosize
-                    value={formData.customTemplate}
-                    onChange={(e) => setFormData({ ...formData, customTemplate: e.target.value })}
-                    minRows={6}
-                    maxRows={12}
-                    aria-label="Custom persona template"
+                <TextareaAutosize
+                  value={formData.customTemplate}
+                  onChange={(e) => setFormData({ ...formData, customTemplate: e.target.value })}
+                  minRows={6}
+                  maxRows={12}
+                  aria-label="Custom persona template"
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none"
-                    placeholder="Enter your custom template here..."
-                  />
+                  placeholder="Enter your custom template here..."
+                />
                 </div>
               )}
             </div>

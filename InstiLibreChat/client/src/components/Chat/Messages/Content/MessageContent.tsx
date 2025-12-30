@@ -103,7 +103,7 @@ const DisplayMessage = ({ text, isCreatedByUser, message, showCursor }: TDisplay
 
   const content = useMemo(() => {
     // Parse new structured JSON format: { documents: [...], template: {...}, persona: {...}, query: "..." }
-    if (isCreatedByUser && (text.trim().startsWith('{') && (text.includes('"documents"') || text.includes('"query"')))) {
+    if (isCreatedByUser && text.trim().startsWith('{')) {
       let documentNames = '';
       let userQuery = '';
       let templateName = '';
@@ -113,26 +113,29 @@ const DisplayMessage = ({ text, isCreatedByUser, message, showCursor }: TDisplay
         // Try to parse as JSON
         const requestObject = JSON.parse(text);
         
-        // Extract documents
-        if (requestObject.documents && Array.isArray(requestObject.documents) && requestObject.documents.length > 0) {
-          documentNames = requestObject.documents.map((doc: any) => doc.name).join(', ');
-        }
-        
-        // Extract query
-        if (requestObject.query) {
+        // Check if this is our structured format (has query field)
+        if (requestObject.query !== undefined && requestObject.query !== null) {
+
+          // Extract documents
+          if (requestObject.documents && Array.isArray(requestObject.documents) && requestObject.documents.length > 0) {
+            documentNames = requestObject.documents.map((doc: any) => doc.name).join(', ');
+          }
+          
+          // Extract query
           userQuery = requestObject.query;
-        }
-        
-        // Extract template description (for display)
-        if (requestObject.template && requestObject.template.description) {
-          templateName = requestObject.template.description.substring(0, 50);
-          if (requestObject.template.description.length > 50) templateName += '...';
-        }
-        
-        // Extract persona description (for display)
-        if (requestObject.persona && requestObject.persona.description) {
-          personaName = requestObject.persona.description.substring(0, 50);
-          if (requestObject.persona.description.length > 50) personaName += '...';
+          
+          // Extract template name (for display)
+          if (requestObject.template && requestObject.template.name) {
+            templateName = requestObject.template.name;
+          }
+          
+          // Extract persona name (for display)
+          if (requestObject.persona && requestObject.persona.name) {
+            personaName = requestObject.persona.name;
+          }
+        } else {
+          // Not our format, show as-is
+          userQuery = text;
         }
       } catch (e) {
         // Fallback: try to parse old format
@@ -273,14 +276,12 @@ const DisplayMessage = ({ text, isCreatedByUser, message, showCursor }: TDisplay
           documentNames = requestObject.documents.map((doc: any) => doc.name).join(', ');
         }
         
-        if (requestObject.template && requestObject.template.description) {
-          templateName = requestObject.template.description.substring(0, 50);
-          if (requestObject.template.description.length > 50) templateName += '...';
+        if (requestObject.template && requestObject.template.name) {
+          templateName = requestObject.template.name;
         }
         
-        if (requestObject.persona && requestObject.persona.description) {
-          personaName = requestObject.persona.description.substring(0, 50);
-          if (requestObject.persona.description.length > 50) personaName += '...';
+        if (requestObject.persona && requestObject.persona.name) {
+          personaName = requestObject.persona.name;
         }
       } catch (e) {
         // Continue to fallback parsing
@@ -294,15 +295,19 @@ const DisplayMessage = ({ text, isCreatedByUser, message, showCursor }: TDisplay
         documentNames = documentsMatch[1];
       }
       
+      // Extract persona name from request block
       const personaMatch = text.match(/persona:\s*"((?:[^"\\]|\\.)*)"/s);
       if (personaMatch && personaMatch[1].trim()) {
         const personaContent = personaMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+        // Try to extract just the name (first line typically contains the name)
         personaName = personaContent.split('\n')[0].trim() || 'Persona';
       }
       
+      // Extract template name from request block
       const templateMatch = text.match(/template:\s*"((?:[^"\\]|\\.)*)"/s);
       if (templateMatch && templateMatch[1].trim()) {
         const templateContent = templateMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+        // Try to extract just the name (first line typically contains the name)
         templateName = templateContent.split('\n')[0].trim() || 'Template';
       }
     }
